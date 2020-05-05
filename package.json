@@ -1,0 +1,11 @@
+{
+  "name": "time-bot",
+  "version": "2.0.0",
+  "description": "Tells the time when pingged",
+  "main": "bot.js",
+  "author": "Dane Halle (Mordecai)",
+  "dependencies": {
+    "discord.js": "^11.5.1",
+    "dotenv": "^8.2.0"
+  }
+}
