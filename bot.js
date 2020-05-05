@@ -1,16 +1,16 @@
 require('dotenv').config();
-const Discord = require('discord.js');
-const bot = new Discord.Client();
-const TOKEN = process.env.TOKEN;
-
+const Discord=require('discord.js');
+const bot=new Discord.Client();
+const TOKEN=process.env.TOKEN;
 bot.login(TOKEN);
 
 bot.on('ready', () => {
-  console.info(`Logged in as ${bot.user.tag}!`);
+  console.info(`We are up and running as ${bot.user.tag}!`);
+  console.info(`======================================`);
 });
 
 bot.on('message', message => {
-    if (message.author.bot){
+    if(message.author.bot){
         return;
     }
 
@@ -52,19 +52,34 @@ bot.on('message', message => {
                 }
                 var sendOut="*Beep boop*\nThe time is given in GMT+2 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso="+year+""+month+""+day+"T"+hours+""+minutes+"&p1=101\n*Beep boop*";
                 message.channel.send(sendOut);
-                console.log(message.member.user.tag+" called for a link");
+                today=new Date();
+                var hours=today.getHours();
+                var minutes=today.getMinutes();
+                var seconds=today.getSeconds();
+                if(hours<10&&hours!=0){
+                    hours="0"+hours;
+                }
+                if(minutes<10&&minutes!=0){
+                    minutes="0"+minutes;
+                }
+                if(seconds<10&&seconds!=0){
+                    seconds="0"+seconds;
+                } 
+                console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Link");
             }
         }
     }
     if(message.content.substring(0, 1) == '!') {
-        var args = message.content.substring(1).split(' ');
-        var cmd = args[0];
+        var args=message.content.substring(1).split(' ');
+        var cmd=args[0];
        
-        args = args.splice(1);
-        switch(cmd) {
+        // args=args.splice(1);
+        switch(cmd){
             // !ping
             case 'ping':
-                message.channel.send("Pong!");
+                if(message.member.user.tag=="Mordecai#3257"){
+                    message.channel.send("Pong!");
+                }
                 break;
             // !time
             case 'time':
@@ -113,10 +128,103 @@ bot.on('message', message => {
                 var timeDate=time+" "+date;
                 var sendOut="It is currently **"+timeDate+"** in Finland (Where the games are located)."
                 message.channel.send(sendOut);
-                console.log(message.member.user.tag+" called for !time");
+                today=new Date();
+                var hours=today.getHours();
+                var minutes=today.getMinutes();
+                var seconds=today.getSeconds();
+                if(hours<10&&hours!=0){
+                    hours="0"+hours;
+                }
+                if(minutes<10&&minutes!=0){
+                    minutes="0"+minutes;
+                }
+                if(seconds<10&&seconds!=0){
+                    seconds="0"+seconds;
+                } 
+                console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !time");
+                break;
+            case 'roll':
+                if(args[1]!=null&&args[1].includes("d")){
+                    var output=0; var outString="`"; var i; 
+                    if(isNaN(args[1].substring(0, args[1].indexOf("d")))||isNaN(args[1].substring(args[1].indexOf("d")+1))){
+                        message.channel.send("\tError: Invalid format");
+                        today=new Date();
+                        var hours=today.getHours();
+                        var minutes=today.getMinutes();
+                        var seconds=today.getSeconds();
+                        if(hours<10&&hours!=0){
+                            hours="0"+hours;
+                        }
+                        if(minutes<10&&minutes!=0){
+                            minutes="0"+minutes;
+                        }
+                        if(seconds<10&&seconds!=0){
+                            seconds="0"+seconds;
+                        } 
+                        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !roll error");
+                    }else{
+                        for(i=0; i<args[1].substring(0, args[1].indexOf("d")); i++){
+                            var roll=Math.floor(Math.random()*args[1].substring(args[1].indexOf("d")+1))+1;
+                            output+=roll;
+                            if(outString=="`"){
+                                outString+=roll;
+                            }else{
+                                outString+=", "+roll;
+                            }
+                        }
+                        message.channel.send("Rolling "+args[1]+":\n\t"+outString+"`\n\tTotal: "+output);
+                        today=new Date();
+                        var hours=today.getHours();
+                        var minutes=today.getMinutes();
+                        var seconds=today.getSeconds();
+                        if(hours<10&&hours!=0){
+                            hours="0"+hours;
+                        }
+                        if(minutes<10&&minutes!=0){
+                            minutes="0"+minutes;
+                        }
+                        if(seconds<10&&seconds!=0){
+                            seconds="0"+seconds;
+                        } 
+                        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !roll xdy");
+                    }
+                }else if(args[1]!=null){
+                    message.channel.send("\tError: Invalid format");
+                    today=new Date();
+                    var hours=today.getHours();
+                    var minutes=today.getMinutes();
+                    var seconds=today.getSeconds();
+                    if(hours<10&&hours!=0){
+                        hours="0"+hours;
+                    }
+                    if(minutes<10&&minutes!=0){
+                        minutes="0"+minutes;
+                    }
+                    if(seconds<10&&seconds!=0){
+                        seconds="0"+seconds;
+                    } 
+                    console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !roll error");
+                }else{
+                    var roll=Math.floor(Math.random()*20)+1;
+                    message.channel.send("Rolling 1d20:\n\tTotal: "+roll);
+                    today=new Date();
+                    var hours=today.getHours();
+                    var minutes=today.getMinutes();
+                    var seconds=today.getSeconds();
+                    if(hours<10&&hours!=0){
+                        hours="0"+hours;
+                    }
+                    if(minutes<10&&minutes!=0){
+                        minutes="0"+minutes;
+                    }
+                    if(seconds<10&&seconds!=0){
+                        seconds="0"+seconds;
+                    } 
+                    console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !roll");
+                }
                 break;
          }
-     }else if((message.content.toLowerCase().includes("filled")||message.content.toLowerCase().includes("refill")||message.content.toLowerCase().includes("restock"))&&!message.content.includes("tenor")&&!((message.member.roles.find(r => r.name.toLowerCase() === "Mod Squad")||message.member.roles.find(r => r.name.toLowerCase() === "Surrogate Team"||message.member.roles.find(r => r.name.toLowerCase() === "Alpha Testers"))))){
+     }else if(((message.content.toLowerCase().includes("filled")||message.content.toLowerCase().includes("refill")||message.content.toLowerCase().includes("restock"))&&!message.content.includes("tenor"))&&!((message.member.roles.find(r => r.name.toLowerCase() === "mod squad")||message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"||message.member.roles.find(r => r.name.toLowerCase() === "alpha testers"))))){
         today=new Date();
         var day=today.getDate();
         var month=today.getMonth()+1;
@@ -163,10 +271,23 @@ bot.on('message', message => {
 
         if(hours>=20||hours<=8){
             var sendOut="*Beep boop*\nIt is currently **"+timeDate+"** in Finland (Where the games are located).\n";
-            var out1=sendOut+"It is currently between **8:00 PM and 8:00 AM** so it is likely that no one is in the office.\n";
+            var out1=sendOut+"Between **8:00 PM and 8:00 AM** means it is likely that no one is in the office.\n";
             var out2=out1+"*Beep boop*";
             message.channel.send(out2);
-            console.log(message.member.user.tag+"'s meassage detected between 8PM to 8AM.");
+            today=new Date();
+            var hours=today.getHours();
+            var minutes=today.getMinutes();
+            var seconds=today.getSeconds();
+            if(hours<10&&hours!=0){
+                hours="0"+hours;
+            }
+            if(minutes<10&&minutes!=0){
+                minutes="0"+minutes;
+            }
+            if(seconds<10&&seconds!=0){
+                seconds="0"+seconds;
+            } 
+            console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected");
         }else{
             var sendOut="*Beep boop*\nIt is currently **"+timeDate+"** in Finland (Where the games are located) right now.\n";
             var out2=sendOut+"*Beep boop*";
