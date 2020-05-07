@@ -559,7 +559,8 @@ bot.on('message', message => {
                     out+="`!remote GAME_NAME`\n\tThis command will toggle the remote status of the given game. This will impact help triggers for that game. The following games are supported:\n\t\t";
                     out+="`SumoBots`\n\t\t`Pinball`\n\t\t`RealRacing`\n\t\t`Claw`\n\n";
                     out+="`!status GAME_NAME`\n\tThis will give the bot's known status of the given game. This supports the same games as `!remote`\n\n";
-                    out+="`(ab:cd)`\n\tThis allows for a timezone converter link to show up at ab:cd time in Finland."
+                    out+="`(ab:cd)`\n\tThis allows for a timezone converter link to show up at ab:cd time in Finland.\n\n";
+                    out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.";
                     message.channel.send(out);
                 }
                 today=new Date();
@@ -576,6 +577,41 @@ bot.on('message', message => {
                     seconds="0"+seconds;
                 } 
                 console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !getHelp");
+                break;
+            // !game GAME_NAME
+            case 'game':
+                if(triggerSumoResponse){
+                    message.reply("Here you go!\nhttps://surrogate.tv/game/sumobots");
+                }else if(triggerRaceResponse){
+                    message.reply("Here you go!\nhttps://surrogate.tv/game/racerealcars143");
+                }else if(triggerPinballResponse&&triggerClawResponse){
+                    message.reply("There are multiple games here. Here are the links!\nhttps://surrogate.tv/game/batman66\nhttps://surrogate.tv/game/forceclaw")
+                }else if(triggerClawResponse){
+                    message.reply("Here you go!\nhttps://surrogate.tv/game/forceclaw");
+                }else if(triggerPinballResponse){
+                    message.reply("Here you go!\nhttps://surrogate.tv/game/batman66");
+                }else if(triggerGeneralResponse){
+                    var out="Here are all the links to the current games:\n";
+                    out+="https://surrogate.tv/game/sumobots\n";
+                    out+="https://surrogate.tv/game/racerealcars143\n";
+                    out+="https://surrogate.tv/game/batman66\n";
+                    out+="https://surrogate.tv/game/forceclaw\n";
+                    message.reply(out);
+                }
+                today=new Date();
+                var hours=today.getHours();
+                var minutes=today.getMinutes();
+                var seconds=today.getSeconds();
+                if(hours<10&&hours!=0){
+                    hours="0"+hours;
+                }
+                if(minutes<10&&minutes!=0){
+                    minutes="0"+minutes;
+                }
+                if(seconds<10&&seconds!=0){
+                    seconds="0"+seconds;
+                } 
+                console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !game");
                 break;
 
         }
