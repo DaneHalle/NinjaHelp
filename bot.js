@@ -1,6 +1,9 @@
 require('dotenv').config();
 const Discord=require('discord.js');
+const fetch = require('node-fetch');
+const querystring = require('querystring');
 const bot=new Discord.Client();
+
 const TOKEN=process.env.TOKEN;
 bot.login(TOKEN);
 
@@ -22,7 +25,7 @@ bot.on('ready', () => {
   console.info(`=======================================`);
 });
 
-bot.on('message', message => {
+bot.on('message', async message => {
     if(message.author.bot){
         return;
     }
@@ -560,7 +563,8 @@ bot.on('message', message => {
                     out+="`SumoBots`\n\t\t`Pinball`\n\t\t`RealRacing`\n\t\t`Claw`\n\n";
                     out+="`!status GAME_NAME`\n\tThis will give the bot's known status of the given game. This supports the same games as `!remote`\n\n";
                     out+="`(ab:cd)`\n\tThis allows for a timezone converter link to show up at ab:cd time in Finland.\n\n";
-                    out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.";
+                    out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n\n";
+                    out+="`!schedule` | `!schedule GAME_NAME` - When used in server catagories, it gives the scheule and link to the game. When used with GAME_NAME, it will return the schedule for that game.";
                     message.channel.send(out);
                 }
                 today=new Date();
@@ -585,9 +589,15 @@ bot.on('message', message => {
                 }else if(triggerRaceResponse){
                     message.reply("Here you go!\nhttps://surrogate.tv/game/racerealcars143");
                 }else if(triggerPinballResponse&&triggerClawResponse){
-                    message.reply("There are multiple games here. Here are the links!\nhttps://surrogate.tv/game/batman66\nhttps://surrogate.tv/game/forceclaw")
-                }else if(triggerClawResponse){
+                    var out="There are multiple games here. Here are the links!\n";
+                    out+="https://surrogate.tv/game/batman66\n";
+                    out+="https://surrogate.tv/game/forceclaw\n";
+                    out+="https://surrogate.tv/game/toiletpaperclaw";
+                    message.reply(out);
+                }else if(triggerClawResponse&&706819836071903275==message.channel.id){
                     message.reply("Here you go!\nhttps://surrogate.tv/game/forceclaw");
+                }else if(triggerClawResponse&&662301446036783108==message.channel.id){
+                    message.reply("Here you go!\nhttps://surrogate.tv/game/toiletpaperclaw");
                 }else if(triggerPinballResponse){
                     message.reply("Here you go!\nhttps://surrogate.tv/game/batman66");
                 }else if(triggerGeneralResponse){
@@ -596,7 +606,10 @@ bot.on('message', message => {
                     out+="https://surrogate.tv/game/racerealcars143\n";
                     out+="https://surrogate.tv/game/batman66\n";
                     out+="https://surrogate.tv/game/forceclaw\n";
+                    out+="https://surrogate.tv/game/toiletpaperclaw";
                     message.reply(out);
+                }else{
+                    return;
                 }
                 today=new Date();
                 var hours=today.getHours();
@@ -613,10 +626,189 @@ bot.on('message', message => {
                 } 
                 console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !game");
                 break;
+            case 'schedule':
+                var url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=";
+                if(triggerSumoResponse||message.content.toLowerCase().includes("sumobots")){
+                    url+="sumobots";
+                    var command="SumoBots";
+                }else if(triggerRaceResponse||message.content.toLowerCase().includes("racerealcars143")){
+                    url+="racerealcars143";
+                    var command="RaceRealCars143";
+                }else if((triggerClawResponse&&706819836071903275==message.channel.id)||message.content.toLowerCase().includes("forceclaw")){
+                    url+="forceclaw";
+                    var command="ForceClaw";
+                }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
+                    url+="toiletpaperclaw";
+                    var command="ToiletPaperClaw";
+                }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("pinball")){
+                    url+="batman66";
+                    var command="Batman66 Pinball";
+                }else{
+                    return;
+                }
 
+                const minDay=1440;
+                const {list}=fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                }).then(response => response.json())
+                    .then((x) => {
+                        if(x.result.schedule==null){
+                            message.channel.send("There is no schedule for "+command+".");
+                        }else{
+                            var i; var output=""; 
+                            for(i=0; i<x.result.schedule.length; i++){
+                                var startTime=x.result.schedule[i].startTime+(3*60);
+                                var duration=x.result.schedule[i].duration;
+                                var endTime=startTime+duration;
+                                var day=Math.floor(startTime/minDay);
+                                var startHour=Math.floor((startTime-(day*minDay))/60);
+                                var startMinute="00";
+                                if((startTime-day*minDay)%60!=2*(startTime-day*minDay)%60){
+                                    startMinute="30";
+                                }
+                                if(startHour>23){
+                                    var addToDay=Math.floor(startHour/24);
+                                    startHour%=24;
+                                    day+=addToDay;
+                                }
+                                var endHour=Math.floor((endTime-day*minDay)/60);
+                                var endMinute="00";
+                                var endDay=day;
+                                if((endTime-day*minDay)%60!=2*(endTime-day*minDay)%60){
+                                    endMinute="30";
+                                }
+                                if(endHour>23||endHour<=0){
+                                    var addToDay=Math.floor(endHour/24);
+                                    if(endHour<0){
+                                        endHour=0;
+                                        addToDay=3;//Don't talk about it
+                                    }
+                                    endHour%=24;
+                                    endDay+=addToDay;
+                                }
+                                switch(day){
+                                    case 0:
+                                        output+="> Monday:         ";
+                                        break;
+                                    case 1:
+                                        output+="> Tuesday:         ";
+                                        break;
+                                    case 2:
+                                        output+="> Wednesday:  ";
+                                        break;
+                                    case 3:
+                                        output+="> Thursday:       ";
+                                        break;
+                                    case 4:
+                                        output+="> Friday:             ";
+                                        break;
+                                    case 5:
+                                        output+="> Saturday:        ";
+                                        break;
+                                    case 6:
+                                        output+="> Sunday:           ";
+                                        break;
+                                    default:
+                                        break;
+                                }
+
+                                if(startHour>=12){
+                                    if(startHour%12<10&&startHour!=12){
+                                        output+="0"+(startHour%12)+":"+startMinute+" PM - ";
+                                    }else if(startHour==12){
+                                        output+=(startHour)+":"+startMinute+" PM - ";
+                                    }else{
+                                        output+=(startHour%12)+":"+startMinute+" PM - ";
+                                    }
+                                }else if(startHour==0){
+                                    output+="12:"+startMinute+" AM - ";
+                                }else{
+                                    if(startHour<10){
+                                        output+="0"+startHour+":"+startMinute+" AM - ";
+                                    }else{
+                                        output+=startHour+":"+startMinute+" AM - ";
+                                    }
+                                }
+
+
+                                switch(endDay){
+                                    case 0:
+                                        output+="Monday:         ";
+                                        break;
+                                    case 1:
+                                        output+="Tuesday:         ";
+                                        break;
+                                    case 2:
+                                        output+="Wednesday:  ";
+                                        break;
+                                    case 3:
+                                        output+="Thursday:       ";
+                                        break;
+                                    case 4:
+                                        output+="Friday:             ";
+                                        break;
+                                    case 5:
+                                        output+="Saturday:        ";
+                                        break;
+                                    case 6:
+                                        output+="Sunday:           ";
+                                        break;
+                                    default:
+                                        output+="Monday:         ";
+                                        break;
+                                }
+
+                                if(endHour>=12){
+                                    if(endHour%12<10&&endHour!=12){
+                                        output+="0"+(endHour%12)+":"+endMinute+" PM\n";
+                                    }else if(endHour==12){
+                                        output+=(endHour)+":"+endMinute+" PM\n";
+                                    }else{
+                                        output+=(endHour%12)+":"+endMinute+" PM\n";
+                                    }
+                                }else if(endHour==0){
+                                    output+="12:"+endMinute+" AM\n";
+                                }else{
+                                    if(endHour<10){
+                                        output+="0"+endHour+":"+endMinute+" AM\n";
+                                    }else{
+                                        output+=endHour+":"+endMinute+" AM\n";
+                                    }
+                                }
+                            }
+
+                            output="Here is the schedule (Finland time GMT+3) for **"+command+"** this week!\n"+output;
+                            output+="Link to **"+command+"** can be found here!\nhttps://surrogate.tv/game/";
+                            command=command.split(' ');
+                            command=command.splice(0);
+                            output+=command[0].toLowerCase();
+                            message.channel.send(output);
+                        }
+                    });
+                    
+                today=new Date();
+                var hours=today.getHours();
+                var minutes=today.getMinutes();
+                var seconds=today.getSeconds();
+                if(hours<10&&hours!=0){
+                    hours="0"+hours;
+                }
+                if(minutes<10&&minutes!=0){
+                    minutes="0"+minutes;
+                }
+                if(seconds<10&&seconds!=0){
+                    seconds="0"+seconds;
+                } 
+                console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !schedule");
+
+                break;
         }
         return;
     }
+
     //"Refill the machine" for Claw
     if(triggerClawResponse&&
         ((message.content.toLowerCase().includes("filled")||
@@ -651,8 +843,10 @@ bot.on('message', message => {
             month="0"+month;
         }
         if(hours>=12){
-            if(hours%12<10){
+            if(hours%12<10&&hours!=12){
                 var time="0"+(hours%12)+":"+minutes+":"+seconds+" PM";
+            }else if(hours==12){
+                output+=(hours)+":"+minutes+" PM - ";
             }else{
                 var time=(hours%12)+":"+minutes+":"+seconds+" PM";
             }
@@ -668,7 +862,7 @@ bot.on('message', message => {
 
         var date=day+"/"+month+"/"+year;
         var timeDate=time+" on "+date;
-        if(hours>=20||hours<=8){
+        if(hours>=20||hours<8){
             var sendOut="*Beep boop*\nIt is currently **"+timeDate+"** in Finland (Where the games are located).\n";
             var out1=sendOut+"Between **8:00 PM and 8:00 AM** means it is likely that no one is in the office.\n";
             var out2=out1+"*Beep boop*";
@@ -690,6 +884,7 @@ bot.on('message', message => {
         }
         return;
     }
+
     //"How do I play" for Sumo
     if(triggerSumoResponse&&
         message.content.toLowerCase().includes("how")&&
@@ -722,6 +917,7 @@ bot.on('message', message => {
         console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to play\" Sumo");
         return;
     }
+
     //"How do I play" for RealRacing
     if(triggerRaceResponse&&
         message.content.toLowerCase().includes("how")&&
@@ -755,6 +951,7 @@ bot.on('message', message => {
         console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to play\" RealRacing");
         return;
     }
+
     //"How do I play" for Pinball
     if(triggerPinballResponse&&
         message.content.toLowerCase().includes("how")&&
@@ -787,72 +984,6 @@ bot.on('message', message => {
         console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to play\" Pinball");
         return;
     }
-
-    //"How do I queue up"
-    if(message.content.toLowerCase().includes("how")&&
-        message.content.toLowerCase().includes("queue")&&
-        (message.content.toLowerCase().includes("join")||
-            message.content.toLowerCase().includes("up"))&&
-        !((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
-            message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"||
-            message.member.roles.find(r=>r.name.toLowerCase()==="alpha testers")||
-            message.member.roles.find(r=>r.name.toLowerCase()==="patreon suppporter")||
-            message.member.roles.find(r=>r.name.toLowerCase()==="verified players")||
-            message.member.roles.find(r=>r.name.toLowerCase()==="broom squad"))))){
-        var out="*(Robot Ninja Auto Help)*\n";
-        out+="**How to join the queue in SumoBots:**\n\t";
-        out+="Join the queue by clicking the \"Click Here to Play Next\" button in the top right corner. ";
-        out+="You can leave the queue (only before the game starts) by clicking on the ";
-        out+="[X] button in the same location.";
-        message.channel.send(out);
-        today=new Date();
-        var hours=today.getHours();
-        var minutes=today.getMinutes();
-        var seconds=today.getSeconds();
-        if(hours<10&&hours!=0){
-            hours="0"+hours;
-        }
-        if(minutes<10&&minutes!=0){
-            minutes="0"+minutes;
-        }
-        if(seconds<10&&seconds!=0){
-            seconds="0"+seconds;
-        } 
-        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to queue\"");
-        return;
-    }
-    //"How do I leave queue"
-    if(message.content.toLowerCase().includes("how")&&
-        message.content.toLowerCase().includes("queue")&&
-        message.content.toLowerCase().includes("leave")&&
-        !((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
-            message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"||
-            message.member.roles.find(r=>r.name.toLowerCase()==="alpha testers")||
-            message.member.roles.find(r=>r.name.toLowerCase()==="patreon suppporter")||
-            message.member.roles.find(r=>r.name.toLowerCase()==="verified players")||
-            message.member.roles.find(r=>r.name.toLowerCase()==="broom squad"))))){
-        var out="*(Robot Ninja Auto Help)*\n";
-        out+="**How to leave the queue in SumoBots:**\n\t";
-        out+="You can leave the queue (only before the game starts) by clicking on the [X] button in the queue ";
-        out+="info above the chat. If you leave the queue during the game then your game will just end.";
-        message.channel.send(out);
-        today=new Date();
-        var hours=today.getHours();
-        var minutes=today.getMinutes();
-        var seconds=today.getSeconds();
-        if(hours<10&&hours!=0){
-            hours="0"+hours;
-        }
-        if(minutes<10&&minutes!=0){
-            minutes="0"+minutes;
-        }
-        if(seconds<10&&seconds!=0){
-            seconds="0"+seconds;
-        } 
-        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to leave queue\"");
-        return;
-    }
-
     //"Ball stuck" for Pinball
     if(triggerPinballResponse&&
         message.content.toLowerCase().includes("ball")&&
@@ -949,6 +1080,71 @@ bot.on('message', message => {
             seconds="0"+seconds;
         } 
         console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"two balls\" Pinball");
+        return;
+    }
+
+    //"How do I queue up" for all
+    if(message.content.toLowerCase().includes("how")&&
+        message.content.toLowerCase().includes("queue")&&
+        (message.content.toLowerCase().includes("join")||
+            message.content.toLowerCase().includes("up"))&&
+        !((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+            message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"||
+            message.member.roles.find(r=>r.name.toLowerCase()==="alpha testers")||
+            message.member.roles.find(r=>r.name.toLowerCase()==="patreon suppporter")||
+            message.member.roles.find(r=>r.name.toLowerCase()==="verified players")||
+            message.member.roles.find(r=>r.name.toLowerCase()==="broom squad"))))){
+        var out="*(Robot Ninja Auto Help)*\n";
+        out+="**How to join the queue in SumoBots:**\n\t";
+        out+="Join the queue by clicking the \"Click Here to Play Next\" button in the top right corner. ";
+        out+="You can leave the queue (only before the game starts) by clicking on the ";
+        out+="[X] button in the same location.";
+        message.channel.send(out);
+        today=new Date();
+        var hours=today.getHours();
+        var minutes=today.getMinutes();
+        var seconds=today.getSeconds();
+        if(hours<10&&hours!=0){
+            hours="0"+hours;
+        }
+        if(minutes<10&&minutes!=0){
+            minutes="0"+minutes;
+        }
+        if(seconds<10&&seconds!=0){
+            seconds="0"+seconds;
+        } 
+        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to queue\"");
+        return;
+    }
+    //"How do I leave queue" for all
+    if(message.content.toLowerCase().includes("how")&&
+        message.content.toLowerCase().includes("queue")&&
+        message.content.toLowerCase().includes("leave")&&
+        !((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+            message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"||
+            message.member.roles.find(r=>r.name.toLowerCase()==="alpha testers")||
+            message.member.roles.find(r=>r.name.toLowerCase()==="patreon suppporter")||
+            message.member.roles.find(r=>r.name.toLowerCase()==="verified players")||
+            message.member.roles.find(r=>r.name.toLowerCase()==="broom squad"))))){
+        var out="*(Robot Ninja Auto Help)*\n";
+        out+="**How to leave the queue in SumoBots:**\n\t";
+        out+="You can leave the queue (only before the game starts) by clicking on the [X] button in the queue ";
+        out+="info above the chat. If you leave the queue during the game then your game will just end.";
+        message.channel.send(out);
+        today=new Date();
+        var hours=today.getHours();
+        var minutes=today.getMinutes();
+        var seconds=today.getSeconds();
+        if(hours<10&&hours!=0){
+            hours="0"+hours;
+        }
+        if(minutes<10&&minutes!=0){
+            minutes="0"+minutes;
+        }
+        if(seconds<10&&seconds!=0){
+            seconds="0"+seconds;
+        } 
+        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to leave queue\"");
         return;
     }
 });
