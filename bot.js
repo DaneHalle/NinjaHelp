@@ -20,9 +20,151 @@ var raceRemote=false;
 var pinballRemote=false;
 var clawRemote=false;
 
+//Game Announcements 
+async function sumobotsAnnounce(){
+    while(true){
+        var date=new Date();
+        var weekdays = new Array(
+            "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+        );
+        var day = date.getDay();
+
+        var rand=Math.floor(Math.random()*9)+1;
+
+        const minDay=1440;
+        const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=sumobots", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        }).then(response => response.json())
+            .then((x) => {
+                if(x==null||x.result==null||x.result.schedule==null){
+                    var scheduleHour=null;
+                }else{
+                    var i; var output=""; 
+                    for(i=0; i<x.result.schedule.length; i++){
+                        var startTime=x.result.schedule[i].startTime+(3*60);
+                        var duration=x.result.schedule[i].duration;
+                        var scheduleDay=Math.floor(startTime/minDay);
+                        var scheduleHour=Math.floor((startTime-(scheduleDay*minDay))/60);
+                        if(scheduleHour>23){
+                            var addToDay=Math.floor(scheduleHour/24);
+                            scheduleHour%=24;
+                            scheduleDay+=addToDay;
+                        }
+                        if(scheduleDay==day+1){
+                            break;
+                        }
+                    }
+                    var curHour=date.getHours()+4;
+                    var curMinute=date.getMinutes();
+                    if(scheduleHour!=null&&curHour==scheduleHour&&curMinute==45){
+                        var out="@here **SumoBots** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/sumobots\n";
+                        bot.channels.get("627919045420646401").send(out, {
+                          files: [{
+                            attachment: './gifs/sumo_'+rand+'.gif',
+                            name: 'sumo.gif'
+                          }]
+                        });
+                        today=new Date();
+                        var hours=today.getHours();
+                        var minutes=today.getMinutes();
+                        var seconds=today.getSeconds();
+                        if(hours<10&&hours!=0){
+                            hours="0"+hours;
+                        }
+                        if(minutes<10&&minutes!=0){
+                            minutes="0"+minutes;
+                        }
+                        if(seconds<10&&seconds!=0){
+                            seconds="0"+seconds;
+                        } 
+                        console.log(hours+":"+minutes+":"+seconds+" EST | AUTO ANNOUNCE | SumoBots Announcement");
+                    }
+                }
+            });
+        await Sleep(60000)
+    }
+}
+
+async function raceAnnouncement(){
+    while(true){
+        var date=new Date();
+        var weekdays = new Array(
+            "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+        );
+        var day = date.getDay();
+
+        var rand=Math.floor(Math.random()*4)+1;
+
+        const minDay=1440;
+        const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=racerealcars143", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        }).then(response => response.json())
+            .then((x) => {
+                if(x==null||x.result==null||x.result.schedule==null){
+                    var scheduleHour=null;
+                }else{
+                    var i; var output=""; 
+                    for(i=0; i<x.result.schedule.length; i++){
+                        var startTime=x.result.schedule[i].startTime+(3*60);
+                        var duration=x.result.schedule[i].duration;
+                        var scheduleDay=Math.floor(startTime/minDay);
+                        var scheduleHour=Math.floor((startTime-(scheduleDay*minDay))/60);
+                        if(scheduleHour>23){
+                            var addToDay=Math.floor(scheduleHour/24);
+                            scheduleHour%=24;
+                            scheduleDay+=addToDay;
+                        }
+                        if(scheduleDay==day+1){
+                            break;
+                        }
+                    }
+                    var curHour=date.getHours()+4;
+                    var curMinute=date.getMinutes();
+                    if(scheduleHour!=null&&curHour==scheduleHour&&curMinute==45){
+                        var out="@here **RaceRealCars143** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/racerealcars143\n";
+                        bot.channels.get("589484542214012963").send(out, { 
+                          files: [{
+                            attachment: './gifs/race_'+rand+'.gif',
+                            name: 'race.gif'
+                          }]
+                        });
+                        today=new Date();
+                        var hours=today.getHours();
+                        var minutes=today.getMinutes();
+                        var seconds=today.getSeconds();
+                        if(hours<10&&hours!=0){
+                            hours="0"+hours;
+                        }
+                        if(minutes<10&&minutes!=0){
+                            minutes="0"+minutes;
+                        }
+                        if(seconds<10&&seconds!=0){
+                            seconds="0"+seconds;
+                        } 
+                        console.log(hours+":"+minutes+":"+seconds+" EST | AUTO ANNOUNCE | RaceRealCars143 Announcement");
+                    }
+                }
+            });
+        await Sleep(60000)
+    }
+}
+
+function Sleep(milliseconds) {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+
 bot.on('ready', () => {
-  console.info(`We are up and running as ${bot.user.tag}`);
-  console.info(`=======================================`);
+    sumobotsAnnounce();
+    raceAnnouncement();
+    console.info(`We are up and running as ${bot.user.tag}`);
+    console.info(`=======================================`);
 });
 
 bot.on('message', async message => {
@@ -566,21 +708,21 @@ bot.on('message', async message => {
                     out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n\n";
                     out+="`!schedule` | `!schedule GAME_NAME` - When used in server catagories, it gives the scheule and link to the game. When used with GAME_NAME, it will return the schedule for that game.";
                     message.channel.send(out);
+                    today=new Date();
+                    var hours=today.getHours();
+                    var minutes=today.getMinutes();
+                    var seconds=today.getSeconds();
+                    if(hours<10&&hours!=0){
+                        hours="0"+hours;
+                    }
+                    if(minutes<10&&minutes!=0){
+                        minutes="0"+minutes;
+                    }
+                    if(seconds<10&&seconds!=0){
+                        seconds="0"+seconds;
+                    } 
+                    console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !getHelp");
                 }
-                today=new Date();
-                var hours=today.getHours();
-                var minutes=today.getMinutes();
-                var seconds=today.getSeconds();
-                if(hours<10&&hours!=0){
-                    hours="0"+hours;
-                }
-                if(minutes<10&&minutes!=0){
-                    minutes="0"+minutes;
-                }
-                if(seconds<10&&seconds!=0){
-                    seconds="0"+seconds;
-                } 
-                console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !getHelp");
                 break;
             // !game GAME_NAME
             case 'game':
@@ -626,6 +768,7 @@ bot.on('message', async message => {
                 } 
                 console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !game");
                 break;
+            // !schedule
             case 'schedule':
                 var url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=";
                 if(triggerSumoResponse||message.content.toLowerCase().includes("sumobots")){
@@ -804,6 +947,45 @@ bot.on('message', async message => {
                 } 
                 console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !schedule");
 
+                break;
+            // !host
+            case 'host':
+                if(message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                    message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team")){
+                    if(triggerSumoResponse||message.content.toLowerCase().includes("sumobots")){
+                        var out="@.here **SumoBots** is live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/sumobots\n";
+                        var rand=Math.floor(Math.random()*9)+1;
+                        message.channel.send(out, {
+                            files: [{
+                                attachment: `./gifs/sumo_`+rand+`.gif`,
+                                name: `sumo.gif`
+                            }]
+                        });
+                        console.log("sending "+rand+" gif");
+                    }else if(triggerRaceResponse||message.content.toLowerCase().includes("racerealcars143")){
+                        var game="race";
+                        var command="RaceRealCars143";
+                    }else if((triggerClawResponse&&706819836071903275==message.channel.id)||message.content.toLowerCase().includes("forceclaw")){
+                        var game="force";
+                        var command="ForceClaw";
+                    }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
+                        var game="toilet";
+                        var command="ToiletPaperClaw";
+                    }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("pinball")){
+                        var game="pinball";
+                        var command="Batman66 Pinball";
+                    }else{
+                        return;
+                    }
+                    // var rand=Math.floor(Math.random()*9)+1;
+                    // message.channel.send({
+                    //     files: [{
+                    //         attachment: `./gifs/`+game+`_`+rand+`.gif`,
+                    //         name: game+`.gif`
+                    //     }]
+                    // });
+
+                }
                 break;
         }
         return;
