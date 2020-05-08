@@ -1,11 +1,17 @@
 {
   "name": "time-bot",
-  "version": "2.0.0",
-  "description": "Tells the time when pingged",
+  "version": "3.0.0",
+  "description": "Support bot for Surrogate.tv discord",
   "main": "bot.js",
   "author": "Dane Halle (Mordecai)",
   "dependencies": {
     "discord.js": "^11.5.1",
-    "dotenv": "^8.2.0"
-  }
+    "dotenv": "^8.2.0",
+    "node-fetch": "^2.6.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "license": "ISC"
 }
