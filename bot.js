@@ -20,7 +20,7 @@ var pinballRemote=false;
 var clawRemote=false;
 
 //Game Announcements 
-async function sumobotsAnnounce(){
+async function announcement(game, image, numImage, channel){
     while(true){
         var date=new Date();
         var weekdays = new Array(
@@ -28,10 +28,10 @@ async function sumobotsAnnounce(){
         );
         var day = date.getDay();
 
-        var rand=Math.floor(Math.random()*9)+1;
+        var rand=Math.floor(Math.random()*numImage)+1;
 
         const minDay=1440;
-        const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=sumobots", {
+        const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId="+game.toLowerCase(), {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -40,6 +40,7 @@ async function sumobotsAnnounce(){
             .then((x) => {
                 if(x==null||x.result==null||x.result.schedule==null){
                     var scheduleHour=null;
+
                 }else{
                     var i; var output=""; 
                     for(i=0; i<x.result.schedule.length; i++){
@@ -56,97 +57,17 @@ async function sumobotsAnnounce(){
                             break;
                         }
                     }
-                    var curHour=date.getHours()+4;
+                    var curHour=date.getHours()+8;
                     var curMinute=date.getMinutes();
                     if(scheduleHour!=null&&curHour==scheduleHour&&curMinute==45){
-                        var out="@here **SumoBots** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/sumobots\n";
-                        bot.channels.get("627919045420646401").send(out, {
+                        var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                        bot.channels.get(channel).send(out, {
                           files: [{
-                            attachment: './gifs/sumo_'+rand+'.gif',
-                            name: 'sumo.gif'
+                            attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                            name: image+'.gif'
                           }]
                         });
-                        today=new Date();
-                        var hours=today.getHours();
-                        var minutes=today.getMinutes();
-                        var seconds=today.getSeconds();
-                        if(hours<10&&hours!=0){
-                            hours="0"+hours;
-                        }
-                        if(minutes<10&&minutes!=0){
-                            minutes="0"+minutes;
-                        }
-                        if(seconds<10&&seconds!=0){
-                            seconds="0"+seconds;
-                        } 
-                        console.log(hours+":"+minutes+":"+seconds+" EST | AUTO ANNOUNCE | SumoBots Announcement");
-                    }
-                }
-            });
-        await Sleep(60000)
-    }
-}
-
-async function raceAnnouncement(){
-    while(true){
-        var date=new Date();
-        var weekdays = new Array(
-            "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-        );
-        var day = date.getDay();
-
-        var rand=Math.floor(Math.random()*4)+1;
-
-        const minDay=1440;
-        const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=racerealcars143", {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-        }).then(response => response.json())
-            .then((x) => {
-                if(x==null||x.result==null||x.result.schedule==null){
-                    var scheduleHour=null;
-                }else{
-                    var i; var output=""; 
-                    for(i=0; i<x.result.schedule.length; i++){
-                        var startTime=x.result.schedule[i].startTime+(3*60);
-                        var duration=x.result.schedule[i].duration;
-                        var scheduleDay=Math.floor(startTime/minDay);
-                        var scheduleHour=Math.floor((startTime-(scheduleDay*minDay))/60);
-                        if(scheduleHour>23){
-                            var addToDay=Math.floor(scheduleHour/24);
-                            scheduleHour%=24;
-                            scheduleDay+=addToDay;
-                        }
-                        if(scheduleDay==day+1){
-                            break;
-                        }
-                    }
-                    var curHour=date.getHours()+4;
-                    var curMinute=date.getMinutes();
-                    if(scheduleHour!=null&&curHour==scheduleHour&&curMinute==45){
-                        var out="@here **RaceRealCars143** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/racerealcars143\n";
-                        bot.channels.get("589484542214012963").send(out, { 
-                          files: [{
-                            attachment: './gifs/race_'+rand+'.gif',
-                            name: 'race.gif'
-                          }]
-                        });
-                        today=new Date();
-                        var hours=today.getHours();
-                        var minutes=today.getMinutes();
-                        var seconds=today.getSeconds();
-                        if(hours<10&&hours!=0){
-                            hours="0"+hours;
-                        }
-                        if(minutes<10&&minutes!=0){
-                            minutes="0"+minutes;
-                        }
-                        if(seconds<10&&seconds!=0){
-                            seconds="0"+seconds;
-                        } 
-                        console.log(hours+":"+minutes+":"+seconds+" EST | AUTO ANNOUNCE | RaceRealCars143 Announcement");
+                        logBotActions(null, game+" Announcement");
                     }
                 }
             });
@@ -158,9 +79,30 @@ function Sleep(milliseconds) {
     return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
+function logBotActions(message, action){
+    today=new Date();
+    var hours=today.getHours();
+    var minutes=today.getMinutes();
+    var seconds=today.getSeconds();
+    if(hours<10&&hours!=0){
+        hours="0"+hours;
+    }
+    if(minutes<10&&minutes!=0){
+        minutes="0"+minutes;
+    }
+    if(seconds<10&&seconds!=0){
+        seconds="0"+seconds;
+    } 
+    if(message==null){
+        console.log(hours+":"+minutes+":"+seconds+" EST | AUTO ANNOUNCE | "+action); 
+    }else{
+        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | "+action);
+    }
+}
+
 bot.on('ready', () => {
-    sumobotsAnnounce();
-    raceAnnouncement();
+    announcement("SumoBots", "sumo", 9, "627919045420646401");
+    announcement("RaceRealCars143", "race", 4, "589484542214012963");
     console.info(`We are up and running as ${bot.user.tag}`);
     console.info(`=======================================`);
 });
@@ -281,20 +223,7 @@ bot.on('message', async message => {
                 var sendOut="*Beep boop*\nThe time is given in GMT+2 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso="
                                 +year+""+month+""+day+"T"+hours+""+minutes+"&p1=101\n*Beep boop*";
                 message.channel.send(sendOut);
-                today=new Date();
-                var hours=today.getHours();
-                var minutes=today.getMinutes();
-                var seconds=today.getSeconds();
-                if(hours<10&&hours!=0){
-                    hours="0"+hours;
-                }
-                if(minutes<10&&minutes!=0){
-                    minutes="0"+minutes;
-                }
-                if(seconds<10&&seconds!=0){
-                    seconds="0"+seconds;
-                } 
-                console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Link");
+                logBotActions(message, "Link")
             }
         }
     }
@@ -356,20 +285,7 @@ bot.on('message', async message => {
                 var timeDate=time+" "+date;
                 var sendOut="It is currently **"+timeDate+"** in Finland (Where the games are located)."
                 message.channel.send(sendOut);
-                today=new Date();
-                var hours=today.getHours();
-                var minutes=today.getMinutes();
-                var seconds=today.getSeconds();
-                if(hours<10&&hours!=0){
-                    hours="0"+hours;
-                }
-                if(minutes<10&&minutes!=0){
-                    minutes="0"+minutes;
-                }
-                if(seconds<10&&seconds!=0){
-                    seconds="0"+seconds;
-                } 
-                console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !time");
+                logBotActions(message, "!time");
                 break;
             // !roll xdy / !roll
             case 'roll':
@@ -403,54 +319,15 @@ bot.on('message', async message => {
                             }
                         }
                         message.channel.send("Rolling "+args[1]+":\n\t"+outString+"`\n\tTotal: "+output);
-                        today=new Date();
-                        var hours=today.getHours();
-                        var minutes=today.getMinutes();
-                        var seconds=today.getSeconds();
-                        if(hours<10&&hours!=0){
-                            hours="0"+hours;
-                        }
-                        if(minutes<10&&minutes!=0){
-                            minutes="0"+minutes;
-                        }
-                        if(seconds<10&&seconds!=0){
-                            seconds="0"+seconds;
-                        } 
-                        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !roll xdy");
+                        logBotActions(message, "!roll xdy");
                     }
                 }else if(args[1]!=null){
                     message.channel.send("\tError: Invalid format");
-                    today=new Date();
-                    var hours=today.getHours();
-                    var minutes=today.getMinutes();
-                    var seconds=today.getSeconds();
-                    if(hours<10&&hours!=0){
-                        hours="0"+hours;
-                    }
-                    if(minutes<10&&minutes!=0){
-                        minutes="0"+minutes;
-                    }
-                    if(seconds<10&&seconds!=0){
-                        seconds="0"+seconds;
-                    } 
-                    console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !roll error");
+                    logBotActions(message, "!roll error");
                 }else{
                     var roll=Math.floor(Math.random()*20)+1;
                     message.channel.send("Rolling 1d20:\n\tTotal: "+roll);
-                    today=new Date();
-                    var hours=today.getHours();
-                    var minutes=today.getMinutes();
-                    var seconds=today.getSeconds();
-                    if(hours<10&&hours!=0){
-                        hours="0"+hours;
-                    }
-                    if(minutes<10&&minutes!=0){
-                        minutes="0"+minutes;
-                    }
-                    if(seconds<10&&seconds!=0){
-                        seconds="0"+seconds;
-                    } 
-                    console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !roll");
+                    logBotActions(message, "!roll");
                 }
                 break;
             // !remote GAME
@@ -461,145 +338,41 @@ bot.on('message', async message => {
                         if(sumoRemote){
                             sumoRemote=false;
                             message.channel.send("Switching **off** remote hosting for SumoBots.");
-                            today=new Date();
-                            var hours=today.getHours();
-                            var minutes=today.getMinutes();
-                            var seconds=today.getSeconds();
-                            if(hours<10&&hours!=0){
-                                hours="0"+hours;
-                            }
-                            if(minutes<10&&minutes!=0){
-                                minutes="0"+minutes;
-                            }
-                            if(seconds<10&&seconds!=0){
-                                seconds="0"+seconds;
-                            } 
-                            console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !remote SumoBots to false");
+                            logBotActions(message, "!remote SumoBots to False");
                         }else{
                             sumoRemote=true;
                             message.channel.send("Switching **on** remote hosting for SumoBots.");
-                            today=new Date();
-                            var hours=today.getHours();
-                            var minutes=today.getMinutes();
-                            var seconds=today.getSeconds();
-                            if(hours<10&&hours!=0){
-                                hours="0"+hours;
-                            }
-                            if(minutes<10&&minutes!=0){
-                                minutes="0"+minutes;
-                            }
-                            if(seconds<10&&seconds!=0){
-                                seconds="0"+seconds;
-                            } 
-                            console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !remote SumoBots to true");
+                            logBotActions(message, "!remote SumoBots to True");
                         }
                     }else if(args[1]!=null&&args[1].toLowerCase().includes("realracing")){
                         if(raceRemote){
                             raceRemote=false;
                             message.channel.send("Switching **off** remote hosting for RealRacing.");
-                            today=new Date();
-                            var hours=today.getHours();
-                            var minutes=today.getMinutes();
-                            var seconds=today.getSeconds();
-                            if(hours<10&&hours!=0){
-                                hours="0"+hours;
-                            }
-                            if(minutes<10&&minutes!=0){
-                                minutes="0"+minutes;
-                            }
-                            if(seconds<10&&seconds!=0){
-                                seconds="0"+seconds;
-                            } 
-                            console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !remote RealRacing to false");
+                            logBotActions(message, "!remote RealRacing to False");
                         }else{
                             raceRemote=true;
                             message.channel.send("Switching **on** remote hosting for RealRacing.");
-                            today=new Date();
-                            var hours=today.getHours();
-                            var minutes=today.getMinutes();
-                            var seconds=today.getSeconds();
-                            if(hours<10&&hours!=0){
-                                hours="0"+hours;
-                            }
-                            if(minutes<10&&minutes!=0){
-                                minutes="0"+minutes;
-                            }
-                            if(seconds<10&&seconds!=0){
-                                seconds="0"+seconds;
-                            } 
-                            console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !remote RealRacing to true");
+                            logBotActions(message, "!remote RealRacing to True");
                         }
                     }else if(args[1]!=null&&args[1].toLowerCase().includes("pinball")){
                         if(pinballRemote){
                             pinballRemote=false;
                             message.channel.send("Switching **off** remote hosting for Pinball.");
-                            today=new Date();
-                            var hours=today.getHours();
-                            var minutes=today.getMinutes();
-                            var seconds=today.getSeconds();
-                            if(hours<10&&hours!=0){
-                                hours="0"+hours;
-                            }
-                            if(minutes<10&&minutes!=0){
-                                minutes="0"+minutes;
-                            }
-                            if(seconds<10&&seconds!=0){
-                                seconds="0"+seconds;
-                            } 
-                            console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !remote Pinball to false");
+                            logBotActions(message, "!remote Pinball to False");
                         }else{
                             pinballRemote=true;
                             message.channel.send("Switching **on** remote hosting for Pinball.");
-                            today=new Date();
-                            var hours=today.getHours();
-                            var minutes=today.getMinutes();
-                            var seconds=today.getSeconds();
-                            if(hours<10&&hours!=0){
-                                hours="0"+hours;
-                            }
-                            if(minutes<10&&minutes!=0){
-                                minutes="0"+minutes;
-                            }
-                            if(seconds<10&&seconds!=0){
-                                seconds="0"+seconds;
-                            } 
-                            console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !remote Pinball to true");
+                            logBotActions(message, "!Pinball to True");
                         }
                     }else if(args[1]!=null&&args[1].toLowerCase().includes("claw")){
                         if(clawRemote){
                             clawRemote=false;
                             message.channel.send("Switching **off** remote hosting for ClawGame.");
-                            today=new Date();
-                            var hours=today.getHours();
-                            var minutes=today.getMinutes();
-                            var seconds=today.getSeconds();
-                            if(hours<10&&hours!=0){
-                                hours="0"+hours;
-                            }
-                            if(minutes<10&&minutes!=0){
-                                minutes="0"+minutes;
-                            }
-                            if(seconds<10&&seconds!=0){
-                                seconds="0"+seconds;
-                            } 
-                            console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !remote ClawGame to false");
+                            logBotActions(message, "!remote ClawGame to False");
                         }else{
                             clawRemote=true;
                             message.channel.send("Switching **on** remote hosting for ClawGame.");
-                            today=new Date();
-                            var hours=today.getHours();
-                            var minutes=today.getMinutes();
-                            var seconds=today.getSeconds();
-                            if(hours<10&&hours!=0){
-                                hours="0"+hours;
-                            }
-                            if(minutes<10&&minutes!=0){
-                                minutes="0"+minutes;
-                            }
-                            if(seconds<10&&seconds!=0){
-                                seconds="0"+seconds;
-                            } 
-                            console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !remote ClawGame to true");
+                            logBotActions(message, "!remote ClawGame to True");
                         }
                     }
                 }
@@ -614,80 +387,28 @@ bot.on('message', async message => {
                         }else{
                             message.channel.send("SumoBots remote is **off**.");
                         }
-                        today=new Date();
-                        var hours=today.getHours();
-                        var minutes=today.getMinutes();
-                        var seconds=today.getSeconds();
-                        if(hours<10&&hours!=0){
-                            hours="0"+hours;
-                        }
-                        if(minutes<10&&minutes!=0){
-                            minutes="0"+minutes;
-                        }
-                        if(seconds<10&&seconds!=0){
-                            seconds="0"+seconds;
-                        } 
-                        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !status SumoBots");
+                        logBotActions(message, "!status SumoBots");
                     }else if(args[1]!=null&&args[1].toLowerCase().includes("pinball")){
                         if(pinballRemote){
                             message.channel.send("Pinball remote is **on**.");
                         }else{
                             message.channel.send("Pinball remote is **off**.");
                         }
-                        today=new Date();
-                        var hours=today.getHours();
-                        var minutes=today.getMinutes();
-                        var seconds=today.getSeconds();
-                        if(hours<10&&hours!=0){
-                            hours="0"+hours;
-                        }
-                        if(minutes<10&&minutes!=0){
-                            minutes="0"+minutes;
-                        }
-                        if(seconds<10&&seconds!=0){
-                            seconds="0"+seconds;
-                        } 
-                        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !status Pinball");
+                        logBotActions(message, "!status Pinball");
                     }else if(args[1]!=null&&args[1].toLowerCase().includes("realracing")){
                         if(raceRemote){
                             message.channel.send("RealRacing remote is **on**.");
                         }else{
                             message.channel.send("RealRacing remote is **off**.");
                         }
-                        today=new Date();
-                        var hours=today.getHours();
-                        var minutes=today.getMinutes();
-                        var seconds=today.getSeconds();
-                        if(hours<10&&hours!=0){
-                            hours="0"+hours;
-                        }
-                        if(minutes<10&&minutes!=0){
-                            minutes="0"+minutes;
-                        }
-                        if(seconds<10&&seconds!=0){
-                            seconds="0"+seconds;
-                        } 
-                        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !status RealRacing");
+                        logBotActions(message, "!status RealRacing");
                     }else if(args[1]!=null&&args[1].toLowerCase().includes("claw")){
                         if(clawRemote){
                             message.channel.send("Claw remote is **on**.");
                         }else{
                             message.channel.send("Claw remote is **off**.");
                         }
-                        today=new Date();
-                        var hours=today.getHours();
-                        var minutes=today.getMinutes();
-                        var seconds=today.getSeconds();
-                        if(hours<10&&hours!=0){
-                            hours="0"+hours;
-                        }
-                        if(minutes<10&&minutes!=0){
-                            minutes="0"+minutes;
-                        }
-                        if(seconds<10&&seconds!=0){
-                            seconds="0"+seconds;
-                        } 
-                        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !status Claw");
+                        logBotActions(message, "!status Claw");
                     }
                 }
                 break;
@@ -705,20 +426,7 @@ bot.on('message', async message => {
                     out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n\n";
                     out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME,";
                     message.channel.send(out);
-                    today=new Date();
-                    var hours=today.getHours();
-                    var minutes=today.getMinutes();
-                    var seconds=today.getSeconds();
-                    if(hours<10&&hours!=0){
-                        hours="0"+hours;
-                    }
-                    if(minutes<10&&minutes!=0){
-                        minutes="0"+minutes;
-                    }
-                    if(seconds<10&&seconds!=0){
-                        seconds="0"+seconds;
-                    } 
-                    console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !getHelp");
+                    logBotActions(message, "!getHelp");
                 }
                 break;
             // !game GAME_NAME
@@ -750,20 +458,7 @@ bot.on('message', async message => {
                 }else{
                     return;
                 }
-                today=new Date();
-                var hours=today.getHours();
-                var minutes=today.getMinutes();
-                var seconds=today.getSeconds();
-                if(hours<10&&hours!=0){
-                    hours="0"+hours;
-                }
-                if(minutes<10&&minutes!=0){
-                    minutes="0"+minutes;
-                }
-                if(seconds<10&&seconds!=0){
-                    seconds="0"+seconds;
-                } 
-                console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !game");
+                logBotActions(message, "!game");
                 break;
             // !schedule
             case 'schedule':
@@ -922,20 +617,7 @@ bot.on('message', async message => {
                             message.channel.send(output);
                         }
                     });
-                today=new Date();
-                var hours=today.getHours();
-                var minutes=today.getMinutes();
-                var seconds=today.getSeconds();
-                if(hours<10&&hours!=0){
-                    hours="0"+hours;
-                }
-                if(minutes<10&&minutes!=0){
-                    minutes="0"+minutes;
-                }
-                if(seconds<10&&seconds!=0){
-                    seconds="0"+seconds;
-                } 
-                console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !schedule");
+                logBotActions(message, "!schedule");
                 break;
         }
         return;
@@ -997,20 +679,7 @@ bot.on('message', async message => {
             var out1=sendOut+"Between **8:00 PM and 8:00 AM** means it is likely that no one is in the office.\n";
             var out2=out1+"*Beep boop*";
             message.channel.send(out2);
-            today=new Date();
-            var hours=today.getHours();
-            var minutes=today.getMinutes();
-            var seconds=today.getSeconds();
-            if(hours<10&&hours!=0){
-                hours="0"+hours;
-            }
-            if(minutes<10&&minutes!=0){
-                minutes="0"+minutes;
-            }
-            if(seconds<10&&seconds!=0){
-                seconds="0"+seconds;
-            } 
-            console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"refill\" claw");
+            logBotActions(message, "Detected \"refill\" claw");
         }
         return;
     }
@@ -1031,20 +700,7 @@ bot.on('message', async message => {
         out+="2. When your game starts use [WASD] or the arrow keys to drive around.\n\t";
         out+="3. Knock others into the holes of the arena and be the last one standing.";
         message.channel.send(out);
-        today=new Date();
-        var hours=today.getHours();
-        var minutes=today.getMinutes();
-        var seconds=today.getSeconds();
-        if(hours<10&&hours!=0){
-            hours="0"+hours;
-        }
-        if(minutes<10&&minutes!=0){
-            minutes="0"+minutes;
-        }
-        if(seconds<10&&seconds!=0){
-            seconds="0"+seconds;
-        } 
-        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to play\" Sumo");
+        logBotActions(message, "Detected \"how to play\" Sumo");
         return;
     }
 
@@ -1065,20 +721,7 @@ bot.on('message', async message => {
         out+="3. Drive to the start / finish line during the warm up phase.\n\t";
         out+="4. After the race starts, complete 4 laps to finish the race.";
         message.channel.send(out);
-        today=new Date();
-        var hours=today.getHours();
-        var minutes=today.getMinutes();
-        var seconds=today.getSeconds();
-        if(hours<10&&hours!=0){
-            hours="0"+hours;
-        }
-        if(minutes<10&&minutes!=0){
-            minutes="0"+minutes;
-        }
-        if(seconds<10&&seconds!=0){
-            seconds="0"+seconds;
-        } 
-        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to play\" RealRacing");
+        logBotActions(message, "Detected \"how to play\" RealRacing");
         return;
     }
 
@@ -1098,20 +741,7 @@ bot.on('message', async message => {
         out+="2. When your game starts use the left and right [CTRL] buttons to use the flippers and use [SPACEBAR] to launch the ball. ";
         out+="You have 3 balls per game with the players taking turns.";
         message.channel.send(out);
-        today=new Date();
-        var hours=today.getHours();
-        var minutes=today.getMinutes();
-        var seconds=today.getSeconds();
-        if(hours<10&&hours!=0){
-            hours="0"+hours;
-        }
-        if(minutes<10&&minutes!=0){
-            minutes="0"+minutes;
-        }
-        if(seconds<10&&seconds!=0){
-            seconds="0"+seconds;
-        } 
-        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to play\" Pinball");
+        logBotActions(message, "Detected \"how to play\" Pinball");
         return;
     }
     //"Ball stuck" for Pinball
@@ -1132,20 +762,7 @@ bot.on('message', async message => {
         out+="If the machine can’t find the ball after two tries, ";
         out+="it will say “Missing Pinball” and the next player continues.";
         message.channel.send(out);
-        today=new Date();
-        var hours=today.getHours();
-        var minutes=today.getMinutes();
-        var seconds=today.getSeconds();
-        if(hours<10&&hours!=0){
-            hours="0"+hours;
-        }
-        if(minutes<10&&minutes!=0){
-            minutes="0"+minutes;
-        }
-        if(seconds<10&&seconds!=0){
-            seconds="0"+seconds;
-        } 
-        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"ball stuck\" Pinball");
+        logBotActions(message, "Detected \"ball stuck\" Pinball");
         return;
     }
     //"Why AFK check" Pinball
@@ -1163,20 +780,7 @@ bot.on('message', async message => {
         out+="but many weren’t playing when it was their turn because of the long wait times. ";
         out+="The AFK check ensures that only players who are ready to play are put in the game.";
         message.channel.send(out);
-        today=new Date();
-        var hours=today.getHours();
-        var minutes=today.getMinutes();
-        var seconds=today.getSeconds();
-        if(hours<10&&hours!=0){
-            hours="0"+hours;
-        }
-        if(minutes<10&&minutes!=0){
-            minutes="0"+minutes;
-        }
-        if(seconds<10&&seconds!=0){
-            seconds="0"+seconds;
-        } 
-        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"AFK check\" Pinball");
+        logBotActions(message, "Detected \"AFK check\" Pinball");
         return;
     }
     //"Two balls" Pinball
@@ -1196,20 +800,7 @@ bot.on('message', async message => {
         out+="Sometimes it will be fixed for the next player. And in the worst case, it will last the whole game. ";
         out+="There is nothing we can do about it. Just play another game afterwards.";
         message.channel.send(out);
-        today=new Date();
-        var hours=today.getHours();
-        var minutes=today.getMinutes();
-        var seconds=today.getSeconds();
-        if(hours<10&&hours!=0){
-            hours="0"+hours;
-        }
-        if(minutes<10&&minutes!=0){
-            minutes="0"+minutes;
-        }
-        if(seconds<10&&seconds!=0){
-            seconds="0"+seconds;
-        } 
-        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"two balls\" Pinball");
+        logBotActions(message, "Detected \"two balls\" Pinball");
         return;
     }
 
@@ -1230,20 +821,7 @@ bot.on('message', async message => {
         out+="You can leave the queue (only before the game starts) by clicking on the ";
         out+="[X] button in the same location.";
         message.channel.send(out);
-        today=new Date();
-        var hours=today.getHours();
-        var minutes=today.getMinutes();
-        var seconds=today.getSeconds();
-        if(hours<10&&hours!=0){
-            hours="0"+hours;
-        }
-        if(minutes<10&&minutes!=0){
-            minutes="0"+minutes;
-        }
-        if(seconds<10&&seconds!=0){
-            seconds="0"+seconds;
-        } 
-        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to queue\"");
+        logBotActions(message, "Detected \"how to queue\"");
         return;
     }
     //"How do I leave queue" for all
@@ -1261,20 +839,7 @@ bot.on('message', async message => {
         out+="You can leave the queue (only before the game starts) by clicking on the [X] button in the queue ";
         out+="info above the chat. If you leave the queue during the game then your game will just end.";
         message.channel.send(out);
-        today=new Date();
-        var hours=today.getHours();
-        var minutes=today.getMinutes();
-        var seconds=today.getSeconds();
-        if(hours<10&&hours!=0){
-            hours="0"+hours;
-        }
-        if(minutes<10&&minutes!=0){
-            minutes="0"+minutes;
-        }
-        if(seconds<10&&seconds!=0){
-            seconds="0"+seconds;
-        } 
-        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | Detected \"how to leave queue\"");
+        logBotActions(message, "Detected \"how to leave queue\"");
         return;
     }
 });
