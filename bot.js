@@ -3,7 +3,6 @@ const Discord=require('discord.js');
 const fetch = require('node-fetch');
 const querystring = require('querystring');
 const bot=new Discord.Client();
-
 const TOKEN=process.env.TOKEN;
 bot.login(TOKEN);
 
@@ -159,7 +158,6 @@ function Sleep(milliseconds) {
     return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
-
 bot.on('ready', () => {
     sumobotsAnnounce();
     raceAnnouncement();
@@ -303,7 +301,6 @@ bot.on('message', async message => {
     if(message.content.substring(0, 1) == '!') {
         var args=message.content.substring(1).split(' ');
         var cmd=args[0];
-       
         // args=args.splice(1);
         switch(cmd){
             // !ping
@@ -706,7 +703,7 @@ bot.on('message', async message => {
                     out+="`!status GAME_NAME`\n\tThis will give the bot's known status of the given game. This supports the same games as `!remote`\n\n";
                     out+="`(ab:cd)`\n\tThis allows for a timezone converter link to show up at ab:cd time in Finland.\n\n";
                     out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n\n";
-                    out+="`!schedule` | `!schedule GAME_NAME` - When used in server catagories, it gives the scheule and link to the game. When used with GAME_NAME, it will return the schedule for that game.";
+                    out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME,";
                     message.channel.send(out);
                     today=new Date();
                     var hours=today.getHours();
@@ -789,7 +786,6 @@ bot.on('message', async message => {
                 }else{
                     return;
                 }
-
                 const minDay=1440;
                 const {list}=fetch(url, {
                     method: 'GET',
@@ -857,7 +853,6 @@ bot.on('message', async message => {
                                     default:
                                         break;
                                 }
-
                                 if(startHour>=12){
                                     if(startHour%12<10&&startHour!=12){
                                         output+="0"+(startHour%12)+":"+startMinute+" PM - ";
@@ -875,8 +870,6 @@ bot.on('message', async message => {
                                         output+=startHour+":"+startMinute+" AM - ";
                                     }
                                 }
-
-
                                 switch(endDay){
                                     case 0:
                                         output+="Monday:         ";
@@ -903,7 +896,6 @@ bot.on('message', async message => {
                                         output+="Monday:         ";
                                         break;
                                 }
-
                                 if(endHour>=12){
                                     if(endHour%12<10&&endHour!=12){
                                         output+="0"+(endHour%12)+":"+endMinute+" PM\n";
@@ -922,7 +914,6 @@ bot.on('message', async message => {
                                     }
                                 }
                             }
-
                             output="Here is the schedule (Finland time GMT+3) for **"+command+"** this week!\n"+output;
                             output+="Link to **"+command+"** can be found here!\nhttps://surrogate.tv/game/";
                             command=command.split(' ');
@@ -931,7 +922,6 @@ bot.on('message', async message => {
                             message.channel.send(output);
                         }
                     });
-                    
                 today=new Date();
                 var hours=today.getHours();
                 var minutes=today.getMinutes();
@@ -946,46 +936,6 @@ bot.on('message', async message => {
                     seconds="0"+seconds;
                 } 
                 console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !schedule");
-
-                break;
-            // !host
-            case 'host':
-                if(message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
-                    message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team")){
-                    if(triggerSumoResponse||message.content.toLowerCase().includes("sumobots")){
-                        var out="@.here **SumoBots** is live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/sumobots\n";
-                        var rand=Math.floor(Math.random()*9)+1;
-                        message.channel.send(out, {
-                            files: [{
-                                attachment: `./gifs/sumo_`+rand+`.gif`,
-                                name: `sumo.gif`
-                            }]
-                        });
-                        console.log("sending "+rand+" gif");
-                    }else if(triggerRaceResponse||message.content.toLowerCase().includes("racerealcars143")){
-                        var game="race";
-                        var command="RaceRealCars143";
-                    }else if((triggerClawResponse&&706819836071903275==message.channel.id)||message.content.toLowerCase().includes("forceclaw")){
-                        var game="force";
-                        var command="ForceClaw";
-                    }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
-                        var game="toilet";
-                        var command="ToiletPaperClaw";
-                    }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("pinball")){
-                        var game="pinball";
-                        var command="Batman66 Pinball";
-                    }else{
-                        return;
-                    }
-                    // var rand=Math.floor(Math.random()*9)+1;
-                    // message.channel.send({
-                    //     files: [{
-                    //         attachment: `./gifs/`+game+`_`+rand+`.gif`,
-                    //         name: game+`.gif`
-                    //     }]
-                    // });
-
-                }
                 break;
         }
         return;
@@ -1007,7 +957,6 @@ bot.on('message', async message => {
         var hours=today.getHours()+7;
         var minutes=today.getMinutes();
         var seconds=today.getSeconds();
-
         if(hours>23){
             day++;
             hours%=24;
@@ -1041,7 +990,6 @@ bot.on('message', async message => {
                 var time=hours+":"+minutes+":"+seconds+" AM";
             }
         }
-
         var date=day+"/"+month+"/"+year;
         var timeDate=time+" on "+date;
         if(hours>=20||hours<8){
