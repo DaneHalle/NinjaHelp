@@ -1,7 +1,8 @@
 require('dotenv').config();
 const Discord=require('discord.js');
-const fetch = require('node-fetch');
-const querystring = require('querystring');
+const fetch=require('node-fetch');
+const querystring=require('querystring');
+const ms=require("ms");
 const bot=new Discord.Client();
 const TOKEN=process.env.TOKEN;
 bot.login(TOKEN);
@@ -21,16 +22,14 @@ var clawRemote=false;
 
 //Game Announcements 
 async function announcement(game, image, numImage, channel){
+    var date=new Date();
+    var weekdays = new Array(
+        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+    );
+    var day = date.getDay();
+    var rand=Math.floor(Math.random()*numImage)+1;
+    const minDay=1440;
     while(true){
-        var date=new Date();
-        var weekdays = new Array(
-            "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-        );
-        var day = date.getDay();
-
-        var rand=Math.floor(Math.random()*numImage)+1;
-
-        const minDay=1440;
         const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId="+game.toLowerCase(), {
             method: 'GET',
             headers: {
@@ -39,39 +38,47 @@ async function announcement(game, image, numImage, channel){
         }).then(response => response.json())
             .then((x) => {
                 if(x==null||x.result==null||x.result.schedule==null){
-                    var scheduleHour=null;
-
-                }else{
-                    var i; var output=""; 
-                    for(i=0; i<x.result.schedule.length; i++){
-                        var startTime=x.result.schedule[i].startTime+(3*60);
-                        var duration=x.result.schedule[i].duration;
-                        var scheduleDay=Math.floor(startTime/minDay);
-                        var scheduleHour=Math.floor((startTime-(scheduleDay*minDay))/60);
-                        if(scheduleHour>23){
-                            var addToDay=Math.floor(scheduleHour/24);
-                            scheduleHour%=24;
-                            scheduleDay+=addToDay;
-                        }
-                        if(scheduleDay==day+1){
-                            break;
-                        }
-                    }
-                    var curHour=date.getHours()+8;
-                    var curMinute=date.getMinutes();
-                    if(scheduleHour!=null&&curHour==scheduleHour&&curMinute==45){
-                        var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
-                        bot.channels.get(channel).send(out, {
-                          files: [{
-                            attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
-                            name: image+'.gif'
-                          }]
-                        });
-                        logBotActions(null, game+" Announcement");
-                    }
-                }
+        var scheduleHour=null;
+    }else{
+        var i; var output=""; 
+        for(i=0; i<x.result.schedule.length; i++){
+            var startTime=x.result.schedule[i].startTime+(3*60);
+            var duration=x.result.schedule[i].duration;
+            var scheduleDay=Math.floor(startTime/minDay);
+            var scheduleHour=Math.floor((startTime-(scheduleDay*minDay))/60);
+            if(scheduleHour>23){
+                var addToDay=Math.floor(scheduleHour/24);
+                scheduleHour%=24;
+                scheduleDay+=addToDay;
+            }
+            if(scheduleDay==day+1){
+                break;
+            }
+        }
+        var curHour=date.getHours()+8;
+        var curMinute=date.getMinutes();
+        if(scheduleHour!=null&&curHour==scheduleHour&&curMinute==45){
+            var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+            bot.channels.get(channel).send(out, {
+              files: [{
+                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                name: image+'.gif'
+              }]
             });
-        await Sleep(60000)
+            logBotActions(null, game+" Announcement");
+        }else if(x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==0){
+            var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+            bot.channels.get(channel).send(out, {
+              files: [{
+                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                name: image+'.gif'
+              }]
+            });
+            logBotActions(null, game+" Announcement");
+        }
+    }
+            });
+        await Sleep(60000) //1 minute
     }
 }
 
@@ -103,6 +110,7 @@ function logBotActions(message, action){
 bot.on('ready', () => {
     announcement("SumoBots", "sumo", 9, "627919045420646401");
     announcement("RaceRealCars143", "race", 4, "589484542214012963");
+    // announcement("SumoBots", "sumo", 9, "707047722208854101"); //Testing
     console.info(`We are up and running as ${bot.user.tag}`);
     console.info(`=======================================`);
 });
@@ -229,7 +237,7 @@ bot.on('message', async message => {
     }
     if(message.content.substring(0, 1) == '!') {
         var args=message.content.substring(1).split(' ');
-        var cmd=args[0];
+        var cmd=args[0].toLowerCase();
         // args=args.splice(1);
         switch(cmd){
             // !ping
@@ -413,18 +421,30 @@ bot.on('message', async message => {
                 }
                 break;
             // !getHelp
-            case 'getHelp':
+            case 'gethelp':
                 if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                         message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                    var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n\n";
-                    out+="`!time`\n\tThis command will tell the time and day in Finland\n\n";
-                    out+="`!roll` | `!roll xdy`\n\tThis command will roll a d20 on an unmodified command and will roll **x** number of **y** sided dice on a modified command\n\n";
+                    var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
+                    out+="`!time`\n\tThis command will tell the time and day in Finland\n";
+                    out+="`!roll` | `!roll xdy`\n\tThis command will roll a d20 on an unmodified command and will roll **x** number of **y** sided dice on a modified command\n";
                     out+="`!remote GAME_NAME`\n\tThis command will toggle the remote status of the given game. This will impact help triggers for that game. The following games are supported:\n\t\t";
-                    out+="`SumoBots`\n\t\t`Pinball`\n\t\t`RealRacing`\n\t\t`Claw`\n\n";
-                    out+="`!status GAME_NAME`\n\tThis will give the bot's known status of the given game. This supports the same games as `!remote`\n\n";
-                    out+="`(ab:cd)`\n\tThis allows for a timezone converter link to show up at ab:cd time in Finland.\n\n";
-                    out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n\n";
-                    out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME,";
+                    out+="`SumoBots`, `Pinball`, `RealRacing`, `Claw`\n";
+                    out+="`!status GAME_NAME`\n\tThis will give the bot's known status of the given game. This supports the same games as `!remote`\n";
+                    out+="`(ab:cd)`\n\tThis allows for a timezone converter link to show up at ab:cd time in Finland.\n";
+                    out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n";
+                    out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME. The following are the current game names\n\t\t";
+                    out+="`SumoBots`, `RaceRealCars143`, `Pinball`, `ForceClaw`, `ToiletPaperClaw`\n";
+                    out+="`!mute <USER> <time>`\n\tWill mute <USER> for however long <time> is (time is formated as the following `3s/3m/3h/3y`. Note that if <USER> is already muted, you cannot extend their time till the first expires.\n";
+                    out+="`!unmute <USER>`\n\tWill unmute <USER> only if they are already muted. (Useful if bot goes down/changes are made to code)"
+                    message.channel.send(out);
+                    logBotActions(message, "!getHelp");
+                }else{
+                    var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
+                    out+="`!time`\n\tThis command will tell the time and day in Finland\n";
+                    out+="`!roll` | `!roll xdy`\n\tThis command will roll a d20 on an unmodified command and will roll **x** number of **y** sided dice on a modified command\n";
+                    out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n";
+                    out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME. The following are the current game names\n\t\t";
+                    out+="`SumoBots`, `RaceRealCars143`, `Pinball`, `ForceClaw`, `ToiletPaperClaw`";
                     message.channel.send(out);
                     logBotActions(message, "!getHelp");
                 }
@@ -619,6 +639,70 @@ bot.on('message', async message => {
                     });
                 logBotActions(message, "!schedule");
                 break;
+            // !mute <USER> <TIME>
+            case 'mute':
+                if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                        message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team")&&
+                    args[1]!=null&&args[2]!=null)){
+                    let toMute=message.guild.member(message.mentions.users.first()||message.guild.members.get(args[0]));
+                    let role = message.guild.roles.find(r => r.name === "muted");
+                    if(!toMute){
+                        // 593000239841935362
+                        bot.channels.get("707047722208854101").send(`Couldn't find user.`);
+                        return;
+                    }
+                    if(toMute.hasPermission("MANAGE_MESSAGES")){
+                        // 593000239841935362
+                        bot.channels.get("707047722208854101").send(`Can't mute that user`);
+                        return;
+                    }
+
+                    let mutetime = args[2];
+                    if(!mutetime){
+                        // 593000239841935362
+                        bot.channels.get("707047722208854101").send(`You need to specify a time (3s/3d/3h/3y)`);
+                        return;
+                    }
+
+                    await(toMute.addRole(role.id));
+                    // 593000239841935362
+                    bot.channels.get("707047722208854101").send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
+                    logBotActions(message, "!mute "+toMute.user.tag+" "+ms(ms(mutetime)));
+
+                    setTimeout(function(){
+                        if(toMute.roles.find(r=>r.name.toLowerCase()==="muted")){
+                            toMute.removeRole(role.id);
+                            // 593000239841935362
+                            bot.channels.get("707047722208854101").send(`<@${toMute.id}> has been unmuted!`);
+                            logBotActions(message, toMute.user.tag+" unmuted after "+ms(ms(mutetime)))
+                        }
+                    }, ms(mutetime));
+                }
+                break;
+            // !unmute <USER>
+            case "unmute":
+                if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                        message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team")&&
+                    args[1]!=null)){
+                    let toUnmute=message.guild.member(message.mentions.users.first()||message.guild.members.get(args[0]));
+                    let role = message.guild.roles.find(r=>r.name==="muted");
+                    if(!toUnmute){
+                        // 593000239841935362
+                        bot.channels.get("707047722208854101").send("Couldn't find user.");
+                        return;
+                    }else if(!toUnmute.roles.find(r=>r.name.toLowerCase()==="muted")){
+                        // 593000239841935362
+                        bot.channels.get("707047722208854101").send(`<@${toUnmute} is not muted.`);
+                        return;
+                    }
+
+                    await(toUnmute.addRole(role.id));
+                    toUnmute.removeRole(role.id);
+                    // 593000239841935362
+                    bot.channels.get("707047722208854101").send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
+                    logBotActions(message, "!unmute "+toUnmute.user.tag);
+                }
+                break;
         }
         return;
     }
@@ -728,7 +812,8 @@ bot.on('message', async message => {
     //"How do I play" for Pinball
     if(triggerPinballResponse&&
         message.content.toLowerCase().includes("how")&&
-        message.content.toLowerCase().includes("play")&&
+        (message.content.toLowerCase().includes("play")&&
+            !message.content.toLowerCase("player"))&&
         !((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
             message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"||
             message.member.roles.find(r=>r.name.toLowerCase()==="alpha testers")||
@@ -787,6 +872,7 @@ bot.on('message', async message => {
     if(triggerPinballResponse&&
         message.content.toLowerCase().includes("two")&&
         message.content.toLowerCase().includes("ball")&&
+        !message.conent.toLowerCase().includes("flipper")&&
         !((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
             message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"||
             message.member.roles.find(r=>r.name.toLowerCase()==="alpha testers")||
