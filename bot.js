@@ -15,10 +15,10 @@ var sumoTrigger=[650048288787005451, 627919045420646401, 650048505380864040, 707
 var generalTrigger=[586955337870082082, 589485632984973332, 571600581936939049, 571388780058247185, 631391110966804510, 571390705117954049, 707600524727418900];
 var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 621355376167747594, 707600524727418900];
 
-var sumoRemote=false;
-var raceRemote=false;
-var pinballRemote=false;
-var clawRemote=false;
+// var sumoRemote=false;
+// var raceRemote=false;
+// var pinballRemote=false;
+// var clawRemote=false;
 
 //Game Announcements 
 async function announcement(game, image, numImage, channel){
@@ -38,45 +38,45 @@ async function announcement(game, image, numImage, channel){
         }).then(response => response.json())
             .then((x) => {
                 if(x==null||x.result==null||x.result.schedule==null){
-        var scheduleHour=null;
-    }else{
-        var i; var output=""; 
-        for(i=0; i<x.result.schedule.length; i++){
-            var startTime=x.result.schedule[i].startTime+(3*60);
-            var duration=x.result.schedule[i].duration;
-            var scheduleDay=Math.floor(startTime/minDay);
-            var scheduleHour=Math.floor((startTime-(scheduleDay*minDay))/60);
-            if(scheduleHour>23){
-                var addToDay=Math.floor(scheduleHour/24);
-                scheduleHour%=24;
-                scheduleDay+=addToDay;
-            }
-            if(scheduleDay==day+1){
-                break;
-            }
-        }
-        var curHour=date.getHours()+8;
-        var curMinute=date.getMinutes();
-        if(scheduleHour!=null&&curHour==scheduleHour&&curMinute==45){
-            var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
-            bot.channels.get(channel).send(out, {
-              files: [{
-                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
-                name: image+'.gif'
-              }]
-            });
-            logBotActions(null, game+" Announcement");
-        }else if(x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==0){
-            var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
-            bot.channels.get(channel).send(out, {
-              files: [{
-                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
-                name: image+'.gif'
-              }]
-            });
-            logBotActions(null, game+" Announcement");
-        }
-    }
+                    var scheduleHour=null;
+                }else{
+                    var i; var output=""; 
+                    for(i=0; i<x.result.schedule.length; i++){
+                        var startTime=x.result.schedule[i].startTime+(3*60);
+                        var duration=x.result.schedule[i].duration;
+                        var scheduleDay=Math.floor(startTime/minDay);
+                        var scheduleHour=Math.floor((startTime-(scheduleDay*minDay))/60);
+                        if(scheduleHour>23){
+                            var addToDay=Math.floor(scheduleHour/24);
+                            scheduleHour%=24;
+                            scheduleDay+=addToDay;
+                        }
+                        if(scheduleDay==day+1){
+                            break;
+                        }
+                    }
+                    var curHour=date.getHours()+8;
+                    var curMinute=date.getMinutes();
+                    if(scheduleHour!=null&&curHour==scheduleHour&&curMinute==45){
+                        var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                        bot.channels.get(channel).send(out, {
+                          files: [{
+                            attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                            name: image+'.gif'
+                          }]
+                        });
+                        logBotActions(null, game+" Announcement");
+                    }else if(x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==0){
+                        var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                        bot.channels.get(channel).send(out, {
+                          files: [{
+                            attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                            name: image+'.gif'
+                          }]
+                        });
+                        logBotActions(null, game+" Announcement");
+                    }
+                }
             });
         await Sleep(60000) //1 minute
     }
@@ -338,88 +338,88 @@ bot.on('message', async message => {
                     logBotActions(message, "!roll");
                 }
                 break;
-            // !remote GAME
-            case 'remote':
-                if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
-                        message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                    if(args[1]!=null&&args[1].toLowerCase().includes("sumobots")){
-                        if(sumoRemote){
-                            sumoRemote=false;
-                            message.channel.send("Switching **off** remote hosting for SumoBots.");
-                            logBotActions(message, "!remote SumoBots to False");
-                        }else{
-                            sumoRemote=true;
-                            message.channel.send("Switching **on** remote hosting for SumoBots.");
-                            logBotActions(message, "!remote SumoBots to True");
-                        }
-                    }else if(args[1]!=null&&args[1].toLowerCase().includes("realracing")){
-                        if(raceRemote){
-                            raceRemote=false;
-                            message.channel.send("Switching **off** remote hosting for RealRacing.");
-                            logBotActions(message, "!remote RealRacing to False");
-                        }else{
-                            raceRemote=true;
-                            message.channel.send("Switching **on** remote hosting for RealRacing.");
-                            logBotActions(message, "!remote RealRacing to True");
-                        }
-                    }else if(args[1]!=null&&args[1].toLowerCase().includes("pinball")){
-                        if(pinballRemote){
-                            pinballRemote=false;
-                            message.channel.send("Switching **off** remote hosting for Pinball.");
-                            logBotActions(message, "!remote Pinball to False");
-                        }else{
-                            pinballRemote=true;
-                            message.channel.send("Switching **on** remote hosting for Pinball.");
-                            logBotActions(message, "!Pinball to True");
-                        }
-                    }else if(args[1]!=null&&args[1].toLowerCase().includes("claw")){
-                        if(clawRemote){
-                            clawRemote=false;
-                            message.channel.send("Switching **off** remote hosting for ClawGame.");
-                            logBotActions(message, "!remote ClawGame to False");
-                        }else{
-                            clawRemote=true;
-                            message.channel.send("Switching **on** remote hosting for ClawGame.");
-                            logBotActions(message, "!remote ClawGame to True");
-                        }
-                    }
-                }
-                break;
-            // !status GAME
-            case 'status':
-                if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
-                        message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                    if(args[1]!=null&&args[1].toLowerCase().includes("sumobots")){
-                        if(sumoRemote){
-                            message.channel.send("SumoBots remote is **on**.");
-                        }else{
-                            message.channel.send("SumoBots remote is **off**.");
-                        }
-                        logBotActions(message, "!status SumoBots");
-                    }else if(args[1]!=null&&args[1].toLowerCase().includes("pinball")){
-                        if(pinballRemote){
-                            message.channel.send("Pinball remote is **on**.");
-                        }else{
-                            message.channel.send("Pinball remote is **off**.");
-                        }
-                        logBotActions(message, "!status Pinball");
-                    }else if(args[1]!=null&&args[1].toLowerCase().includes("realracing")){
-                        if(raceRemote){
-                            message.channel.send("RealRacing remote is **on**.");
-                        }else{
-                            message.channel.send("RealRacing remote is **off**.");
-                        }
-                        logBotActions(message, "!status RealRacing");
-                    }else if(args[1]!=null&&args[1].toLowerCase().includes("claw")){
-                        if(clawRemote){
-                            message.channel.send("Claw remote is **on**.");
-                        }else{
-                            message.channel.send("Claw remote is **off**.");
-                        }
-                        logBotActions(message, "!status Claw");
-                    }
-                }
-                break;
+            // // !remote GAME
+            // case 'remote':
+            //     if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+            //             message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+            //         if(args[1]!=null&&args[1].toLowerCase().includes("sumobots")){
+            //             if(sumoRemote){
+            //                 sumoRemote=false;
+            //                 message.channel.send("Switching **off** remote hosting for SumoBots.");
+            //                 logBotActions(message, "!remote SumoBots to False");
+            //             }else{
+            //                 sumoRemote=true;
+            //                 message.channel.send("Switching **on** remote hosting for SumoBots.");
+            //                 logBotActions(message, "!remote SumoBots to True");
+            //             }
+            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("realracing")){
+            //             if(raceRemote){
+            //                 raceRemote=false;
+            //                 message.channel.send("Switching **off** remote hosting for RealRacing.");
+            //                 logBotActions(message, "!remote RealRacing to False");
+            //             }else{
+            //                 raceRemote=true;
+            //                 message.channel.send("Switching **on** remote hosting for RealRacing.");
+            //                 logBotActions(message, "!remote RealRacing to True");
+            //             }
+            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("pinball")){
+            //             if(pinballRemote){
+            //                 pinballRemote=false;
+            //                 message.channel.send("Switching **off** remote hosting for Pinball.");
+            //                 logBotActions(message, "!remote Pinball to False");
+            //             }else{
+            //                 pinballRemote=true;
+            //                 message.channel.send("Switching **on** remote hosting for Pinball.");
+            //                 logBotActions(message, "!Pinball to True");
+            //             }
+            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("claw")){
+            //             if(clawRemote){
+            //                 clawRemote=false;
+            //                 message.channel.send("Switching **off** remote hosting for ClawGame.");
+            //                 logBotActions(message, "!remote ClawGame to False");
+            //             }else{
+            //                 clawRemote=true;
+            //                 message.channel.send("Switching **on** remote hosting for ClawGame.");
+            //                 logBotActions(message, "!remote ClawGame to True");
+            //             }
+            //         }
+            //     }
+            //     break;
+            // // !status GAME
+            // case 'status':
+            //     if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+            //             message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+            //         if(args[1]!=null&&args[1].toLowerCase().includes("sumobots")){
+            //             if(sumoRemote){
+            //                 message.channel.send("SumoBots remote is **on**.");
+            //             }else{
+            //                 message.channel.send("SumoBots remote is **off**.");
+            //             }
+            //             logBotActions(message, "!status SumoBots");
+            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("pinball")){
+            //             if(pinballRemote){
+            //                 message.channel.send("Pinball remote is **on**.");
+            //             }else{
+            //                 message.channel.send("Pinball remote is **off**.");
+            //             }
+            //             logBotActions(message, "!status Pinball");
+            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("realracing")){
+            //             if(raceRemote){
+            //                 message.channel.send("RealRacing remote is **on**.");
+            //             }else{
+            //                 message.channel.send("RealRacing remote is **off**.");
+            //             }
+            //             logBotActions(message, "!status RealRacing");
+            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("claw")){
+            //             if(clawRemote){
+            //                 message.channel.send("Claw remote is **on**.");
+            //             }else{
+            //                 message.channel.send("Claw remote is **off**.");
+            //             }
+            //             logBotActions(message, "!status Claw");
+            //         }
+            //     }
+            //     break;
             // !getHelp
             case 'gethelp':
                 if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
@@ -427,15 +427,16 @@ bot.on('message', async message => {
                     var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
                     out+="`!time`\n\tThis command will tell the time and day in Finland\n";
                     out+="`!roll` | `!roll xdy`\n\tThis command will roll a d20 on an unmodified command and will roll **x** number of **y** sided dice on a modified command\n";
-                    out+="`!remote GAME_NAME`\n\tThis command will toggle the remote status of the given game. This will impact help triggers for that game. The following games are supported:\n\t\t";
-                    out+="`SumoBots`, `Pinball`, `RealRacing`, `Claw`\n";
-                    out+="`!status GAME_NAME`\n\tThis will give the bot's known status of the given game. This supports the same games as `!remote`\n";
+                    // out+="`!remote GAME_NAME`\n\tThis command will toggle the remote status of the given game. This will impact help triggers for that game. The following games are supported:\n\t\t";
+                    // out+="`SumoBots`, `Pinball`, `RealRacing`, `Claw`\n";
+                    // out+="`!status GAME_NAME`\n\tThis will give the bot's known status of the given game. This supports the same games as `!remote`\n";
                     out+="`(ab:cd)`\n\tThis allows for a timezone converter link to show up at ab:cd time in Finland.\n";
                     out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n";
                     out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME. The following are the current game names\n\t\t";
                     out+="`SumoBots`, `RaceRealCars143`, `Pinball`, `ForceClaw`, `ToiletPaperClaw`\n";
                     out+="`!mute <USER> <time>`\n\tWill mute <USER> for however long <time> is (time is formated as the following `3s/3m/3h/3y`. Note that if <USER> is already muted, you cannot extend their time till the first expires.\n";
-                    out+="`!unmute <USER>`\n\tWill unmute <USER> only if they are already muted. (Useful if bot goes down/changes are made to code)"
+                    out+="`!unmute <USER>`\n\tWill unmute <USER> only if they are already muted. (Useful if bot goes down/changes are made to code)\n";
+                    out+="`!top | !top GAME_NAME month(?)`\n\tThis will give the top scores for game catagory or GAME_NAME. When given a name, you can also ask for monthly top scores."
                     message.channel.send(out);
                     logBotActions(message, "!getHelp");
                 }else{
@@ -444,7 +445,8 @@ bot.on('message', async message => {
                     out+="`!roll` | `!roll xdy`\n\tThis command will roll a d20 on an unmodified command and will roll **x** number of **y** sided dice on a modified command\n";
                     out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n";
                     out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME. The following are the current game names\n\t\t";
-                    out+="`SumoBots`, `RaceRealCars143`, `Pinball`, `ForceClaw`, `ToiletPaperClaw`";
+                    out+="`SumoBots`, `RaceRealCars143`, `Pinball`, `ForceClaw`, `ToiletPaperClaw`\n";
+                    out+="`!top | !top GAME_NAME month(?)`\n\tThis will give the top scores for game catagory or GAME_NAME. When given a name, you can also ask for monthly top scores."
                     message.channel.send(out);
                     logBotActions(message, "!getHelp");
                 }
@@ -501,8 +503,8 @@ bot.on('message', async message => {
                 }else{
                     return;
                 }
-                const minDay=1440;
-                const {list}=fetch(url, {
+                var minDay=1440;
+                var {list}=fetch(url, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -703,6 +705,101 @@ bot.on('message', async message => {
                     logBotActions(message, "!unmute "+toUnmute.user.tag);
                 }
                 break;
+            // !top <GAME> month(?)
+            case "top":
+                var url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/scores?gameId=";
+                var scoreType="All Time";
+                if(triggerSumoResponse||message.content.toLowerCase().includes("sumobots")){
+                    url+="99ca6347-0e10-4465-8fe1-9fee8bc5fb35&order=";
+                    var command="SumoBots";
+                    if(args[2]!=null&&args[2].toLowerCase().includes("month")){
+                        message.channel.send("There are no monthly scores for "+command+".");
+                        return;
+                    }
+                }else if(triggerRaceResponse||message.content.toLowerCase().includes("racerealcars143")){
+                    url+="953f2154-9a6e-4602-99c6-265408da6310&order=";
+                    var command="RaceRealCars143";
+                    if(args[2]!=null&&args[2].toLowerCase().includes("month")){
+                        url+="month";
+                        scoreType="Monthly";
+                    }
+                }else if((triggerClawResponse&&706819836071903275==message.channel.id)||message.content.toLowerCase().includes("forceclaw")){
+                    url+="ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0&order=";
+                    var command="ForceClaw";
+                    if(args[2]!=null&&args[2].toLowerCase().includes("month")){
+                        message.channel.send("There are no monthly scores for "+command+".");
+                        return;
+                    }
+                }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
+                    url+="46db6268-bfc3-43ff-ba7d-02ffaf1f2867&order=";
+                    var command="ToiletPaperClaw";
+                    if(args[2]!=null&&args[2].toLowerCase().includes("month")){
+                        message.channel.send("There are no monthly scores for "+command+".");
+                        return;
+                    }
+                }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("pinball")){
+                    url+="592ac917-14d2-481a-9d37-3b840ad46b19&order=";
+                    var command="Batman66 Pinball";
+                    if(args[2]!=null&&args[2].toLowerCase().includes("month")){
+                        url+="month";
+                        scoreType="Monthly";
+                    }
+                }else{
+                    return;
+                }
+                var minDay=1440;
+                var {list}=fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                }).then(response => response.json())
+                    .then((x) => {
+                        if(x==null||x.result==null||x.result.Items==null){
+                            message.channel.send("There were no scores for "+command+".");
+                        }else{
+                            if(x.result.Items.length>10){
+                                var scores="Here are the Top 10 "+scoreType+" scores for **"+command+"**:";
+                            }else{
+                                var scores="Here are the Top "+x.result.Items.length+" "+scoreType+" scores for **"+command+"**:";
+                            }
+                            var i;
+                            for(i=0; i<x.result.Items.length&&i<10; i++){
+                                if(x.result.Items[i].userObject.userIcon!=null){
+                                    var icon=x.result.Items[i].userObject.userIcon.toLowerCase();
+                                    switch(icon){
+                                        case "broomsquad":
+                                            // <:broomsquad:700736528803954769>
+                                            icon=bot.emojis.get("700736528803954769").toString();
+                                            break;
+                                        case "moderator":
+                                            // <:modsquad:700736529043161139> 
+                                            icon=bot.emojis.get("700736529043161139").toString();
+                                            break;
+                                        case "patreonsupporter":
+                                            // <:patreonsupporter:700736949631188993>
+                                            icon=bot.emojis.get("700736949631188993").toString();
+                                            break;
+                                        case "surrogateteam":
+                                            // <:surrogateteam:700737595734491237>
+                                            icon=bot.emojis.get("700737595734491237").toString();
+                                            break;
+                                        case "alphatester":
+                                            // <:alphatester:700736528967532564>
+                                            icon=bot.emojis.get("700736528967532564").toString();
+                                            break;
+                                    }
+                                    scores+="\n\t"+(i+1)+") "+icon+" **__"+x.result.Items[i].userObject.username+"__**:\t"+x.result.Items[i].points;
+                                }else{
+                                    scores+="\n\t"+(i+1)+") **__"+x.result.Items[i].userObject.username+"__**:\t"+x.result.Items[i].points;
+                                }
+                            }
+                            message.channel.send(scores);
+
+                        }
+                    });
+                logBotActions(message, "!top");
+                break;
         }
         return;
     }
@@ -872,7 +969,7 @@ bot.on('message', async message => {
     if(triggerPinballResponse&&
         message.content.toLowerCase().includes("two")&&
         message.content.toLowerCase().includes("ball")&&
-        !message.conent.toLowerCase().includes("flipper")&&
+        !message.content.toLowerCase().includes("flipper")&&
         !((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
             message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"||
             message.member.roles.find(r=>r.name.toLowerCase()==="alpha testers")||
