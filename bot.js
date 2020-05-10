@@ -3,6 +3,7 @@ const Discord=require('discord.js');
 const fetch=require('node-fetch');
 const querystring=require('querystring');
 const ms=require("ms");
+const fs = require('fs');
 const bot=new Discord.Client();
 const TOKEN=process.env.TOKEN;
 bot.login(TOKEN);
@@ -23,12 +24,13 @@ var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 62
 //Game Announcements 
 async function announcement(game, image, numImage, channel){
     var date=new Date();
-    var weekdays = new Array(
+    var weekdays=new Array(
         "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
     );
-    var day = date.getDay();
+    var day=date.getDay();
     var rand=Math.floor(Math.random()*numImage)+1;
     const minDay=1440;
+    var rightDay=false;
     while(true){
         const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId="+game.toLowerCase(), {
             method: 'GET',
@@ -46,18 +48,21 @@ async function announcement(game, image, numImage, channel){
                         var duration=x.result.schedule[i].duration;
                         var scheduleDay=Math.floor(startTime/minDay);
                         var scheduleHour=Math.floor((startTime-(scheduleDay*minDay))/60);
+                        var scheduleMinute=startTime-(scheduleHour*60)-(scheduleDay*minDay);
                         if(scheduleHour>23){
                             var addToDay=Math.floor(scheduleHour/24);
                             scheduleHour%=24;
                             scheduleDay+=addToDay;
                         }
-                        if(scheduleDay==day+1){
+                        if(scheduleDay==day-1){
+                            rightDay=true;
                             break;
                         }
                     }
-                    var curHour=date.getHours()+8;
+                    date=new Date();
+                    var curHour=(date.getHours()+8)%24;
                     var curMinute=date.getMinutes();
-                    if(scheduleHour!=null&&curHour==scheduleHour&&curMinute==45){
+                    if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==(scheduleMinute-15)%60){
                         var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
                         bot.channels.get(channel).send(out, {
                           files: [{
@@ -65,8 +70,8 @@ async function announcement(game, image, numImage, channel){
                             name: image+'.gif'
                           }]
                         });
-                        logBotActions(null, game+" Announcement");
-                    }else if(x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==0){
+                        logBotActions(null, game+" Pre-Announcement");
+                    }else if(rightDay&&x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==0){
                         var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
                         bot.channels.get(channel).send(out, {
                           files: [{
@@ -75,10 +80,12 @@ async function announcement(game, image, numImage, channel){
                           }]
                         });
                         logBotActions(null, game+" Announcement");
+                    }else if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==0){
+                        logBotActions(null, game+" Announcement happening soon");
                     }
                 }
             });
-        await Sleep(60000) //1 minute
+        await Sleep(ms("1m")) //1 minute
     }
 }
 
@@ -101,18 +108,87 @@ function logBotActions(message, action){
         seconds="0"+seconds;
     } 
     if(message==null){
-        console.log(hours+":"+minutes+":"+seconds+" EST | AUTO ANNOUNCE | "+action); 
+        var out=hours+":"+minutes+":"+seconds+" EST | AUTO ANNOUNCE | "+action;
+        console.log(out);
+        fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
+          if (err) throw err;
+        }); 
     }else{
+        var out=hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | "+action;
         console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | "+action);
+        fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
+          if (err) throw err;
+        }); 
     }
 }
+
+async function newDay(){
+    var date=new Date();
+    var day=date.getDate();
+    var month=date.getMonth()+1;
+    var year=date.getFullYear();
+    while(true){
+        date=new Date();
+        var checkDay=date.getDate();
+        if(checkDay>day){
+            bot.destroy();
+            fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", "Starting a new day and restting the bot", function (err) {
+              if (err) throw err;
+            }); 
+            console.log("Starting a new day\n\n");
+            bot.login(TOKEN);
+            break;
+        }
+        await Sleep(ms("1h"));
+    }
+}
+
+//Queue data for each game
+    //Pinball
+        // https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/extra/592ac917-14d2-481a-9d37-3b840ad46b19
+    //ToiletPaperClaw
+        // https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/extra/46db6268-bfc3-43ff-ba7d-02ffaf1f2867
+    //SumoBots
+        // https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/extra/953f2154-9a6e-4602-99c6-265408da6310
+    //RaceRealCars143
+        // https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/extra/953f2154-9a6e-4602-99c6-265408da6310
+    //ForceClaw
+        // https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/extra/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0
+    //Path
+        // x.result.queueCount
 
 bot.on('ready', () => {
     announcement("SumoBots", "sumo", 9, "627919045420646401");
     announcement("RaceRealCars143", "race", 4, "589484542214012963");
     // announcement("SumoBots", "sumo", 9, "707047722208854101"); //Testing
-    console.info(`We are up and running as ${bot.user.tag}`);
-    console.info(`=======================================`);
+    newDay();
+    var today=new Date();
+    var day=today.getDate();
+    var month=today.getMonth()+1;
+    var year=today.getFullYear();
+    var hours=today.getHours();
+    var minutes=today.getMinutes();
+    var seconds=today.getSeconds();
+    if(hours<10){
+        hours="0"+hours;
+    }
+    if(minutes<10){
+        minutes="0"+minutes;
+    }
+    if(seconds<10){
+        seconds="0"+seconds;
+    }
+    fs.open("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", 'a', function (err, file) {
+      if (err) throw err;
+    });
+    var info="We are up and running as "+bot.user.tag+" at "+hours+":"+minutes+":"+seconds+" EST\n";
+    info+="=======================================================";
+    console.info(info);
+    var info="\nWe are up and running as "+bot.user.tag+" at "+hours+":"+minutes+":"+seconds+" EST";
+    info+=" on "+month+"/"+day+"/"+year+"\n===================================================================\n";
+    fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", info, function (err) {
+      if (err) throw err;
+    }); 
 });
 
 bot.on('message', async message => {
@@ -320,13 +396,18 @@ bot.on('message', async message => {
                         for(i=0; i<args[1].substring(0, args[1].indexOf("d")); i++){
                             var roll=Math.floor(Math.random()*args[1].substring(args[1].indexOf("d")+1))+1;
                             output+=roll;
-                            if(outString=="`"){
-                                outString+=roll;
-                            }else{
-                                outString+=", "+roll;
-                            }
+                            // if(outString=="`"){
+                            //     outString+=roll;
+                            // }else{
+                            //     outString+=", "+roll;
+                            // }
                         }
-                        message.channel.send("Rolling "+args[1]+":\n\t"+outString+"`\n\tTotal: "+output);
+                        if(outString.length>=2000){
+                            message.channel.send("That was too many roles, try a smaller number!");
+                            logBotActions(message, "!roll xdy error");
+                            return;
+                        }
+                        message.channel.send("Rolling "+args[1]+":\n\tTotal: "+output);
                         logBotActions(message, "!roll xdy");
                     }
                 }else if(args[1]!=null){
@@ -521,17 +602,14 @@ bot.on('message', async message => {
                                 var endTime=startTime+duration;
                                 var day=Math.floor(startTime/minDay);
                                 var startHour=Math.floor((startTime-(day*minDay))/60);
-                                var startMinute="00";
-                                if((startTime-day*minDay)%60!=2*(startTime-day*minDay)%60){
-                                    startMinute="30";
-                                }
+                                var startMinute=startTime-(scheduleHour*60)-(scheduleDay*minDay);
                                 if(startHour>23){
                                     var addToDay=Math.floor(startHour/24);
                                     startHour%=24;
                                     day+=addToDay;
                                 }
                                 var endHour=Math.floor((endTime-day*minDay)/60);
-                                var endMinute="00";
+                                var endMinute=(startTime+duration)%60;
                                 var endDay=day;
                                 if((endTime-day*minDay)%60!=2*(endTime-day*minDay)%60){
                                     endMinute="30";
@@ -658,19 +736,16 @@ bot.on('message', async message => {
                         bot.channels.get("707047722208854101").send(`Can't mute that user`);
                         return;
                     }
-
                     let mutetime = args[2];
                     if(!mutetime){
                         // 593000239841935362
                         bot.channels.get("707047722208854101").send(`You need to specify a time (3s/3d/3h/3y)`);
                         return;
                     }
-
                     await(toMute.addRole(role.id));
                     // 593000239841935362
                     bot.channels.get("707047722208854101").send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
                     logBotActions(message, "!mute "+toMute.user.tag+" "+ms(ms(mutetime)));
-
                     setTimeout(function(){
                         if(toMute.roles.find(r=>r.name.toLowerCase()==="muted")){
                             toMute.removeRole(role.id);
