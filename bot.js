@@ -16,13 +16,8 @@ var sumoTrigger=[650048288787005451, 627919045420646401, 650048505380864040, 707
 var generalTrigger=[586955337870082082, 589485632984973332, 571600581936939049, 571388780058247185, 631391110966804510, 571390705117954049, 707600524727418900];
 var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 621355376167747594, 707600524727418900];
 
-var testChannelID=707600524727418900;
-var surrogateChannelID=0;
-
-// var sumoRemote=false;
-// var raceRemote=false;
-// var pinballRemote=false;
-// var clawRemote=false;
+var testChannelID="707600524727418900";
+var surrogateChannelID="0";
 
 //Game Announcements 
 async function announcement(game, image, numImage, channel){
@@ -119,6 +114,12 @@ function logBotActions(message, action){
         fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
           if (err) throw err;
         }); 
+    }else if(message=="AUTO UNMUTE"){
+        var out=hours+":"+minutes+":"+seconds+" EST | AUTO UNMUTE | "+action;
+        console.log(out);
+        fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
+          if (err) throw err;
+        }); 
     }else{
         var out=hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | "+action;
         console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | "+action);
@@ -138,14 +139,82 @@ async function newDay(){
         var checkDay=date.getDate();
         if(checkDay>day){
             bot.destroy();
-            fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", "Starting a new day and restting the bot", function (err) {
+            fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", "Starting a new day and restarting the bot", function (err) {
               if (err) throw err;
             }); 
-            console.log("Starting a new day\n\n");
+            console.log("Starting a new day\n\n\n\n\n");
             bot.login(TOKEN);
             break;
         }
         await Sleep(ms("1h"));
+    }
+}
+
+async function checkToUnmute(){
+    let testServer=bot.guilds.get("707047722208854098");
+    let bromBotServer=bot.guilds.get("664556796576268298");
+    let surrogateServer=bot.guilds.get("571388780058247179");
+    let role = surrogateServer.roles.find(r => r.name === "muted");
+    while(true){
+        date=new Date();
+        var date=new Date();
+        var day=date.getDate();
+        var month=date.getMonth()+1;
+        var year=date.getFullYear();
+        var hour=date.getHours();
+        var minute=date.getMinutes();
+
+        fs.exists("./mute.dat", (exists)=>{
+            if(exists){
+                fs.readFile("./mute.dat", 'ascii', function (err, file) {
+                    if (err) throw err;
+                    var testData=file.toString().split("\n");
+                    var i;
+                    for(i=0; i<testData.length; i++){
+                        if(!testData[i]=="\n"){
+                            var removeUserLine=testData[i];
+                            var remove=removeUserLine.split("|");
+                            var removeTime=remove[1].split("~");
+                            var removeDate=removeTime[0].split("/");
+                            var removeSpecificTime=removeTime[1].split(":");
+                            var success=false;
+                            if((removeDate[0]<=month)&&(removeDate[1]<=day)&&(removeDate[2]<=year)&&(removeSpecificTime[0]<=hour)&&(removeSpecificTime[1]<=minute)){
+                                surrogateServer.members.forEach(u => {
+                                    if(!u.user.bot){
+                                        if(remove[0]==u.user.id){
+                                            u.removeRole(role.id);
+                                            bot.channels.get("593000239841935362").send(`<@${u.user.id}> has been unmuted!`);
+                                            logBotActions("AUTO UNMUTE", u.user.tag+" unmuted automatically");
+                                            success=true;
+                                        }
+                                    }
+                                });
+                            }
+                            if(success){
+                                var reinsert="";
+                                var j;
+                                for(j=0; j<testData.length; j++){
+                                    if(i==j||testData[j]=="\n"){
+                                    }else if(j<testData.length-1){
+                                        reinsert+=testData[j];
+                                    }else{
+                                        reinsert+=testData[j]+"\n";
+                                    }
+                                }
+                                fs.writeFile("./mute.dat", reinsert, (err) => {
+                                    if (err) throw err;
+                                });
+                            }
+                        }
+
+                    }
+                });
+            }
+        });
+
+
+
+        await Sleep(ms("1m"));
     }
 }
 
@@ -166,6 +235,7 @@ async function newDay(){
 bot.on('ready', () => {
     announcement("SumoBots", "sumo", 9, "627919045420646401");
     announcement("RaceRealCars143", "race", 4, "589484542214012963");
+    checkToUnmute();
     // announcement("SumoBots", "sumo", 9, "707047722208854101"); //Testing
     newDay();
     var today=new Date();
@@ -197,10 +267,15 @@ bot.on('message', async message => {
         return;
     }
 
-    // if(message.member.user.tag=="Mordecai#3257"&&message.content.includes("!test")){
-    //     //some test I want to do
-    //     return;
-    // }
+    let testServer=bot.guilds.get("707047722208854098");
+    let bromBotServer=bot.guilds.get("664556796576268298");
+    let surrogateServer=bot.guilds.get("571388780058247179");
+
+    if(message.member.user.tag=="Mordecai#3257"&&message.content.includes("!test")){
+        //some test I want to do
+        //707047722208854101
+        return;
+    }
 
     //Setup triggers for channels
     var i; 
@@ -386,28 +461,16 @@ bot.on('message', async message => {
                         args[1].substring(0, args[1].indexOf("d"))>2000000000||
                         args[1].substring(args[1].indexOf("d")+1>2000000000)){
                         message.author.send("\tError: Invalid format");
-                        today=new Date();
-                        var hours=today.getHours();
-                        var minutes=today.getMinutes();
-                        var seconds=today.getSeconds();
-                        if(hours<10&&hours!=0){
-                            hours="0"+hours;
-                        }
-                        if(minutes<10&&minutes!=0){
-                            minutes="0"+minutes;
-                        }
-                        if(seconds<10&&seconds!=0){
-                            seconds="0"+seconds;
-                        } 
+                        logBotActions(message, "!roll error");
                         console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !roll error");
                     }else{
                         for(i=0; i<args[1].substring(0, args[1].indexOf("d")); i++){
-                            var roll=Math.floor(Math.random()*args[1].substring(args[1].indexOf("d")+1))+1;
                             output+=roll;
                         }
                         if(outString.length>=2000||outString>2000000000){
                             message.author.send("That was too many roles, try a smaller number!");
                             logBotActions(message, "!roll xdy error");
+                            message.delete()
                             return;
                         }
                         message.author.send("Rolling "+args[1]+":\n\tTotal: "+output);
@@ -434,7 +497,7 @@ bot.on('message', async message => {
                     out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n";
                     out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME. The following are the current game names\n\t\t";
                     out+="`SumoBots`, `RaceRealCars143`, `Pinball`, `ForceClaw`, `ToiletPaperClaw`\n";
-                    out+="`!mute <USER> <time>`\n\tWill mute <USER> for however long <time> is (time is formated as the following `3s/3m/3h/3y`. Note that if <USER> is already muted, you cannot extend their time till the first expires.\n";
+                    out+="`!mute <USER> <time>`\n\tWill mute <USER> for however long <time> is (time is formated as the following `3m/3h/3y`. Note that if <USER> is already muted, you cannot extend their time till the first expires.\n";
                     out+="`!unmute <USER>`\n\tWill unmute <USER> only if they are already muted. (Useful if bot goes down/changes are made to code)\n";
                     out+="`!top | !top GAME_NAME month(?)`\n\tThis will give the top scores for game catagory or GAME_NAME. When given a name, you can also ask for monthly top scores."
                     message.author.send(out);
@@ -656,10 +719,10 @@ bot.on('message', async message => {
                 if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                         message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team")&&
                     args[1]!=null&&args[2]!=null)){
-                    let toMute=message.guild.member(message.mentions.users.first()||message.guild.members.get(args[0]));
+                    let toMute=message.guild.member(message.mentions.users.first());
                     let role = message.guild.roles.find(r => r.name === "muted");
                     if(!toMute){
-                        // 
+                        // 593000239841935362
                         bot.channels.get("593000239841935362").send(`Couldn't find user.`);
                         return;
                     }
@@ -677,15 +740,60 @@ bot.on('message', async message => {
                     await(toMute.addRole(role.id));
                     // 593000239841935362
                     bot.channels.get("593000239841935362").send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
-                    logBotActions(message, "!mute "+toMute.user.tag+" "+ms(ms(mutetime)));
-                    setTimeout(function(){
-                        if(toMute.roles.find(r=>r.name.toLowerCase()==="muted")){
-                            toMute.removeRole(role.id);
-                            // 593000239841935362
-                            bot.channels.get("593000239841935362").send(`<@${toMute.id}> has been unmuted!`);
-                            logBotActions(message, toMute.user.tag+" unmuted after "+ms(ms(mutetime)))
+                    var date=new Date();
+                    var day=date.getDate();
+                    var month=date.getMonth()+1;
+                    var year=date.getFullYear();
+                    var minute=date.getMinutes();
+                    var hour=date.getHours();
+                    var startMute=month+"/"+day+"/"+year+"~"+hour+":"+minute;
+                    minute+=(ms(mutetime)/60000);
+                    hour+=Math.floor(minute/60);
+                    minute%=60;
+                    day+=Math.floor(hour/24);
+                    hour%=24;
+                    var endMute=month+"/"+day+"/"+year+"~"+hour+":"+minute+"\n";
+                    var updated=false;
+                    fs.readFile("./mute.dat", 'ascii', function (err, file) {
+                        if (err) throw err;
+                        var testData=file.toString().split("\n");
+                        var toRemove=-1;
+                        var i;
+                        for(i=0; i<testData.length; i++){
+                            if(testData[i].includes(toMute.id)){
+                                toRemove=i;
+                                updated=true;
+                                break;
+                            }
                         }
-                    }, ms(mutetime));
+                        if(toRemove!=-1){
+
+                            var removeUserData=testData[toRemove];
+                            var reinsert="";
+                            var j;
+                            for(j=0; j<testData.length; j++){
+                                if(toRemove==j||testData[j]=="\n"){
+                                }else if(j==testData.length-1){
+                                    reinsert+=testData[j];
+                                }else{
+                                    reinsert+=testData[j]+"\n";
+                                }
+                            }
+                            fs.writeFile("./mute.dat", reinsert, (err)=>{
+                                if(err) throw err;
+                            });
+                            fs.appendFile("./mute.dat", toMute.id+"|"+endMute, (err)=>{
+                                if(err) throw err;
+                            });
+                        }
+                    });
+                    if(!updated){
+                        endMute=toMute.id+"|"+endMute;
+                        fs.appendFile("./mute.dat", endMute, (err)=>{
+                            if(err) throw err;
+                        });
+                    }
+                    logBotActions(message, "!mute "+toMute.user.tag+" "+ms(ms(mutetime)));
                 }
                 break;
             // !unmute <USER>
@@ -710,6 +818,33 @@ bot.on('message', async message => {
                     // 593000239841935362
                     bot.channels.get("593000239841935362").send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
                     logBotActions(message, "!unmute "+toUnmute.user.tag);
+
+                    fs.readFile("./mute.dat", 'ascii', function (err, file) {
+                        if (err) throw err;
+
+                        var testData=file.toString().split("\n");
+                        var toRemove=-1;
+                        var i;
+                        for(i=0; i<testData.length; i++){
+                            if(testData[i].includes(toUnmute.id)){
+                                toRemove=i;
+                                break;
+                            }
+                        }
+                        var removeUserData=testData[i];
+                        var reinsert="";
+                        var i;
+                        for(i=0; i<testData.length; i++){
+                            if(toRemove==i||testData[i]==="\n"){
+
+                            }else{
+                                reinsert+=testData[i]+"\n";
+                            }
+                        }
+                        fs.writeFile("./mute.dat", reinsert, (err) => {
+                            if (err) throw err;
+                        });
+                    });
                 }
                 break;
             // !top <GAME> month(?)
@@ -721,6 +856,7 @@ bot.on('message', async message => {
                     var command="SumoBots";
                     if(args[2]!=null&&args[2].toLowerCase().includes("month")){
                         message.channel.send("There are no monthly scores for "+command+".");
+                        message.delete()
                         return;
                     }
                 }else if(triggerRaceResponse||message.content.toLowerCase().includes("racerealcars143")){
@@ -735,6 +871,7 @@ bot.on('message', async message => {
                     var command="ForceClaw";
                     if(args[2]!=null&&args[2].toLowerCase().includes("month")){
                         message.channel.send("There are no monthly scores for "+command+".");
+                        message.delete()
                         return;
                     }
                 }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
@@ -742,6 +879,7 @@ bot.on('message', async message => {
                     var command="ToiletPaperClaw";
                     if(args[2]!=null&&args[2].toLowerCase().includes("month")){
                         message.channel.send("There are no monthly scores for "+command+".");
+                        message.delete()
                         return;
                     }
                 }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("pinball")){
