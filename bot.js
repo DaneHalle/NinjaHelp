@@ -16,6 +16,9 @@ var sumoTrigger=[650048288787005451, 627919045420646401, 650048505380864040, 707
 var generalTrigger=[586955337870082082, 589485632984973332, 571600581936939049, 571388780058247185, 631391110966804510, 571390705117954049, 707600524727418900];
 var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 621355376167747594, 707600524727418900];
 
+var testChannelID=707600524727418900;
+var surrogateChannelID=0;
+
 // var sumoRemote=false;
 // var raceRemote=false;
 // var pinballRemote=false;
@@ -23,15 +26,15 @@ var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 62
 
 //Game Announcements 
 async function announcement(game, image, numImage, channel){
-    var date=new Date();
-    var weekdays=new Array(
-        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-    );
-    var day=date.getDay();
-    var rand=Math.floor(Math.random()*numImage)+1;
-    const minDay=1440;
-    var rightDay=false;
     while(true){
+        var date=new Date();
+        var weekdays=new Array(
+            "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+        );
+        var day=date.getDay();
+        var rand=Math.floor(Math.random()*numImage)+1;
+        const minDay=1440;
+        var rightDay=false;
         const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId="+game.toLowerCase(), {
             method: 'GET',
             headers: {
@@ -54,7 +57,7 @@ async function announcement(game, image, numImage, channel){
                             scheduleHour%=24;
                             scheduleDay+=addToDay;
                         }
-                        if(scheduleDay==day-1){
+                        if(scheduleDay==((day-1)+7)%7){
                             rightDay=true;
                             break;
                         }
@@ -62,7 +65,7 @@ async function announcement(game, image, numImage, channel){
                     date=new Date();
                     var curHour=(date.getHours()+8)%24;
                     var curMinute=date.getMinutes();
-                    if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==(scheduleMinute-15)%60){
+                    if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==(scheduleMinute-15+60)%60){
                         var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
                         bot.channels.get(channel).send(out, {
                           files: [{
@@ -71,7 +74,7 @@ async function announcement(game, image, numImage, channel){
                           }]
                         });
                         logBotActions(null, game+" Pre-Announcement");
-                    }else if(rightDay&&x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==0){
+                    }else if(rightDay&&x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==scheduleMinute){
                         var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
                         bot.channels.get(channel).send(out, {
                           files: [{
@@ -80,7 +83,7 @@ async function announcement(game, image, numImage, channel){
                           }]
                         });
                         logBotActions(null, game+" Announcement");
-                    }else if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==0){
+                    }else if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==scheduleMinute){
                         logBotActions(null, game+" Announcement happening soon");
                     }
                 }
@@ -98,6 +101,9 @@ function logBotActions(message, action){
     var hours=today.getHours();
     var minutes=today.getMinutes();
     var seconds=today.getSeconds();
+    var day=today.getDate();
+    var month=today.getMonth()+1;
+    var year=today.getFullYear();
     if(hours<10&&hours!=0){
         hours="0"+hours;
     }
@@ -184,17 +190,17 @@ bot.on('ready', () => {
     var info="We are up and running as "+bot.user.tag+" at "+hours+":"+minutes+":"+seconds+" EST\n";
     info+="=======================================================";
     console.info(info);
-    var info="\nWe are up and running as "+bot.user.tag+" at "+hours+":"+minutes+":"+seconds+" EST";
-    info+=" on "+month+"/"+day+"/"+year+"\n===================================================================\n";
-    fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", info, function (err) {
-      if (err) throw err;
-    }); 
 });
 
 bot.on('message', async message => {
     if(message.author.bot){
         return;
     }
+
+    // if(message.member.user.tag=="Mordecai#3257"&&message.content.includes("!test")){
+    //     //some test I want to do
+    //     return;
+    // }
 
     //Setup triggers for channels
     var i; 
@@ -376,8 +382,10 @@ bot.on('message', async message => {
                 if(args[1]!=null&&args[1].includes("d")){
                     var output=0; var outString="`"; var i; 
                     if(isNaN(args[1].substring(0, args[1].indexOf("d")))||
-                        isNaN(args[1].substring(args[1].indexOf("d")+1))){
-                        message.channel.send("\tError: Invalid format");
+                        isNaN(args[1].substring(args[1].indexOf("d")+1))||
+                        args[1].substring(0, args[1].indexOf("d"))>2000000000||
+                        args[1].substring(args[1].indexOf("d")+1>2000000000)){
+                        message.author.send("\tError: Invalid format");
                         today=new Date();
                         var hours=today.getHours();
                         var minutes=today.getMinutes();
@@ -396,111 +404,25 @@ bot.on('message', async message => {
                         for(i=0; i<args[1].substring(0, args[1].indexOf("d")); i++){
                             var roll=Math.floor(Math.random()*args[1].substring(args[1].indexOf("d")+1))+1;
                             output+=roll;
-                            // if(outString=="`"){
-                            //     outString+=roll;
-                            // }else{
-                            //     outString+=", "+roll;
-                            // }
                         }
-                        if(outString.length>=2000){
-                            message.channel.send("That was too many roles, try a smaller number!");
+                        if(outString.length>=2000||outString>2000000000){
+                            message.author.send("That was too many roles, try a smaller number!");
                             logBotActions(message, "!roll xdy error");
                             return;
                         }
-                        message.channel.send("Rolling "+args[1]+":\n\tTotal: "+output);
+                        message.author.send("Rolling "+args[1]+":\n\tTotal: "+output);
                         logBotActions(message, "!roll xdy");
                     }
                 }else if(args[1]!=null){
-                    message.channel.send("\tError: Invalid format");
+                    message.author.send("\tError: Invalid format or too big of a number");
                     logBotActions(message, "!roll error");
                 }else{
                     var roll=Math.floor(Math.random()*20)+1;
-                    message.channel.send("Rolling 1d20:\n\tTotal: "+roll);
+                    message.author.send("Rolling 1d20:\n\tTotal: "+roll);
                     logBotActions(message, "!roll");
                 }
+                message.delete()
                 break;
-            // // !remote GAME
-            // case 'remote':
-            //     if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
-            //             message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-            //         if(args[1]!=null&&args[1].toLowerCase().includes("sumobots")){
-            //             if(sumoRemote){
-            //                 sumoRemote=false;
-            //                 message.channel.send("Switching **off** remote hosting for SumoBots.");
-            //                 logBotActions(message, "!remote SumoBots to False");
-            //             }else{
-            //                 sumoRemote=true;
-            //                 message.channel.send("Switching **on** remote hosting for SumoBots.");
-            //                 logBotActions(message, "!remote SumoBots to True");
-            //             }
-            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("realracing")){
-            //             if(raceRemote){
-            //                 raceRemote=false;
-            //                 message.channel.send("Switching **off** remote hosting for RealRacing.");
-            //                 logBotActions(message, "!remote RealRacing to False");
-            //             }else{
-            //                 raceRemote=true;
-            //                 message.channel.send("Switching **on** remote hosting for RealRacing.");
-            //                 logBotActions(message, "!remote RealRacing to True");
-            //             }
-            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("pinball")){
-            //             if(pinballRemote){
-            //                 pinballRemote=false;
-            //                 message.channel.send("Switching **off** remote hosting for Pinball.");
-            //                 logBotActions(message, "!remote Pinball to False");
-            //             }else{
-            //                 pinballRemote=true;
-            //                 message.channel.send("Switching **on** remote hosting for Pinball.");
-            //                 logBotActions(message, "!Pinball to True");
-            //             }
-            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("claw")){
-            //             if(clawRemote){
-            //                 clawRemote=false;
-            //                 message.channel.send("Switching **off** remote hosting for ClawGame.");
-            //                 logBotActions(message, "!remote ClawGame to False");
-            //             }else{
-            //                 clawRemote=true;
-            //                 message.channel.send("Switching **on** remote hosting for ClawGame.");
-            //                 logBotActions(message, "!remote ClawGame to True");
-            //             }
-            //         }
-            //     }
-            //     break;
-            // // !status GAME
-            // case 'status':
-            //     if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
-            //             message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-            //         if(args[1]!=null&&args[1].toLowerCase().includes("sumobots")){
-            //             if(sumoRemote){
-            //                 message.channel.send("SumoBots remote is **on**.");
-            //             }else{
-            //                 message.channel.send("SumoBots remote is **off**.");
-            //             }
-            //             logBotActions(message, "!status SumoBots");
-            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("pinball")){
-            //             if(pinballRemote){
-            //                 message.channel.send("Pinball remote is **on**.");
-            //             }else{
-            //                 message.channel.send("Pinball remote is **off**.");
-            //             }
-            //             logBotActions(message, "!status Pinball");
-            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("realracing")){
-            //             if(raceRemote){
-            //                 message.channel.send("RealRacing remote is **on**.");
-            //             }else{
-            //                 message.channel.send("RealRacing remote is **off**.");
-            //             }
-            //             logBotActions(message, "!status RealRacing");
-            //         }else if(args[1]!=null&&args[1].toLowerCase().includes("claw")){
-            //             if(clawRemote){
-            //                 message.channel.send("Claw remote is **on**.");
-            //             }else{
-            //                 message.channel.send("Claw remote is **off**.");
-            //             }
-            //             logBotActions(message, "!status Claw");
-            //         }
-            //     }
-            //     break;
             // !getHelp
             case 'gethelp':
                 if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
@@ -508,9 +430,6 @@ bot.on('message', async message => {
                     var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
                     out+="`!time`\n\tThis command will tell the time and day in Finland\n";
                     out+="`!roll` | `!roll xdy`\n\tThis command will roll a d20 on an unmodified command and will roll **x** number of **y** sided dice on a modified command\n";
-                    // out+="`!remote GAME_NAME`\n\tThis command will toggle the remote status of the given game. This will impact help triggers for that game. The following games are supported:\n\t\t";
-                    // out+="`SumoBots`, `Pinball`, `RealRacing`, `Claw`\n";
-                    // out+="`!status GAME_NAME`\n\tThis will give the bot's known status of the given game. This supports the same games as `!remote`\n";
                     out+="`(ab:cd)`\n\tThis allows for a timezone converter link to show up at ab:cd time in Finland.\n";
                     out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n";
                     out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME. The following are the current game names\n\t\t";
@@ -518,7 +437,7 @@ bot.on('message', async message => {
                     out+="`!mute <USER> <time>`\n\tWill mute <USER> for however long <time> is (time is formated as the following `3s/3m/3h/3y`. Note that if <USER> is already muted, you cannot extend their time till the first expires.\n";
                     out+="`!unmute <USER>`\n\tWill unmute <USER> only if they are already muted. (Useful if bot goes down/changes are made to code)\n";
                     out+="`!top | !top GAME_NAME month(?)`\n\tThis will give the top scores for game catagory or GAME_NAME. When given a name, you can also ask for monthly top scores."
-                    message.channel.send(out);
+                    message.author.send(out);
                     logBotActions(message, "!getHelp");
                 }else{
                     var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
@@ -528,9 +447,10 @@ bot.on('message', async message => {
                     out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME. The following are the current game names\n\t\t";
                     out+="`SumoBots`, `RaceRealCars143`, `Pinball`, `ForceClaw`, `ToiletPaperClaw`\n";
                     out+="`!top | !top GAME_NAME month(?)`\n\tThis will give the top scores for game catagory or GAME_NAME. When given a name, you can also ask for monthly top scores."
-                    message.channel.send(out);
+                    message.author.send(out);
                     logBotActions(message, "!getHelp");
                 }
+                message.delete();
                 break;
             // !game GAME_NAME
             case 'game':
@@ -559,8 +479,10 @@ bot.on('message', async message => {
                     out+="https://surrogate.tv/game/toiletpaperclaw";
                     message.reply(out);
                 }else{
+                    message.delete()
                     return;
                 }
+                message.delete();
                 logBotActions(message, "!game");
                 break;
             // !schedule
@@ -582,6 +504,7 @@ bot.on('message', async message => {
                     url+="batman66";
                     var command="Batman66 Pinball";
                 }else{
+                    message.delete()
                     return;
                 }
                 var minDay=1440;
@@ -602,7 +525,10 @@ bot.on('message', async message => {
                                 var endTime=startTime+duration;
                                 var day=Math.floor(startTime/minDay);
                                 var startHour=Math.floor((startTime-(day*minDay))/60);
-                                var startMinute=startTime-(scheduleHour*60)-(scheduleDay*minDay);
+                                var startMinute=startTime-(startHour*60)-(day*minDay);
+                                if(startMinute<=0){
+                                    startMinute="0"+startMinute;
+                                }
                                 if(startHour>23){
                                     var addToDay=Math.floor(startHour/24);
                                     startHour%=24;
@@ -611,8 +537,8 @@ bot.on('message', async message => {
                                 var endHour=Math.floor((endTime-day*minDay)/60);
                                 var endMinute=(startTime+duration)%60;
                                 var endDay=day;
-                                if((endTime-day*minDay)%60!=2*(endTime-day*minDay)%60){
-                                    endMinute="30";
+                                if(endMinute<=0){
+                                    endMinute="0"+endMinute;
                                 }
                                 if(endHour>23||endHour<=0){
                                     var addToDay=Math.floor(endHour/24);
@@ -714,10 +640,16 @@ bot.on('message', async message => {
                             command=command.split(' ');
                             command=command.splice(0);
                             output+=command[0].toLowerCase();
+                            if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                                message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
                             message.channel.send(output);
+                            }else{
+                                message.author.send("That command is currently restricted while my maker works on a better system\n"+output);
+                            }
                         }
                     });
                 logBotActions(message, "!schedule");
+                message.delete()
                 break;
             // !mute <USER> <TIME>
             case 'mute':
@@ -727,30 +659,30 @@ bot.on('message', async message => {
                     let toMute=message.guild.member(message.mentions.users.first()||message.guild.members.get(args[0]));
                     let role = message.guild.roles.find(r => r.name === "muted");
                     if(!toMute){
-                        // 593000239841935362
-                        bot.channels.get("707047722208854101").send(`Couldn't find user.`);
+                        // 
+                        bot.channels.get("593000239841935362").send(`Couldn't find user.`);
                         return;
                     }
                     if(toMute.hasPermission("MANAGE_MESSAGES")){
                         // 593000239841935362
-                        bot.channels.get("707047722208854101").send(`Can't mute that user`);
+                        bot.channels.get("593000239841935362").send(`Can't mute that user`);
                         return;
                     }
                     let mutetime = args[2];
                     if(!mutetime){
                         // 593000239841935362
-                        bot.channels.get("707047722208854101").send(`You need to specify a time (3s/3d/3h/3y)`);
+                        bot.channels.get("593000239841935362").send(`You need to specify a time (3s/3d/3h/3y)`);
                         return;
                     }
                     await(toMute.addRole(role.id));
                     // 593000239841935362
-                    bot.channels.get("707047722208854101").send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
+                    bot.channels.get("593000239841935362").send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
                     logBotActions(message, "!mute "+toMute.user.tag+" "+ms(ms(mutetime)));
                     setTimeout(function(){
                         if(toMute.roles.find(r=>r.name.toLowerCase()==="muted")){
                             toMute.removeRole(role.id);
                             // 593000239841935362
-                            bot.channels.get("707047722208854101").send(`<@${toMute.id}> has been unmuted!`);
+                            bot.channels.get("593000239841935362").send(`<@${toMute.id}> has been unmuted!`);
                             logBotActions(message, toMute.user.tag+" unmuted after "+ms(ms(mutetime)))
                         }
                     }, ms(mutetime));
@@ -765,18 +697,18 @@ bot.on('message', async message => {
                     let role = message.guild.roles.find(r=>r.name==="muted");
                     if(!toUnmute){
                         // 593000239841935362
-                        bot.channels.get("707047722208854101").send("Couldn't find user.");
+                        bot.channels.get("593000239841935362").send("Couldn't find user.");
                         return;
                     }else if(!toUnmute.roles.find(r=>r.name.toLowerCase()==="muted")){
                         // 593000239841935362
-                        bot.channels.get("707047722208854101").send(`<@${toUnmute} is not muted.`);
+                        bot.channels.get("593000239841935362").send(`<@${toUnmute} is not muted.`);
                         return;
                     }
 
                     await(toUnmute.addRole(role.id));
                     toUnmute.removeRole(role.id);
                     // 593000239841935362
-                    bot.channels.get("707047722208854101").send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
+                    bot.channels.get("593000239841935362").send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
                     logBotActions(message, "!unmute "+toUnmute.user.tag);
                 }
                 break;
@@ -820,6 +752,7 @@ bot.on('message', async message => {
                         scoreType="Monthly";
                     }
                 }else{
+                    message.delete()
                     return;
                 }
                 var minDay=1440;
@@ -844,23 +777,18 @@ bot.on('message', async message => {
                                     var icon=x.result.Items[i].userObject.userIcon.toLowerCase();
                                     switch(icon){
                                         case "broomsquad":
-                                            // <:broomsquad:700736528803954769>
                                             icon=bot.emojis.get("700736528803954769").toString();
                                             break;
                                         case "moderator":
-                                            // <:modsquad:700736529043161139> 
                                             icon=bot.emojis.get("700736529043161139").toString();
                                             break;
                                         case "patreonsupporter":
-                                            // <:patreonsupporter:700736949631188993>
                                             icon=bot.emojis.get("700736949631188993").toString();
                                             break;
                                         case "surrogateteam":
-                                            // <:surrogateteam:700737595734491237>
                                             icon=bot.emojis.get("700737595734491237").toString();
                                             break;
                                         case "alphatester":
-                                            // <:alphatester:700736528967532564>
                                             icon=bot.emojis.get("700736528967532564").toString();
                                             break;
                                     }
@@ -869,11 +797,18 @@ bot.on('message', async message => {
                                     scores+="\n\t"+(i+1)+") **__"+x.result.Items[i].userObject.username+"__**:\t"+x.result.Items[i].points;
                                 }
                             }
-                            message.channel.send(scores);
+
+                            if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                                    message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+                                message.channel.send(scores);
+                            }else{
+                                message.author.send("That command is currently restricted while my maker works on a better system\n"+scores);
+                            }
 
                         }
                     });
                 logBotActions(message, "!top");
+                message.delete()
                 break;
         }
         return;
