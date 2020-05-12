@@ -164,9 +164,9 @@ async function checkToUnmute(){
         var hour=date.getHours();
         var minute=date.getMinutes();
 
-        fs.exists("./mute.dat", (exists)=>{
+        fs.exists("./database/mute.dat", (exists)=>{
             if(exists){
-                fs.readFile("./mute.dat", 'ascii', function (err, file) {
+                fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
                     if (err) throw err;
                     var testData=file.toString().split("\n");
                     var i;
@@ -201,7 +201,7 @@ async function checkToUnmute(){
                                         reinsert+=testData[j]+"\n";
                                     }
                                 }
-                                fs.writeFile("./mute.dat", reinsert, (err) => {
+                                fs.writeFile("./database/mute.dat", reinsert, (err) => {
                                     if (err) throw err;
                                 });
                             }
@@ -235,6 +235,9 @@ async function checkToUnmute(){
 bot.on('ready', () => {
     announcement("SumoBots", "sumo", 9, "627919045420646401");
     announcement("RaceRealCars143", "race", 4, "589484542214012963");
+    fs.open("./database/mute.dat", "w", (err)=>{
+        if(err) throw err;
+    });
     checkToUnmute();
     // announcement("SumoBots", "sumo", 9, "707047722208854101"); //Testing
     newDay();
@@ -754,7 +757,7 @@ bot.on('message', async message => {
                     hour%=24;
                     var endMute=month+"/"+day+"/"+year+"~"+hour+":"+minute+"\n";
                     var updated=false;
-                    fs.readFile("./mute.dat", 'ascii', function (err, file) {
+                    fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
                         if (err) throw err;
                         var testData=file.toString().split("\n");
                         var toRemove=-1;
@@ -779,17 +782,17 @@ bot.on('message', async message => {
                                     reinsert+=testData[j]+"\n";
                                 }
                             }
-                            fs.writeFile("./mute.dat", reinsert, (err)=>{
+                            fs.writeFile("./database/mute.dat", reinsert, (err)=>{
                                 if(err) throw err;
                             });
-                            fs.appendFile("./mute.dat", toMute.id+"|"+endMute, (err)=>{
+                            fs.appendFile("./database/mute.dat", toMute.id+"|"+endMute, (err)=>{
                                 if(err) throw err;
                             });
                         }
                     });
                     if(!updated){
                         endMute=toMute.id+"|"+endMute;
-                        fs.appendFile("./mute.dat", endMute, (err)=>{
+                        fs.appendFile("./database/mute.dat", endMute, (err)=>{
                             if(err) throw err;
                         });
                     }
@@ -819,7 +822,7 @@ bot.on('message', async message => {
                     bot.channels.get("593000239841935362").send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
                     logBotActions(message, "!unmute "+toUnmute.user.tag);
 
-                    fs.readFile("./mute.dat", 'ascii', function (err, file) {
+                    fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
                         if (err) throw err;
 
                         var testData=file.toString().split("\n");
@@ -841,7 +844,7 @@ bot.on('message', async message => {
                                 reinsert+=testData[i]+"\n";
                             }
                         }
-                        fs.writeFile("./mute.dat", reinsert, (err) => {
+                        fs.writeFile("./database/mute.dat", reinsert, (err) => {
                             if (err) throw err;
                         });
                     });
