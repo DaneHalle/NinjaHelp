@@ -13,8 +13,9 @@ var pinballTrigger=[617010087457718272, 613630308931207198, 616642431219400735, 
 var arcadeTrigger=[617010087457718272, 706819836071903275, 613630308931207198, 616642431219400735, 662301446036783108, 707600524727418900];
 var raceTrigger=[631131278644740125, 589484542214012963, 631131301302239242, 707600524727418900];
 var sumoTrigger=[650048288787005451, 627919045420646401, 650048505380864040, 707600524727418900];
-var generalTrigger=[586955337870082082, 589485632984973332, 571600581936939049, 571388780058247185, 631391110966804510, 571390705117954049, 707600524727418900];
+var generalTrigger=[586955337870082082, 589485632984973332, 571600581936939049, 571388780058247185, 631391110966804510, 571390705117954049, 710104643996352633, 707600524727418900];
 var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 621355376167747594, 707600524727418900];
+var botSpamID="710104643996352633"; //Currently redirects to test server #general. Need #bot-spam channel on Surrogate server
 
 var testChannelID="707600524727418900";
 var surrogateChannelID="0";
@@ -123,11 +124,15 @@ function logBotActions(message, action){
     }else{
         var out=hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | "+action;
         console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | "+action);
-        fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
-          if (err) throw err;
-        }); 
+        if(message.author.id!="120618883219587072"){//Damn you Grimberg
+            fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
+              if (err) throw err;
+            }); 
+        }
     }
 }
+
+
 
 async function newDay(){
     var date=new Date();
@@ -163,7 +168,6 @@ async function checkToUnmute(){
         var year=date.getFullYear();
         var hour=date.getHours();
         var minute=date.getMinutes();
-
         fs.exists("./database/mute.dat", (exists)=>{
             if(exists){
                 fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
@@ -178,7 +182,11 @@ async function checkToUnmute(){
                             var removeDate=removeTime[0].split("/");
                             var removeSpecificTime=removeTime[1].split(":");
                             var success=false;
-                            if((removeDate[0]<=month)&&(removeDate[1]<=day)&&(removeDate[2]<=year)&&(removeSpecificTime[0]<=hour)&&(removeSpecificTime[1]<=minute)){
+                            if(((removeDate[2]<=year)&&(removeDate[0]<=month)&&(removeDate[1]<=day)&&(removeSpecificTime[0]<=hour)&&(removeSpecificTime[1]<=minute))||
+                                    ((removeDate[2]<=year)&&(removeDate[0]<=month)&&(removeDate[1]<=day)&&(removeSpecificTime[0]<=hour))||
+                                    ((removeDate[2]<=year)&&(removeDate[0]<=month)&&(removeDate[1]<=day))||
+                                    ((removeDate[2]<=year)&&(removeDate[0]<=month))||
+                                    (removeDate[2]<=year)){
                                 surrogateServer.members.forEach(u => {
                                     if(!u.user.bot){
                                         if(remove[0]==u.user.id){
@@ -206,14 +214,10 @@ async function checkToUnmute(){
                                 });
                             }
                         }
-
                     }
                 });
             }
         });
-
-
-
         await Sleep(ms("1m"));
     }
 }
@@ -239,6 +243,7 @@ bot.on('ready', () => {
         if(err) throw err;
     });
     checkToUnmute();
+    bot.user.setActivity("Surrogate.tv", { type: "WATCHING", url: "https://www.surrogate.tv" });
     // announcement("SumoBots", "sumo", 9, "707047722208854101"); //Testing
     newDay();
     var today=new Date();
@@ -285,51 +290,33 @@ bot.on('message', async message => {
     var triggerClawResponse=false; var triggerArcadeResponse=false; var triggerRaceResponse=false; 
     var triggerSumoResponse=false; var triggerGeneralResponse=false; var triggerSneakResponse=false;
     var triggerPinballResponse=false;
-    for(i=0; i<clawTrigger.length; i++){
-        if(clawTrigger[i]==message.channel.id){
+    var maxCheck=Math.max(clawTrigger.length, arcadeTrigger.length, raceTrigger.length, sumoTrigger.length, generalTrigger.length, sneakTrigger.length, pinballTrigger.length);
+    for(i=0; i<maxCheck; i++){
+        if(clawTrigger[i]!=null&&clawTrigger[i]==message.channel.id){
             triggerClawResponse=true;
-            break;
         }
-    }
-    for(i=0; i<arcadeTrigger.length; i++){
-        if(arcadeTrigger[i]==message.channel.id){
-            triggerArcadeResponse=true;
-            break;
-        }
-    }
-    for(i=0; i<raceTrigger.length; i++){
-        if(raceTrigger[i]==message.channel.id){
-            triggerRaceResponse=true;
-            break;
-        }
-    }
-    for(i=0; i<sumoTrigger.length; i++){
-        if(sumoTrigger[i]==message.channel.id){
-            triggerSumoResponse=true;
-            break;
-        }
-    }
-    for(i=0; i<generalTrigger.length; i++){
-        if(generalTrigger[i]==message.channel.id){
-            triggerGeneralResponse=true;
-            break;
-        }
-    }
-    for(i=0; i<sneakTrigger.length; i++){
-        if(sneakTrigger[i]==message.channel.id){
-            triggerSneakResponse=true;
-            break;
-        }
-    }
-    for(i=0; i<pinballTrigger.length; i++){
-        if(pinballTrigger[i]==message.channel.id){
+        if(pinballTrigger[i]!=null&&pinballTrigger[i]==message.channel.id){
             triggerPinballResponse=true;
-            break;
+        }
+        if(arcadeTrigger[i]!=null&&arcadeTrigger[i]==message.channel.id){
+            triggerArcadeResponse=true;
+        }
+        if(raceTrigger[i]&&raceTrigger[i]==message.channel.id){
+            triggerRaceResponse=true;
+        }
+        if(sumoTrigger[i]!=null&&sumoTrigger[i]==message.channel.id){
+            triggerSumoResponse=true;
+        }
+        if(generalTrigger[i]!=null&&generalTrigger[i]==message.channel.id){
+            triggerGeneralResponse=true;
+        }
+        if(sneakTrigger[i]!=null&&sneakTrigger[i]==message.channel.id){
+            triggerSneakResponse=true;
         }
     }
 
     //scraper for getting channel info 
-    if(message.member.user.tag=="Mordecai#3257"&&message.content.includes("!scrape")){
+    if(message.member.user.tag=="Mordecai#3257"&&message.content.startsWith("!scrape")){
         console.log("ID: "+message.channel.id);
         console.log("Type: "+message.channel.type);
         console.log("Guild_ID: "+message.channel.guild_id);
@@ -353,13 +340,13 @@ bot.on('message', async message => {
     }
 
     //(12:34) command
-    var detectColon=(message.content.includes(":"));
-    if(detectColon){
-        var detectLeft=(message.content.substring((message.content.indexOf(":")-3),(message.content.indexOf(":")-2)));
-        var detectRight=(message.content.substring((message.content.indexOf(":")+3),(message.content.indexOf(":")+4)));
-    }
     if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
             message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+        var detectColon=(message.content.includes(":"));
+        if(detectColon){
+            var detectLeft=(message.content.substring((message.content.indexOf(":")-3),(message.content.indexOf(":")-2)));
+            var detectRight=(message.content.substring((message.content.indexOf(":")+3),(message.content.indexOf(":")+4)));
+        }
         if(detectLeft=="("&&detectRight==")"){
             today=new Date();
             var day=today.getDate();
@@ -376,10 +363,10 @@ bot.on('message', async message => {
             minutes%=60;
             hours%=24;
             if(!(isNaN(minutes)||isNaN(hours))){
-                if(hours<10&&hours!=0){
+                if(hours<10){
                     hours="0"+hours;
                 }
-                if(minutes<10&&minutes!=0){
+                if(minutes<10){
                     minutes="0"+minutes;
                 }
                 if(day<10){
@@ -388,7 +375,7 @@ bot.on('message', async message => {
                 if(month<10){
                     month="0"+month;
                 }
-                var sendOut="*Beep boop*\nThe time is given in GMT+2 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso="
+                var sendOut="*Beep boop*\nThe time is given in GMT+3 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso="
                                 +year+""+month+""+day+"T"+hours+""+minutes+"&p1=101\n*Beep boop*";
                 message.channel.send(sendOut);
                 logBotActions(message, "Link")
@@ -462,93 +449,132 @@ bot.on('message', async message => {
                     if(isNaN(args[1].substring(0, args[1].indexOf("d")))||
                         isNaN(args[1].substring(args[1].indexOf("d")+1))||
                         args[1].substring(0, args[1].indexOf("d"))>2000000000||
-                        args[1].substring(args[1].indexOf("d")+1>2000000000)){
-                        message.author.send("\tError: Invalid format");
+                        args[1].substring(args[1].indexOf("d")+1)>2000000000){
+                        if(message.channel.id!=botSpamID){
+                            message.delete();
+                            bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n\tError: Invalid format");
+                        }else{
+                            bot.channels.get(botSpamID).send("\tError: Invalid format");
+                        }
                         logBotActions(message, "!roll error");
                         console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !roll error");
                     }else{
                         for(i=0; i<args[1].substring(0, args[1].indexOf("d")); i++){
+                            var roll=Math.floor(Math.random()*args[1].substring(args[1].indexOf("d")+1))+1;
                             output+=roll;
                         }
                         if(outString.length>=2000||outString>2000000000){
-                            message.author.send("That was too many roles, try a smaller number!");
+                            if(message.channel.id!=botSpamID){
+                                message.delete();
+                                bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThat was too many roles, try a smaller number!"+output);
+                            }else{
+                                bot.channels.get(botSpamID).send("That was too many roles, try a smaller number!");
+                            }
                             logBotActions(message, "!roll xdy error");
-                            message.delete()
                             return;
                         }
-                        message.author.send("Rolling "+args[1]+":\n\tTotal: "+output);
+                        if(message.channel.id!=botSpamID){
+                            message.delete();
+                            bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nRolling "+args[1]+":\n\tTotal: "+output);
+                        }else{
+                            bot.channels.get(botSpamID).send("Rolling "+args[1]+":\n\tTotal: "+output);
+                        }
+                        // message.author.send("Rolling "+args[1]+":\n\tTotal: "+output);
                         logBotActions(message, "!roll xdy");
                     }
                 }else if(args[1]!=null){
-                    message.author.send("\tError: Invalid format or too big of a number");
+                    if(message.channel.id!=botSpamID){
+                        message.delete();
+                        bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n\tError: Invalid format or too big of a number");
+                    }else{
+                        bot.channels.get(botSpamID).send("\tError: Invalid format or too big of a number");
+                    }
+                    // message.author.send("\tError: Invalid format or too big of a number");
                     logBotActions(message, "!roll error");
                 }else{
                     var roll=Math.floor(Math.random()*20)+1;
-                    message.author.send("Rolling 1d20:\n\tTotal: "+roll);
+                    if(message.channel.id!=botSpamID){
+                        message.delete();
+                        bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nRolling 1d20:\n\tTotal: "+roll);
+                    }else{
+                        bot.channels.get(botSpamID).send("Rolling 1d20:\n\tTotal: "+roll);
+                    }
+                    // message.author.send("Rolling 1d20:\n\tTotal: "+roll);
                     logBotActions(message, "!roll");
                 }
-                message.delete()
                 break;
             // !getHelp
             case 'gethelp':
                 if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                         message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
                     var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
-                    out+="`!time`\n\tThis command will tell the time and day in Finland\n";
-                    out+="`!roll` | `!roll xdy`\n\tThis command will roll a d20 on an unmodified command and will roll **x** number of **y** sided dice on a modified command\n";
-                    out+="`(ab:cd)`\n\tThis allows for a timezone converter link to show up at ab:cd time in Finland.\n";
-                    out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n";
-                    out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME. The following are the current game names\n\t\t";
-                    out+="`SumoBots`, `RaceRealCars143`, `Pinball`, `ForceClaw`, `ToiletPaperClaw`\n";
-                    out+="`!mute <USER> <time>`\n\tWill mute <USER> for however long <time> is (time is formated as the following `3m/3h/3y`. Note that if <USER> is already muted, you cannot extend their time till the first expires.\n";
-                    out+="`!unmute <USER>`\n\tWill unmute <USER> only if they are already muted. (Useful if bot goes down/changes are made to code)\n";
-                    out+="`!top | !top GAME_NAME month(?)`\n\tThis will give the top scores for game catagory or GAME_NAME. When given a name, you can also ask for monthly top scores."
-                    message.author.send(out);
-                    logBotActions(message, "!getHelp");
+                    out+="`!time` - Will tell the current time and day in Finland\n";
+                    out+="`!roll` | `!roll xdy` - Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command\n";
+                    out+="`!game` - Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games\n";
+                    out+="`!schedule` | `!schedule <GAME>` - Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified\n";
+                    out+="`!top` | `!top <GAME> ?month?` - Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name\n";
+                    out+="`!mute <USER> <TIME>` - Will mute <USER> for <TIME>. Time is formatted as `3m`/`3h`/`3d`/`3y`\n";
+                    out+="`!unmute <USER>` - If <USER> is muted, will unmute them and remove them from the database\n";
+                    out+="`(ab:cd)` - When you have a time formated as such, it will paste a Timezone conversion link to that time in Finland"
+                    if(message.channel.id!=593000239841935362){
+                        message.delete();
+                        bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
+                    }else{
+                        bot.channels.get("593000239841935362").send(out);
+                    }
                 }else{
                     var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
-                    out+="`!time`\n\tThis command will tell the time and day in Finland\n";
-                    out+="`!roll` | `!roll xdy`\n\tThis command will roll a d20 on an unmodified command and will roll **x** number of **y** sided dice on a modified command\n";
-                    out+="`!game`\n\tWhen used in server catagories, it gives a link to the game(s) that catagory represents.\n";
-                    out+="`!schedule` | `!schedule GAME_NAME` - Returns the schedule of the game the channel is called in or can direct it to give the schedule of GAME_NAME. The following are the current game names\n\t\t";
-                    out+="`SumoBots`, `RaceRealCars143`, `Pinball`, `ForceClaw`, `ToiletPaperClaw`\n";
-                    out+="`!top | !top GAME_NAME month(?)`\n\tThis will give the top scores for game catagory or GAME_NAME. When given a name, you can also ask for monthly top scores."
-                    message.author.send(out);
-                    logBotActions(message, "!getHelp");
+                    out+="`!time` - Will tell the current time and day in Finland\n";
+                    out+="`!roll` | `!roll xdy` - Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command\n";
+                    out+="`!game` - Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games\n";
+                    out+="`!schedule <GAME>` - Will give <GAME>'s current schedule for the week.\n";
+                    out+="`!top <GAME> ?month?` - Will give <GAME>'s top players of all time. If you want the current top players of the month, put month after the game name";
+                    if(message.channel.id!=botSpamID){
+                        message.delete();
+                        bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
+                    }else{
+                        bot.channels.get(botSpamID).send(out);
+                    }
                 }
                 message.delete();
+                logBotActions(message, "!getHelp");
                 break;
             // !game GAME_NAME
             case 'game':
                 if(triggerSumoResponse){
                     message.reply("Here you go!\nhttps://surrogate.tv/game/sumobots");
+                    message.delete()
                 }else if(triggerRaceResponse){
                     message.reply("Here you go!\nhttps://surrogate.tv/game/racerealcars143");
+                    message.delete()
                 }else if(triggerPinballResponse&&triggerClawResponse){
                     var out="There are multiple games here. Here are the links!\n";
                     out+="https://surrogate.tv/game/batman66\n";
                     out+="https://surrogate.tv/game/forceclaw\n";
                     out+="https://surrogate.tv/game/toiletpaperclaw";
                     message.reply(out);
+                    message.delete()
                 }else if(triggerClawResponse&&706819836071903275==message.channel.id){
                     message.reply("Here you go!\nhttps://surrogate.tv/game/forceclaw");
+                    message.delete()
                 }else if(triggerClawResponse&&662301446036783108==message.channel.id){
                     message.reply("Here you go!\nhttps://surrogate.tv/game/toiletpaperclaw");
+                    message.delete()
                 }else if(triggerPinballResponse){
                     message.reply("Here you go!\nhttps://surrogate.tv/game/batman66");
+                    message.delete()
                 }else if(triggerGeneralResponse){
                     var out="Here are all the links to the current games:\n";
                     out+="https://surrogate.tv/game/sumobots\n";
                     out+="https://surrogate.tv/game/racerealcars143\n";
                     out+="https://surrogate.tv/game/batman66\n";
-                    out+="https://surrogate.tv/game/forceclaw\n";
-                    out+="https://surrogate.tv/game/toiletpaperclaw";
+                    // out+="https://surrogate.tv/game/forceclaw\n";
+                    // out+="https://surrogate.tv/game/toiletpaperclaw";
                     message.reply(out);
-                }else{
                     message.delete()
+                }else{
                     return;
                 }
-                message.delete();
                 logBotActions(message, "!game");
                 break;
             // !schedule
@@ -566,11 +592,22 @@ bot.on('message', async message => {
                 }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
                     url+="toiletpaperclaw";
                     var command="ToiletPaperClaw";
-                }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("pinball")){
+                }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("batman66")){
                     url+="batman66";
                     var command="Batman66 Pinball";
                 }else{
-                    message.delete()
+                    if(message.channel.id!=botSpamID){
+                        if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                            message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+                            bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> Can't find that game");
+                            message.delete();
+                        }else{
+                            bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nCan't find that game. Try a different one.");
+                            message.delete();
+                        }
+                    }else{
+                        bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nCan't find that game. Try a different one.");
+                    }
                     return;
                 }
                 var minDay=1440;
@@ -708,14 +745,20 @@ bot.on('message', async message => {
                             output+=command[0].toLowerCase();
                             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                            message.channel.send(output);
+                                message.delete();
+                                message.channel.send(output);
                             }else{
-                                message.author.send("That command is currently restricted while my maker works on a better system\n"+output);
+                                if(message.channel.id!=botSpamID){
+                                    message.delete();
+                                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+output);
+                                }else{
+                                    bot.channels.get(botSpamID).send(output);
+                                }
+                                // message.author.send("That command is currently restricted while my maker works on a better system\n"+output);
                             }
                         }
                     });
                 logBotActions(message, "!schedule");
-                message.delete()
                 break;
             // !mute <USER> <TIME>
             case 'mute':
@@ -858,8 +901,18 @@ bot.on('message', async message => {
                     url+="99ca6347-0e10-4465-8fe1-9fee8bc5fb35&order=";
                     var command="SumoBots";
                     if(args[2]!=null&&args[2].toLowerCase().includes("month")){
-                        message.channel.send("There are no monthly scores for "+command+".");
-                        message.delete()
+                        if(message.channel.id!=botSpamID){
+                            if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                                message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+                                bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
+                                message.delete();
+                            }else{
+                                bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
+                                message.delete();
+                            }
+                        }else{
+                            message.channel.send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
+                        }
                         return;
                     }
                 }else if(triggerRaceResponse||message.content.toLowerCase().includes("racerealcars143")){
@@ -873,19 +926,39 @@ bot.on('message', async message => {
                     url+="ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0&order=";
                     var command="ForceClaw";
                     if(args[2]!=null&&args[2].toLowerCase().includes("month")){
-                        message.channel.send("There are no monthly scores for "+command+".");
-                        message.delete()
+                        if(message.channel.id!=botSpamID){
+                            if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                                message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+                                bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
+                                message.delete();
+                            }else{
+                                bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
+                                message.delete();
+                            }
+                        }else{
+                            message.channel.send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
+                        }
                         return;
                     }
                 }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
                     url+="46db6268-bfc3-43ff-ba7d-02ffaf1f2867&order=";
                     var command="ToiletPaperClaw";
                     if(args[2]!=null&&args[2].toLowerCase().includes("month")){
-                        message.channel.send("There are no monthly scores for "+command+".");
-                        message.delete()
+                        if(message.channel.id!=botSpamID){
+                            if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                                message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+                                bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
+                                message.delete();
+                            }else{
+                                bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
+                                message.delete();
+                            }
+                        }else{
+                            message.channel.send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
+                        }
                         return;
                     }
-                }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("pinball")){
+                }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("batman66")){
                     url+="592ac917-14d2-481a-9d37-3b840ad46b19&order=";
                     var command="Batman66 Pinball";
                     if(args[2]!=null&&args[2].toLowerCase().includes("month")){
@@ -893,7 +966,18 @@ bot.on('message', async message => {
                         scoreType="Monthly";
                     }
                 }else{
-                    message.delete()
+                    if(message.channel.id!=botSpamID){
+                        if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                            message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+                            bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> Can't find that game.");
+                            message.delete();
+                        }else{
+                            bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nCan't find that game.");
+                            message.delete();
+                        }
+                    }else{
+                        message.channel.send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nCan't find that game.");
+                    }
                     return;
                 }
                 var minDay=1440;
@@ -941,20 +1025,28 @@ bot.on('message', async message => {
 
                             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                     message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+                                message.delete();
                                 message.channel.send(scores);
                             }else{
-                                message.author.send("That command is currently restricted while my maker works on a better system\n"+scores);
+                                if(message.channel.id!=botSpamID){
+                                    message.delete();
+                                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+scores);
+                                }else{
+                                    bot.channels.get(botSpamID).send(scores);
+                                }
+                                // message.author.send("That command is currently restricted while my maker works on a better system\n"+scores);
                             }
-
                         }
                     });
                 logBotActions(message, "!top");
-                message.delete()
                 break;
         }
         return;
     }
+    detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse);
+});
 
+function detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse){
     //"Refill the machine" for Claw
     if(triggerClawResponse&&
         ((message.content.toLowerCase().includes("filled")||
@@ -1176,4 +1268,4 @@ bot.on('message', async message => {
         logBotActions(message, "Detected \"how to leave queue\"");
         return;
     }
-});
+}
