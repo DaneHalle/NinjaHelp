@@ -1,12 +1,13 @@
 {
-  "name": "time-bot",
-  "version": "3.0.0",
-  "description": "Support bot for Surrogate.tv discord",
+  "name": "testing-bot",
+  "version": "1.0.0",
+  "description": "Staging code before pushing code to NinjaHelp",
   "main": "bot.js",
   "author": "Dane Halle (Mordecai)",
   "dependencies": {
     "discord.js": "^11.5.1",
     "dotenv": "^8.2.0",
+    "ms": "^2.1.2",
     "node-fetch": "^2.6.0"
   },
   "scripts": {
