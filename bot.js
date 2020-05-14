@@ -1,9 +1,8 @@
 require('dotenv').config();
 const Discord=require('discord.js');
 const fetch=require('node-fetch');
-const querystring=require('querystring');
 const ms=require("ms");
-const fs = require('fs');
+const fs=require('fs');
 const bot=new Discord.Client();
 const TOKEN=process.env.TOKEN;
 bot.login(TOKEN);
@@ -15,7 +14,7 @@ var raceTrigger=[631131278644740125, 589484542214012963, 631131301302239242, 707
 var sumoTrigger=[650048288787005451, 627919045420646401, 650048505380864040, 707600524727418900];
 var generalTrigger=[586955337870082082, 589485632984973332, 571600581936939049, 571388780058247185, 631391110966804510, 571390705117954049, 710104643996352633, 707600524727418900];
 var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 621355376167747594, 707600524727418900];
-var botSpamID="710104643996352633"; //Currently redirects to test server #general. Need #bot-spam channel on Surrogate server
+var botSpamID="710104643996352633"; 
 
 var testChannelID="707600524727418900";
 var surrogateChannelID="0";
@@ -131,8 +130,6 @@ function logBotActions(message, action){
         }
     }
 }
-
-
 
 async function newDay(){
     var date=new Date();
@@ -445,7 +442,7 @@ bot.on('message', async message => {
             // !roll xdy / !roll
             case 'roll':
                 if(args[1]!=null&&args[1].includes("d")){
-                    var output=0; var outString="`"; var i; 
+                    var output=0; var i; 
                     if(isNaN(args[1].substring(0, args[1].indexOf("d")))||
                         isNaN(args[1].substring(args[1].indexOf("d")+1))||
                         args[1].substring(0, args[1].indexOf("d"))>2000000000||
@@ -462,16 +459,16 @@ bot.on('message', async message => {
                         for(i=0; i<args[1].substring(0, args[1].indexOf("d")); i++){
                             var roll=Math.floor(Math.random()*args[1].substring(args[1].indexOf("d")+1))+1;
                             output+=roll;
-                        }
-                        if(outString.length>=2000||outString>2000000000){
-                            if(message.channel.id!=botSpamID){
-                                message.delete();
-                                bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThat was too many roles, try a smaller number!"+output);
-                            }else{
-                                bot.channels.get(botSpamID).send("That was too many roles, try a smaller number!");
+                            if(output>2000000000){
+                                if(message.channel.id!=botSpamID){
+                                    message.delete();
+                                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThat was too many roles, try a smaller number!"+output);
+                                }else{
+                                    bot.channels.get(botSpamID).send("That was too many roles, try a smaller number!");
+                                }
+                                logBotActions(message, "!roll xdy error");
+                                return;
                             }
-                            logBotActions(message, "!roll xdy error");
-                            return;
                         }
                         if(message.channel.id!=botSpamID){
                             message.delete();
@@ -479,7 +476,6 @@ bot.on('message', async message => {
                         }else{
                             bot.channels.get(botSpamID).send("Rolling "+args[1]+":\n\tTotal: "+output);
                         }
-                        // message.author.send("Rolling "+args[1]+":\n\tTotal: "+output);
                         logBotActions(message, "!roll xdy");
                     }
                 }else if(args[1]!=null){
@@ -489,7 +485,6 @@ bot.on('message', async message => {
                     }else{
                         bot.channels.get(botSpamID).send("\tError: Invalid format or too big of a number");
                     }
-                    // message.author.send("\tError: Invalid format or too big of a number");
                     logBotActions(message, "!roll error");
                 }else{
                     var roll=Math.floor(Math.random()*20)+1;
@@ -499,7 +494,6 @@ bot.on('message', async message => {
                     }else{
                         bot.channels.get(botSpamID).send("Rolling 1d20:\n\tTotal: "+roll);
                     }
-                    // message.author.send("Rolling 1d20:\n\tTotal: "+roll);
                     logBotActions(message, "!roll");
                 }
                 break;
@@ -528,7 +522,7 @@ bot.on('message', async message => {
                     out+="`!roll` | `!roll xdy` - Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command\n";
                     out+="`!game` - Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games\n";
                     out+="`!schedule <GAME>` - Will give <GAME>'s current schedule for the week.\n";
-                    out+="`!top <GAME> ?month?` - Will give <GAME>'s top players of all time. If you want the current top players of the month, put month after the game name";
+                    out+="`!top <GAME> m` - Will give <GAME>'s top players of all time. If you want the current top players of the month, put `m` after the game name";
                     if(message.channel.id!=botSpamID){
                         message.delete();
                         bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
@@ -539,7 +533,7 @@ bot.on('message', async message => {
                 message.delete();
                 logBotActions(message, "!getHelp");
                 break;
-            // !game GAME_NAME
+            // !game <GAME>
             case 'game':
                 if(triggerSumoResponse){
                     message.reply("Here you go!\nhttps://surrogate.tv/game/sumobots");
@@ -606,7 +600,7 @@ bot.on('message', async message => {
                             message.delete();
                         }
                     }else{
-                        bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nCan't find that game. Try a different one.");
+                        bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Can't find that game. Try a different one.");
                     }
                     return;
                 }
@@ -754,7 +748,6 @@ bot.on('message', async message => {
                                 }else{
                                     bot.channels.get(botSpamID).send(output);
                                 }
-                                // message.author.send("That command is currently restricted while my maker works on a better system\n"+output);
                             }
                         }
                     });
@@ -768,23 +761,19 @@ bot.on('message', async message => {
                     let toMute=message.guild.member(message.mentions.users.first());
                     let role = message.guild.roles.find(r => r.name === "muted");
                     if(!toMute){
-                        // 593000239841935362
                         bot.channels.get("593000239841935362").send(`Couldn't find user.`);
                         return;
                     }
                     if(toMute.hasPermission("MANAGE_MESSAGES")){
-                        // 593000239841935362
                         bot.channels.get("593000239841935362").send(`Can't mute that user`);
                         return;
                     }
                     let mutetime = args[2];
                     if(!mutetime){
-                        // 593000239841935362
                         bot.channels.get("593000239841935362").send(`You need to specify a time (3s/3d/3h/3y)`);
                         return;
                     }
                     await(toMute.addRole(role.id));
-                    // 593000239841935362
                     bot.channels.get("593000239841935362").send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
                     var date=new Date();
                     var day=date.getDate();
@@ -850,11 +839,9 @@ bot.on('message', async message => {
                     let toUnmute=message.guild.member(message.mentions.users.first()||message.guild.members.get(args[0]));
                     let role = message.guild.roles.find(r=>r.name==="muted");
                     if(!toUnmute){
-                        // 593000239841935362
                         bot.channels.get("593000239841935362").send("Couldn't find user.");
                         return;
                     }else if(!toUnmute.roles.find(r=>r.name.toLowerCase()==="muted")){
-                        // 593000239841935362
                         bot.channels.get("593000239841935362").send(`<@${toUnmute} is not muted.`);
                         return;
                     }
@@ -900,7 +887,7 @@ bot.on('message', async message => {
                 if(triggerSumoResponse||message.content.toLowerCase().includes("sumobots")){
                     url+="99ca6347-0e10-4465-8fe1-9fee8bc5fb35&order=";
                     var command="SumoBots";
-                    if(args[2]!=null&&args[2].toLowerCase().includes("month")){
+                    if(args[2]!=null&&args[2]==="m"){
                         if(message.channel.id!=botSpamID){
                             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
@@ -911,21 +898,21 @@ bot.on('message', async message => {
                                 message.delete();
                             }
                         }else{
-                            message.channel.send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
+                            message.channel.send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
                         }
                         return;
                     }
                 }else if(triggerRaceResponse||message.content.toLowerCase().includes("racerealcars143")){
                     url+="953f2154-9a6e-4602-99c6-265408da6310&order=";
                     var command="RaceRealCars143";
-                    if(args[2]!=null&&args[2].toLowerCase().includes("month")){
+                    if(args[2]!=null&&args[2]==="m"){
                         url+="month";
                         scoreType="Monthly";
                     }
                 }else if((triggerClawResponse&&706819836071903275==message.channel.id)||message.content.toLowerCase().includes("forceclaw")){
                     url+="ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0&order=";
                     var command="ForceClaw";
-                    if(args[2]!=null&&args[2].toLowerCase().includes("month")){
+                    if(args[2]!=null&&args[2]==="m"){
                         if(message.channel.id!=botSpamID){
                             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
@@ -936,14 +923,14 @@ bot.on('message', async message => {
                                 message.delete();
                             }
                         }else{
-                            message.channel.send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
+                            message.channel.send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
                         }
                         return;
                     }
                 }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
                     url+="46db6268-bfc3-43ff-ba7d-02ffaf1f2867&order=";
                     var command="ToiletPaperClaw";
-                    if(args[2]!=null&&args[2].toLowerCase().includes("month")){
+                    if(args[2]!=null&&args[2]==="m"){
                         if(message.channel.id!=botSpamID){
                             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
@@ -954,14 +941,14 @@ bot.on('message', async message => {
                                 message.delete();
                             }
                         }else{
-                            message.channel.send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
+                            message.channel.send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
                         }
                         return;
                     }
                 }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("batman66")){
                     url+="592ac917-14d2-481a-9d37-3b840ad46b19&order=";
                     var command="Batman66 Pinball";
-                    if(args[2]!=null&&args[2].toLowerCase().includes("month")){
+                    if(args[2]!=null&&args[2]==="m"){
                         url+="month";
                         scoreType="Monthly";
                     }
@@ -976,7 +963,7 @@ bot.on('message', async message => {
                             message.delete();
                         }
                     }else{
-                        message.channel.send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nCan't find that game.");
+                        message.channel.send("<@"+message.member.user.id+"> Can't find that game.");
                     }
                     return;
                 }
@@ -1034,11 +1021,34 @@ bot.on('message', async message => {
                                 }else{
                                     bot.channels.get(botSpamID).send(scores);
                                 }
-                                // message.author.send("That command is currently restricted while my maker works on a better system\n"+scores);
                             }
                         }
                     });
                 logBotActions(message, "!top");
+                break;
+            case "meme":
+                var out="If you want there to be a `!meme` command, here is what you need to do.\n\t";
+                out+="1) Find a safe for work meme API.\n\t";
+                out+="2) Make sure it has a random reature or a way to get a random meme.\n\t";
+                out+="3) Make sure it gives usable data and has documentation on how that data is formatted (if it doesn't exist, make it yourself)\n\t";
+                out+="4) Ping me with the API and how the data is formatted.\n\t";
+                out+="5) I will then check to validate the API and data format and if it works, I will implement it. If it doesn't, I will say so.\n";
+                out+="Until someone does these steps, I will not go about implementing a `!meme` command.";
+                if(message.channel.id!=botSpamID){
+                    message.delete();
+                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
+                }else{
+                    bot.channels.get(botSpamID).send(out);
+                }
+                logBotActions(message, "!meme info");
+                break;
+            default:
+                if(message.channel.id!=botSpamID){
+                    message.delete();
+                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n**__*No*__**");
+                }else{
+                    bot.channels.get(botSpamID).send("**__*No*__**");
+                }
                 break;
         }
         return;
