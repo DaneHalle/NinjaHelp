@@ -14,7 +14,8 @@ var raceTrigger=[631131278644740125, 589484542214012963, 631131301302239242, 707
 var sumoTrigger=[650048288787005451, 627919045420646401, 650048505380864040, 707600524727418900];
 var generalTrigger=[586955337870082082, 589485632984973332, 571600581936939049, 571388780058247185, 631391110966804510, 571390705117954049, 710104643996352633, 707600524727418900];
 var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 621355376167747594, 707600524727418900];
-var botSpamID="700390885984043188"; 
+// var botSpamID="700390885984043188"; 
+var botSpamID="707047722208854101";
 
 var testChannelID="707600524727418900";
 
@@ -183,6 +184,8 @@ async function checkToUnmute(){
         var year=date.getFullYear();
         var hour=date.getHours();
         var minute=date.getMinutes();
+        var tempHour=hour+day*24;
+        var tempMin=minute+tempHour*60;
         fs.exists("./database/mute.dat", (exists)=>{
             if(exists){
                 fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
@@ -197,16 +200,15 @@ async function checkToUnmute(){
                             var removeDate=removeTime[0].split("/");
                             var removeSpecificTime=removeTime[1].split(":");
                             var success=false;
-                            if(((removeDate[2]<=year)&&(removeDate[0]<=month)&&(removeDate[1]<=day)&&(removeSpecificTime[0]<=hour)&&(removeSpecificTime[1]<=minute))||
-                                    ((removeDate[2]<=year)&&(removeDate[0]<=month)&&(removeDate[1]<=day)&&(removeSpecificTime[0]<=hour))||
-                                    ((removeDate[2]<=year)&&(removeDate[0]<=month)&&(removeDate[1]<=day))||
-                                    ((removeDate[2]<=year)&&(removeDate[0]<=month))||
-                                    (removeDate[2]<=year)){
+                            var removeHour=parseInt(removeSpecificTime[0])+(parseInt(removeDate[1])*24);
+                            var removeMin=parseInt(removeSpecificTime[1])+(parseInt(removeHour)*24);
+
+                            if(removeMin<=tempMin){
                                 testServer.members.forEach(u => {           //CHANGE SERVER HERE!
                                     if(!u.user.bot){
                                         if(remove[0]==u.user.id){
                                             u.removeRole(role.id);
-                                            bot.channels.get("593000239841935362").send(`<@${u.user.id}> has been unmuted!`);
+                                            bot.channels.get(botSpamID).send(`<@${u.user.id}> has been unmuted!`);
                                             logBotActions("AUTO UNMUTE", u.user.tag+" unmuted automatically");
                                             success=true;
                                         }
@@ -238,9 +240,9 @@ async function checkToUnmute(){
 }
 
 bot.on('ready', () => {
-    announcement("SumoBots", "sumo", 9, "627919045420646401");
-    announcement("RaceRealCars143", "race", 4, "589484542214012963");
-    fs.open("./database/mute.dat", "w", (err)=>{
+    // announcement("SumoBots", "sumo", 9, "627919045420646401");
+    // announcement("RaceRealCars143", "race", 4, "589484542214012963");
+    fs.open("./database/mute.dat", "r+", (err)=>{
         if(err) throw err;
     });
     checkToUnmute();
@@ -295,7 +297,7 @@ bot.on('ready', () => {
     // Broom Bot code End
 });
 
-bot.on('message', async message => {
+bot.on('message',  message => {
     if(message.author.bot){
         return;
     }
@@ -336,7 +338,7 @@ bot.on('message', async message => {
             n_hID: hash.toString(),
         })
     }).then(response => response.text())
-        .then((x) => {
+        .then(async (x) => {
             console.log(x);
             
             let dbReply = x.split('|');
@@ -438,14 +440,44 @@ bot.on('message', async message => {
                 switch(cmd){
                     case "command":
                     case "commands":
+                    case 'gethelp':
+                        if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                                message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+                            var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
+                            out+="`-time` - Will tell the current time and day in Finland\n";
+                            out+="`-roll` | `!roll xdy` - Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command\n";
+                            out+="`-game` - Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games\n";
+                            out+="`-schedule` | `!schedule <GAME>` - Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified\n";
+                            out+="`-top` | `!top <GAME> ?month?` - Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name\n";
+                            out+="`-mute <USER> <TIME>` - Will mute <USER> for <TIME>. Time is formatted as `3m`/`3h`/`3d`/`3y`\n";
+                            out+="`-unmute <USER>` - If <USER> is muted, will unmute them and remove them from the database\n";
+                            out+="`(ab:cd)` - When you have a time formated as such, it will paste a Timezone conversion link to that time in Finland\n";
+                            out+="`-bot` - shows that the bot is running\n";
+                            out+="`-exp` - shows user exp and gives an explanation for exp\n";
+                            out+="`-warning` - shows user warnings and gives an explanation for warnings\n"
+                            out+="`-status` - shows user exp and user warnings, also shows a message for exp gain eligibility\n";
+                            out+="`-level`, `-rank`, `-role`, `-me` - shows user rank and exp, also shows progress to next rank";
+                            // if(message.channel.id!=593000239841935362){
+                            //     message.delete();
+                            //     bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
+                            // }else{
+                                bot.channels.get("593000239841935362").send(out);
+                            // }
+                        }else{
+                            var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
+                            out+="`-time` - Will tell the current time and day in Finland\n";
+                            out+="`-roll` | `-roll xdy` - Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command\n";
+                            out+="`-game` - Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games\n";
+                            out+="`-schedule <GAME>` - Will give <GAME>'s current schedule for the week.\n";
+                            out+="`-top <GAME> m` - Will give <GAME>'s top players of all time. If you want the current top players of the month, put `m` after the game name\n";
+                            out+="`-bot` - shows that the bot is running\n";
+                            out+="`-exp` - shows user exp and gives an explanation for exp\n";
+                            out+="`-warning` - shows user warnings and gives an explanation for warnings\n"
+                            out+="`-status` - shows user exp and user warnings, also shows a message for exp gain eligibility\n";
+                            out+="`-level`, `-rank`, `-role`, `-me` - shows user rank and exp, also shows progress to next rank";
+                            bot.channels.get(botSpamID).send(out);
+                        }
                         deleteMsgWhenNotInChannel = true;
-                        botChannel.send("<@" + message.author.id + ">, Broom Bot has the following commands: \n" +
-                            "- **!bot** - shows that the bot is running\n" +
-                            "- **!exp** - shows user exp and gives an explanation for exp\n" +
-                            "- **!warning** - shows user warnings and gives an explanation for warnings\n" +
-                            "- **!status** - shows user exp and user warnings, also shows a message for exp gain eligibility\n" +
-                            "- **!level, !rank, !role, !me** - shows user rank and exp, also shows progress to next rank"
-                        );
                         break;
                     case "bot":
                         deleteMsgWhenNotInChannel = true;
@@ -497,13 +529,13 @@ bot.on('message', async message => {
                             botChannel.send("<@" + message.author.id + ">, you are not muted.");
                         }
                         break;
-                    // !ping
+                    // -ping
                     case 'ping':
                         if(message.member.user.tag=="Mordecai#3257"){
                             message.channel.send("Pong!");
                         }
                         break;
-                    // !time
+                    // -time
                     case 'time':
                         today=new Date();
                         var day=today.getDate();
@@ -552,7 +584,7 @@ bot.on('message', async message => {
                         message.channel.send(sendOut);
                         logBotActions(message, "!time");
                         break;
-                    // !roll xdy / !roll
+                    // -roll xdy / !roll
                     case 'roll':
                         if(args[1]!=null&&args[1].includes("d")){
                             var output=0; var i; 
@@ -610,43 +642,10 @@ bot.on('message', async message => {
                             logBotActions(message, "!roll");
                         }
                         break;
-                    // !getHelp
-                    case 'gethelp':
-                        if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
-                                message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                            var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
-                            out+="`!time` - Will tell the current time and day in Finland\n";
-                            out+="`!roll` | `!roll xdy` - Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command\n";
-                            out+="`!game` - Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games\n";
-                            out+="`!schedule` | `!schedule <GAME>` - Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified\n";
-                            out+="`!top` | `!top <GAME> ?month?` - Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name\n";
-                            out+="`!mute <USER> <TIME>` - Will mute <USER> for <TIME>. Time is formatted as `3m`/`3h`/`3d`/`3y`\n";
-                            out+="`!unmute <USER>` - If <USER> is muted, will unmute them and remove them from the database\n";
-                            out+="`(ab:cd)` - When you have a time formated as such, it will paste a Timezone conversion link to that time in Finland"
-                            // if(message.channel.id!=593000239841935362){
-                            //     message.delete();
-                            //     bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
-                            // }else{
-                                bot.channels.get("593000239841935362").send(out);
-                            // }
-                        }else{
-                            var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
-                            out+="`!time` - Will tell the current time and day in Finland\n";
-                            out+="`!roll` | `!roll xdy` - Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command\n";
-                            out+="`!game` - Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games\n";
-                            out+="`!schedule <GAME>` - Will give <GAME>'s current schedule for the week.\n";
-                            out+="`!top <GAME> m` - Will give <GAME>'s top players of all time. If you want the current top players of the month, put `m` after the game name";
-                            // if(message.channel.id!=botSpamID){
-                            //     message.delete();
-                            //     bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
-                            // }else{
-                                bot.channels.get(botSpamID).send(out);
-                            // }
-                        }
                         message.delete();
                         logBotActions(message, "!getHelp");
                         break;
-                    // !game <GAME>
+                    // -game <GAME>
                     case 'game':
                         if(triggerSumoResponse){
                             message.reply("Here you go!\nhttps://surrogate.tv/game/sumobots");
@@ -684,7 +683,7 @@ bot.on('message', async message => {
                         }
                         logBotActions(message, "!game");
                         break;
-                    // !schedule
+                    // -schedule
                     case 'schedule':
                         var url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=";
                         if(triggerSumoResponse||message.content.toLowerCase().includes("sumobots")){
@@ -866,7 +865,7 @@ bot.on('message', async message => {
                             });
                         logBotActions(message, "!schedule");
                         break;
-                    // !mute <USER> <TIME>
+                    // -mute <USER> <TIME>
                     case 'mute':
                         if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team")&&
@@ -874,20 +873,21 @@ bot.on('message', async message => {
                             let toMute=message.guild.member(message.mentions.users.first());
                             let role = message.guild.roles.find(r => r.name === "muted");
                             if(!toMute){
-                                bot.channels.get("593000239841935362").send(`Couldn't find user.`);
+                                bot.channels.get(botSpamID).send(`Couldn't find user.`);
                                 return;
                             }
                             if(toMute.hasPermission("MANAGE_MESSAGES")){
-                                bot.channels.get("593000239841935362").send(`Can't mute that user`);
+                                bot.channels.get(botSpamID).send(`Can't mute that user`);
                                 return;
                             }
                             let mutetime = args[2];
                             if(!mutetime){
-                                bot.channels.get("593000239841935362").send(`You need to specify a time (3s/3d/3h/3y)`);
+                                bot.channels.get(botSpamID).send(`You need to specify a time (3s/3d/3h/3y)`);
                                 return;
                             }
-                            await(toMute.addRole(role.id));
-                            bot.channels.get("593000239841935362").send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
+                            // await(toMute.addRole(role.id));
+                            toMute.addRole(role.id);
+                            bot.channels.get(botSpamID).send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
                             var date=new Date();
                             var day=date.getDate();
                             var month=date.getMonth()+1;
@@ -915,7 +915,6 @@ bot.on('message', async message => {
                                     }
                                 }
                                 if(toRemove!=-1){
-
                                     var removeUserData=testData[toRemove];
                                     var reinsert="";
                                     var j;
@@ -930,7 +929,7 @@ bot.on('message', async message => {
                                     fs.writeFile("./database/mute.dat", reinsert, (err)=>{
                                         if(err) throw err;
                                     });
-                                    fs.appendFile("./database/mute.dat", toMute.id+"|"+endMute, (err)=>{
+                                    fs.appendFile("./database/mute.dat", endMute, (err)=>{
                                         if(err) throw err;
                                     });
                                 }
@@ -944,7 +943,7 @@ bot.on('message', async message => {
                             logBotActions(message, "!mute "+toMute.user.tag+" "+ms(ms(mutetime)));
                         }
                         break;
-                    // !unmute <USER>
+                    // -unmute <USER>
                     case "unmute":
                         if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team")&&
@@ -952,17 +951,17 @@ bot.on('message', async message => {
                             let toUnmute=message.guild.member(message.mentions.users.first()||message.guild.members.get(args[0]));
                             let role = message.guild.roles.find(r=>r.name==="muted");
                             if(!toUnmute){
-                                bot.channels.get("593000239841935362").send("Couldn't find user.");
+                                bot.channels.get(botSpamID).send("Couldn't find user.");
                                 return;
                             }else if(!toUnmute.roles.find(r=>r.name.toLowerCase()==="muted")){
-                                bot.channels.get("593000239841935362").send(`<@${toUnmute} is not muted.`);
+                                bot.channels.get(botSpamID).send(`<@${toUnmute} is not muted.`);
                                 return;
                             }
 
-                            await(toUnmute.addRole(role.id));
+                            // await(toUnmute.addRole(role.id));
                             toUnmute.removeRole(role.id);
                             // 593000239841935362
-                            bot.channels.get("593000239841935362").send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
+                            bot.channels.get(botSpamID).send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
                             logBotActions(message, "!unmute "+toUnmute.user.tag);
 
                             fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
@@ -993,7 +992,7 @@ bot.on('message', async message => {
                             });
                         }
                         break;
-                    // !top <GAME> month(?)
+                    // -top <GAME> month(?)
                     case "top":
                         var url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/scores?gameId=";
                         var scoreType="All Time";
@@ -1102,19 +1101,19 @@ bot.on('message', async message => {
                                             var icon=x.result.Items[i].userObject.userIcon.toLowerCase();
                                             switch(icon){
                                                 case "broomsquad":
-                                                    icon=bot.emojis.get("700736528803954769").toString();
+                                                    // icon=bot.emojis.get("700736528803954769").toString();
                                                     break;
                                                 case "moderator":
-                                                    icon=bot.emojis.get("700736529043161139").toString();
+                                                    // icon=bot.emojis.get("700736529043161139").toString();
                                                     break;
                                                 case "patreonsupporter":
-                                                    icon=bot.emojis.get("700736949631188993").toString();
+                                                    // icon=bot.emojis.get("700736949631188993").toString();
                                                     break;
                                                 case "surrogateteam":
-                                                    icon=bot.emojis.get("700737595734491237").toString();
+                                                    // icon=bot.emojis.get("700737595734491237").toString();
                                                     break;
                                                 case "alphatester":
-                                                    icon=bot.emojis.get("700736528967532564").toString();
+                                                    // icon=bot.emojis.get("700736528967532564").toString();
                                                     break;
                                             }
                                             scores+="\n\t"+(i+1)+") "+icon+" **__"+x.result.Items[i].userObject.username+"__**:\t"+x.result.Items[i].points;
@@ -1139,7 +1138,7 @@ bot.on('message', async message => {
                             });
                         logBotActions(message, "!top");
                         break;
-                    // !meme
+                    // -meme
                     case "meme":
                         var out="If you want there to be a `!meme` command, here is what you need to do.\n\t";
                         out+="1) Find a safe for work meme API.\n\t";
