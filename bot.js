@@ -165,6 +165,8 @@ async function checkToUnmute(){
         var year=date.getFullYear();
         var hour=date.getHours();
         var minute=date.getMinutes();
+        var tempHour=hour+day*24;
+        var tempMin=minute+tempHour*60;
         fs.exists("./database/mute.dat", (exists)=>{
             if(exists){
                 fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
@@ -179,11 +181,9 @@ async function checkToUnmute(){
                             var removeDate=removeTime[0].split("/");
                             var removeSpecificTime=removeTime[1].split(":");
                             var success=false;
-                            if(((removeDate[2]<=year)&&(removeDate[0]<=month)&&(removeDate[1]<=day)&&(removeSpecificTime[0]<=hour)&&(removeSpecificTime[1]<=minute))||
-                                    ((removeDate[2]<=year)&&(removeDate[0]<=month)&&(removeDate[1]<=day)&&(removeSpecificTime[0]<=hour))||
-                                    ((removeDate[2]<=year)&&(removeDate[0]<=month)&&(removeDate[1]<=day))||
-                                    ((removeDate[2]<=year)&&(removeDate[0]<=month))||
-                                    (removeDate[2]<=year)){
+                            var removeHour=parseInt(removeSpecificTime[0])+(parseInt(removeDate[1])*24);
+                            var removeMin=parseInt(removeSpecificTime[1])+(parseInt(removeHour)*24);
+                            if(removeMin<=tempMin){
                                 surrogateServer.members.forEach(u => {
                                     if(!u.user.bot){
                                         if(remove[0]==u.user.id){
@@ -817,7 +817,7 @@ bot.on('message', async message => {
                             fs.writeFile("./database/mute.dat", reinsert, (err)=>{
                                 if(err) throw err;
                             });
-                            fs.appendFile("./database/mute.dat", toMute.id+"|"+endMute, (err)=>{
+                            fs.appendFile("./database/mute.dat", endMute, (err)=>{
                                 if(err) throw err;
                             });
                         }
@@ -1026,6 +1026,7 @@ bot.on('message', async message => {
                     });
                 logBotActions(message, "!top");
                 break;
+            // !meme
             case "meme":
                 var out="If you want there to be a `!meme` command, here is what you need to do.\n\t";
                 out+="1) Find a safe for work meme API.\n\t";
