@@ -140,7 +140,9 @@ async function newDay(){
     while(true){
         date=new Date();
         var checkDay=date.getDate();
-        if(checkDay>day){
+        var checkMonth=date.getMonth()+1;
+        var checkYear=date.getFullYear();
+        if(checkDay>day||checkMonth>month||checkYear>year){
             bot.destroy();
             fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", "Starting a new day and restarting the bot", function (err) {
               if (err) throw err;
@@ -183,7 +185,7 @@ async function checkToUnmute(){
                             var removeSpecificTime=removeTime[1].split(":");
                             var success=false;
                             var removeHour=parseInt(removeSpecificTime[0])+(parseInt(removeDate[1])*24);
-                            var removeMin=parseInt(removeSpecificTime[1])+(parseInt(removeHour)*24);
+                            var removeMin=parseInt(removeSpecificTime[1])+(parseInt(removeHour)*60);
                             if(removeMin<=tempMin){
                                 surrogateServer.members.forEach(u => {
                                     if(!u.user.bot){
