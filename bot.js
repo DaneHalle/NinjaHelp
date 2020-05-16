@@ -15,6 +15,7 @@ var sumoTrigger=[650048288787005451, 627919045420646401, 650048505380864040, 707
 var generalTrigger=[586955337870082082, 589485632984973332, 571600581936939049, 571388780058247185, 631391110966804510, 571390705117954049, 710104643996352633, 707600524727418900];
 var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 621355376167747594, 707600524727418900];
 var botSpamID="710104643996352633"; 
+var modBotSpamID="593000239841935362";
 
 var testChannelID="707600524727418900";
 var surrogateChannelID="0";
@@ -188,7 +189,7 @@ async function checkToUnmute(){
                                     if(!u.user.bot){
                                         if(remove[0]==u.user.id){
                                             u.removeRole(role.id);
-                                            bot.channels.get("593000239841935362").send(`<@${u.user.id}> has been unmuted!`);
+                                            bot.channels.get(modBotSpamID).send(`<@${u.user.id}> has been unmuted!`);
                                             logBotActions("AUTO UNMUTE", u.user.tag+" unmuted automatically");
                                             success=true;
                                         }
@@ -510,11 +511,11 @@ bot.on('message', async message => {
                     out+="`!mute <USER> <TIME>` - Will mute <USER> for <TIME>. Time is formatted as `3m`/`3h`/`3d`/`3y`\n";
                     out+="`!unmute <USER>` - If <USER> is muted, will unmute them and remove them from the database\n";
                     out+="`(ab:cd)` - When you have a time formated as such, it will paste a Timezone conversion link to that time in Finland"
-                    if(message.channel.id!=593000239841935362){
+                    if(message.channel.id!=modBotSpamID){
                         message.delete();
-                        bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
+                        bot.channels.get(modBotSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
                     }else{
-                        bot.channels.get("593000239841935362").send(out);
+                        bot.channels.get(modBotSpamID).send(out);
                     }
                 }else{
                     var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
@@ -593,7 +594,7 @@ bot.on('message', async message => {
                     if(message.channel.id!=botSpamID){
                         if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                             message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                            bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> Can't find that game");
+                            bot.channels.get(modBotSpamID).send("<@"+message.member.user.id+"> Can't find that game");
                             message.delete();
                         }else{
                             bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nCan't find that game. Try a different one.");
@@ -761,20 +762,20 @@ bot.on('message', async message => {
                     let toMute=message.guild.member(message.mentions.users.first());
                     let role = message.guild.roles.find(r => r.name === "muted");
                     if(!toMute){
-                        bot.channels.get("593000239841935362").send(`Couldn't find user.`);
+                        bot.channels.get(modBotSpamID).send(`Couldn't find user.`);
                         return;
                     }
                     if(toMute.hasPermission("MANAGE_MESSAGES")){
-                        bot.channels.get("593000239841935362").send(`Can't mute that user`);
+                        bot.channels.get(modBotSpamID).send(`Can't mute that user`);
                         return;
                     }
                     let mutetime = args[2];
                     if(!mutetime){
-                        bot.channels.get("593000239841935362").send(`You need to specify a time (3s/3d/3h/3y)`);
+                        bot.channels.get(modBotSpamID).send(`You need to specify a time (3s/3d/3h/3y)`);
                         return;
                     }
                     await(toMute.addRole(role.id));
-                    bot.channels.get("593000239841935362").send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
+                    bot.channels.get(modBotSpamID).send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
                     var date=new Date();
                     var day=date.getDate();
                     var month=date.getMonth()+1;
@@ -839,17 +840,16 @@ bot.on('message', async message => {
                     let toUnmute=message.guild.member(message.mentions.users.first()||message.guild.members.get(args[0]));
                     let role = message.guild.roles.find(r=>r.name==="muted");
                     if(!toUnmute){
-                        bot.channels.get("593000239841935362").send("Couldn't find user.");
+                        bot.channels.get(modBotSpamID).send("Couldn't find user.");
                         return;
                     }else if(!toUnmute.roles.find(r=>r.name.toLowerCase()==="muted")){
-                        bot.channels.get("593000239841935362").send(`<@${toUnmute} is not muted.`);
+                        bot.channels.get(modBotSpamID).send(`<@${toUnmute} is not muted.`);
                         return;
                     }
 
                     await(toUnmute.addRole(role.id));
                     toUnmute.removeRole(role.id);
-                    // 593000239841935362
-                    bot.channels.get("593000239841935362").send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
+                    bot.channels.get(modBotSpamID).send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
                     logBotActions(message, "!unmute "+toUnmute.user.tag);
 
                     fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
@@ -891,7 +891,7 @@ bot.on('message', async message => {
                         if(message.channel.id!=botSpamID){
                             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                                bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
+                                bot.channels.get(modBotSpamID).send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
                                 message.delete();
                             }else{
                                 bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
@@ -916,7 +916,7 @@ bot.on('message', async message => {
                         if(message.channel.id!=botSpamID){
                             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                                bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
+                                bot.channels.get(modBotSpamID).send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
                                 message.delete();
                             }else{
                                 bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
@@ -934,7 +934,7 @@ bot.on('message', async message => {
                         if(message.channel.id!=botSpamID){
                             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                                bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
+                                bot.channels.get(modBotSpamID).send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
                                 message.delete();
                             }else{
                                 bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
@@ -956,7 +956,7 @@ bot.on('message', async message => {
                     if(message.channel.id!=botSpamID){
                         if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                             message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                            bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> Can't find that game.");
+                            bot.channels.get(modBotSpamID).send("<@"+message.member.user.id+"> Can't find that game.");
                             message.delete();
                         }else{
                             bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nCan't find that game.");
@@ -1044,12 +1044,12 @@ bot.on('message', async message => {
                 logBotActions(message, "!meme info");
                 break;
             default:
-                if(message.channel.id!=botSpamID){
-                    message.delete();
-                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n**__*No*__**");
-                }else{
-                    bot.channels.get(botSpamID).send("**__*No*__**");
-                }
+                // if(message.channel.id!=botSpamID){
+                //     message.delete();
+                //     bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n**__*No*__**");
+                // }else{
+                //     bot.channels.get(botSpamID).send("**__*No*__**");
+                // }
                 break;
         }
         return;
