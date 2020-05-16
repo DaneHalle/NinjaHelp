@@ -27,13 +27,14 @@ const expLevelNames=[
 const expLevelNamePrefix=["a", "a", "a", "an", "a", "an", "a", "a"];
 
 const swearWords=[
-    "bastard","bitch","blowjob","boner","choad","clit","cock","coomer","cum","cunt","dick",
-    "faggot","fuck","fck","gangbang","ginger","gook","horny","hump","inbred","jackoff",
-    "jacking","jerk","jizz","motherfucker","mofo","nigga","nigger","nutbag","nutsack",
-    "peepee","peehole","penis","pigshit","pissoff","porn","prick","puss","pussy","puta",
-    "queef","ratfuck","rimjob","schlong","scum","shitbag","shitstain","shitass","shitbag",
-    "shitbrain","shithead","shithole","shitland","slut","spank","sperm","spunk","squirt",
-    "stiffy","sucker","tits","titty","twat","vagina","wank","whore","yankoff"];
+    // "bastard","bitch","blowjob","boner","choad","clit","cock","coomer","cum","cunt","dick",
+    // "faggot","fuck","fck","gangbang","ginger","gook","horny","hump","inbred","jackoff",
+    // "jacking","jerk","jizz","motherfucker","mofo","nigga","nigger","nutbag","nutsack",
+    // "peepee","peehole","penis","pigshit","pissoff","porn","prick","puss","pussy","puta",
+    // "queef","ratfuck","rimjob","schlong","scum","shitbag","shitstain","shitass","shitbag",
+    // "shitbrain","shithead","shithole","shitland","slut","spank","sperm","spunk","squirt",
+    // "stiffy","sucker","tits","titty","twat","vagina","wank","whore","yankoff"
+    ];
 let botChannel;
 // Brrom Bot code End
 
@@ -157,7 +158,9 @@ async function newDay(){
     while(true){
         date=new Date();
         var checkDay=date.getDate();
-        if(checkDay>day){
+        var checkMonth=date.getMonth()+1;
+        var checkYear=date.getFullYear();
+        if(checkDay>day||checkMonth>month||checkYear>year){
             bot.destroy();
             fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", "Starting a new day and restarting the bot", function (err) {
               if (err) throw err;
@@ -200,7 +203,7 @@ async function checkToUnmute(){
                             var removeSpecificTime=removeTime[1].split(":");
                             var success=false;
                             var removeHour=parseInt(removeSpecificTime[0])+(parseInt(removeDate[1])*24);
-                            var removeMin=parseInt(removeSpecificTime[1])+(parseInt(removeHour)*24);
+                            var removeMin=parseInt(removeSpecificTime[1])+(parseInt(removeHour)*60);
                             if(removeMin<=tempMin){
                                 broomBotServer.members.forEach(u => {           //CHANGE SERVER HERE!
                                     if(!u.user.bot){
@@ -483,7 +486,9 @@ bot.on('message',  message => {
                         break;
                     case "exp":
                         deleteMsgWhenNotInChannel=true;
-                        botChannel.send("<@"+message.author.id+">, you have "+exp+" exp. Gain up to 5 exp per day by sending any message in this server. Everyone loses some exp per day, so come back regularly.");
+                        var out="<@"+message.author.id+">, you have "+exp+" exp. Gain up to 5 exp per day by sending any message in this server. Everyone loses some exp per day, so come back regularly."
+                        if(dbReply[2]==="B") out+=" You can't gain exp because you have warnings.";
+                        botChannel.send(out);
                         break;
                     case "warning":
                     case "warnings":
@@ -1473,12 +1478,31 @@ let checkMute=function (server, user, warnings) {
         }
         
     } else {
-        
         if ( userRoles.find(r => r.name==="muted") ) {
-            user.removeRole(mutedRole)
-                .then(e => console.log(e))
-                .catch(e => console.log(e));
-            roleHasBeenGiven=3;
+            fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
+                if (err) throw err;
+                var testData=file.toString().split("\n");
+                var i; var located=false;
+                for(i=0; i<testData.length; i++){
+                    if(!testData[i]=="\n"){
+                        var removeUserLine=testData[i];
+                        if(removeUserLine.includes("|")){
+                            var userID=removeUserLine.split("|")[0];
+                            if(userID==user.id){
+                                located=true;
+                                break;
+                            }
+                        }
+                    }
+                }if(!located){
+                    user.removeRole(mutedRole)
+                        .then(e => console.log(e))
+                        .catch(e => console.log(e));
+                    roleHasBeenGiven=3;
+                }else{
+                    roleHasBeenGiven=4;
+                }
+            });
         } else {
             roleHasBeenGiven=4;
         }
