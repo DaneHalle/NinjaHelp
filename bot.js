@@ -14,20 +14,19 @@ var raceTrigger=[631131278644740125, 589484542214012963, 631131301302239242, 707
 var sumoTrigger=[650048288787005451, 627919045420646401, 650048505380864040, 707600524727418900];
 var generalTrigger=[586955337870082082, 589485632984973332, 571600581936939049, 571388780058247185, 631391110966804510, 571390705117954049, 710104643996352633, 707600524727418900];
 var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 621355376167747594, 707600524727418900];
-// var botSpamID="700390885984043188"; 
-var botSpamID="707047722208854101";
+var botSpamID="700390885984043188";
 
 var testChannelID="707600524727418900";
 
 // Broom Bot code Start
-const expLevels = [0,25,100,200,400,750,2000,999999999];
-const expLevelNames = [
+const expLevels=[0,25,100,200,400,750,2000,999999999];
+const expLevelNames=[
     "growing-up robot ninja","regular robot ninja","trained robot ninja",
     "experienced robot ninja","master robot ninja","elder robot ninja",
     "holy robot ninja","maximum reached"];
-const expLevelNamePrefix = ["a", "a", "a", "an", "a", "a", "a", "a"];
+const expLevelNamePrefix=["a", "a", "a", "an", "a", "an", "a", "a"];
 
-const swearWords = [
+const swearWords=[
     "bastard","bitch","blowjob","boner","choad","clit","cock","coomer","cum","cunt","dick",
     "faggot","fuck","fck","gangbang","ginger","gook","horny","hump","inbred","jackoff",
     "jacking","jerk","jizz","motherfucker","mofo","nigga","nigger","nutbag","nutsack",
@@ -173,9 +172,9 @@ async function newDay(){
 
 async function checkToUnmute(){
     let testServer=bot.guilds.get("707047722208854098");
-    let bromBotServer=bot.guilds.get("664556796576268298");
+    let broomBotServer=bot.guilds.get("664556796576268298");
     let surrogateServer=bot.guilds.get("571388780058247179");
-    let role = testServer.roles.find(r => r.name === "muted");          //CHANGE SERVER HERE!
+    let role=broomBotServer.roles.find(r => r.name==="muted");          //CHANGE SERVER HERE!
     while(true){
         date=new Date();
         var date=new Date();
@@ -202,9 +201,8 @@ async function checkToUnmute(){
                             var success=false;
                             var removeHour=parseInt(removeSpecificTime[0])+(parseInt(removeDate[1])*24);
                             var removeMin=parseInt(removeSpecificTime[1])+(parseInt(removeHour)*24);
-
                             if(removeMin<=tempMin){
-                                testServer.members.forEach(u => {           //CHANGE SERVER HERE!
+                                broomBotServer.members.forEach(u => {           //CHANGE SERVER HERE!
                                     if(!u.user.bot){
                                         if(remove[0]==u.user.id){
                                             u.removeRole(role.id);
@@ -273,8 +271,8 @@ bot.on('ready', () => {
     console.info(info);
 
     // Broom Bot code Start
-    // let server = bot.guilds.get("664556796576268298");
-    let server=bot.guilds.get("707047722208854098");
+    let server=bot.guilds.get("664556796576268298");
+    // let server=bot.guilds.get("707047722208854098");
     server.members.forEach(u => {
         if (!u.user.bot) {
             fetch("http://proco.me/data/BroomBot/updatemember.php", {
@@ -287,13 +285,13 @@ bot.on('ready', () => {
                 })
             }).then(response => response.text())
                 .then((x) => {
-                    let exp = parseInt(x.split('|')[5]);
-                    console.log(u.user.username + ", exp: ", exp);
+                    let exp=parseInt(x.split('|')[5]);
+                    console.log(u.user.username+", exp: ", exp);
                     checkRole(server, u, exp);
                 });
         }
     });
-    botChannel = bot.channels.get("707047722208854101");
+    botChannel=bot.channels.get(botSpamID);
     // Broom Bot code End
 });
 
@@ -326,8 +324,8 @@ bot.on('message',  message => {
         return;
     }
 
-    console.log("new message by " + message.author.username + " - says: '" + message.content + "'");
-    let hash = hashID(message.author.id);
+    console.log("new message by "+message.author.username+" - says: '"+message.content+"'");
+    let hash=hashID(message.author.id);
 
     fetch("http://proco.me/data/BroomBot/updatemember.php", {
         method: 'POST',
@@ -341,19 +339,19 @@ bot.on('message',  message => {
         .then(async (x) => {
             console.log(x);
             
-            let dbReply = x.split('|');
-            let exp = parseInt(dbReply[5]);
-            let currentLevelIndex = expLevels.findIndex(x => x > exp) - 1;
-            let nrWarnings = parseInt(x.split('|')[6]);
-            let hasSwearWords = false;
+            let dbReply=x.split('|');
+            let exp=parseInt(dbReply[5]);
+            let currentLevelIndex=expLevels.findIndex(x => x > exp) - 1;
+            let nrWarnings=parseInt(x.split('|')[6]);
+            let hasSwearWords=false;
             
-            let roleGiven = checkRole(message.guild, message.member, exp);
+            let roleGiven=checkRole(message.guild, message.member, exp);
             
-            if (roleGiven > -1) {
-                botChannel.send("<@" + message.author.id + ">, your are now "
-                    + expLevelNamePrefix[currentLevelIndex] + " " + expLevelNames[currentLevelIndex].toUpperCase() + "!");
+            if (roleGiven>-1) {
+                botChannel.send("<@"+message.author.id+">, your are now "
+                   +expLevelNamePrefix[currentLevelIndex]+" "+expLevelNames[currentLevelIndex].toUpperCase()+"!");
             }
-            let deleteMsgWhenNotInChannel = false;
+            let deleteMsgWhenNotInChannel=false;
 
             // NinjaHelp stuff
             let testServer=bot.guilds.get("707047722208854098");
@@ -434,7 +432,7 @@ bot.on('message',  message => {
                 }
             }
 
-            if(message.content.substring(0, 1) == '-'){
+            if(message.content.substring(0, 1)=='-'){
                 var args=message.content.substring(1).split(' ');
                 var cmd=args[0].toLowerCase();
                 switch(cmd){
@@ -461,7 +459,7 @@ bot.on('message',  message => {
                             //     message.delete();
                             //     bot.channels.get("593000239841935362").send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
                             // }else{
-                                bot.channels.get("593000239841935362").send(out);
+                                bot.channels.get(botSpamID).send(out);
                             // }
                         }else{
                             var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
@@ -477,56 +475,56 @@ bot.on('message',  message => {
                             out+="`-level`, `-rank`, `-role`, `-me` - shows user rank and exp, also shows progress to next rank";
                             bot.channels.get(botSpamID).send(out);
                         }
-                        deleteMsgWhenNotInChannel = true;
+                        deleteMsgWhenNotInChannel=true;
                         break;
                     case "bot":
-                        deleteMsgWhenNotInChannel = true;
-                        botChannel.send("<@" + message.author.id + ">, The Bot is running. The Brooms are sweeping. The ninjas are still invisible.");
+                        deleteMsgWhenNotInChannel=true;
+                        botChannel.send("<@"+message.author.id+">, The Bot is running. The Brooms are sweeping. The ninjas are still invisible.");
                         break;
                     case "exp":
-                        deleteMsgWhenNotInChannel = true;
-                        botChannel.send("<@" + message.author.id + ">, you have " + exp + " exp. Gain up to 5 exp per day by sending any message in this server. Everyone loses some exp per day, so come back regularly.");
+                        deleteMsgWhenNotInChannel=true;
+                        botChannel.send("<@"+message.author.id+">, you have "+exp+" exp. Gain up to 5 exp per day by sending any message in this server. Everyone loses some exp per day, so come back regularly.");
                         break;
                     case "warning":
                     case "warnings":
-                        deleteMsgWhenNotInChannel = true;
-                        var rText1 = (parseInt(dbReply[6]) > 0) ? " This means you can't gain exp. One warning will be removed every 7 days." : "";
-                        var rText2 = (parseInt(dbReply[6]) > 0) ? " Your last warning was " + timestampToText(dbReply[9]) : "";
-                        botChannel.send("<@" + message.author.id + ">, you have " + nrWarnings + " warnings." + rText1 + rText2);
+                        deleteMsgWhenNotInChannel=true;
+                        var rText1=(parseInt(dbReply[6]) > 0) ? " This means you can't gain exp. One warning will be removed every 7 days." : "";
+                        var rText2=(parseInt(dbReply[6]) > 0) ? " Your last warning was "+timestampToText(dbReply[9]) : "";
+                        botChannel.send("<@"+message.author.id+">, you have "+nrWarnings+" warnings."+rText1+rText2);
                         break;
                     case "status":
-                        deleteMsgWhenNotInChannel = true;
-                        var rText1 = dbReply[6];
-                        var rText2 = "";
-                        if (dbReply[2] === "B") rText2 = "You can't gain exp because you have warnings.";
-                        if (dbReply[2] === "C") rText2 = "You already gained your daily exp. Write any message after "  + timestampToText(parseInt(dbReply[8]) + 86400) + " to gain more." ;
-                        if (dbReply[2] === "D") rText2 = "You can't gain exp today because your last message was more than 5 days ago.";
-                        if (dbReply[0] === "B") rText2 = "Your user wasn't found. A new user has been created.";
-                        botChannel.send("<@" + message.author.id + ">, Your current status is: " + exp + " exp, " + rText1 + " warnings. " + rText2);
+                        deleteMsgWhenNotInChannel=true;
+                        var rText1=dbReply[6];
+                        var rText2="";
+                        if (dbReply[2]==="B") rText2="You can't gain exp because you have warnings.";
+                        if (dbReply[2]==="C") rText2="You already gained your daily exp. Write any message after " +timestampToText(parseInt(dbReply[8])+86400)+" to gain more." ;
+                        if (dbReply[2]==="D") rText2="You can't gain exp today because your last message was more than 5 days ago.";
+                        if (dbReply[0]==="B") rText2="Your user wasn't found. A new user has been created.";
+                        botChannel.send("<@"+message.author.id+">, Your current status is: "+exp+" exp, "+rText1+" warnings. "+rText2);
                         break;
                     case "level":
                     case "rank":
                     case "role":
                     case "me":
-                        deleteMsgWhenNotInChannel = true;
-                        botChannel.send("<@" + message.author.id + ">, you are currently " + expLevelNamePrefix[currentLevelIndex]
-                            + " " + expLevelNames[currentLevelIndex].toUpperCase() + " with " + exp.toLocaleString()
-                            + " exp. Reach " + expLevels[currentLevelIndex + 1].toLocaleString() + " exp to become " + expLevelNamePrefix[currentLevelIndex] + " "
-                            + expLevelNames[currentLevelIndex + 1].toUpperCase() + "."
+                        deleteMsgWhenNotInChannel=true;
+                        botChannel.send("<@"+message.author.id+">, you are currently "+expLevelNamePrefix[currentLevelIndex]
+                           +" "+expLevelNames[currentLevelIndex].toUpperCase()+" with "+exp.toLocaleString()
+                           +" exp. Reach "+expLevels[currentLevelIndex+1].toLocaleString()+" exp to become "+expLevelNamePrefix[currentLevelIndex+1]+" "
+                           +expLevelNames[currentLevelIndex+1].toUpperCase()+"."
                         );
                         break;
                     case "pardon":
-                        deleteMsgWhenNotInChannel = true;
-                        if (message.member.roles.find(r => r.name === "muted")) {
-                            let postWarningMessage = checkMute(message.guild, message.member, nrWarnings);
-                            if (postWarningMessage === 2) {
-                                botChannel.send("<@" + message.author.id + ">, you can't be pardoned right now because you have 3 or more warnings. One warning is removed every 7 days. Try again at about "
-                                    + timestampToText(parseInt(dbReply[9]) + (86400 * 7  * (nrWarnings - 2))));
-                            } else if (postWarningMessage === 3) {
-                                botChannel.send("<@" + message.author.id + ">, you have been pardoned.");
+                        deleteMsgWhenNotInChannel=true;
+                        if (message.member.roles.find(r => r.name==="muted")) {
+                            let postWarningMessage=checkMute(message.guild, message.member, nrWarnings);
+                            if (postWarningMessage===2) {
+                                botChannel.send("<@"+message.author.id+">, you can't be pardoned right now because you have 3 or more warnings. One warning is removed every 7 days. Try again at about "
+                                   +timestampToText(parseInt(dbReply[9])+(86400 * 7  * (nrWarnings - 2))));
+                            } else if (postWarningMessage===3) {
+                                botChannel.send("<@"+message.author.id+">, you have been pardoned.");
                             }
                         } else {
-                            botChannel.send("<@" + message.author.id + ">, you are not muted.");
+                            botChannel.send("<@"+message.author.id+">, you are not muted.");
                         }
                         break;
                     // -ping
@@ -871,7 +869,7 @@ bot.on('message',  message => {
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team")&&
                             args[1]!=null&&args[2]!=null)){
                             let toMute=message.guild.member(message.mentions.users.first());
-                            let role = message.guild.roles.find(r => r.name === "muted");
+                            let role=message.guild.roles.find(r => r.name==="muted");
                             if(!toMute){
                                 bot.channels.get(botSpamID).send(`Couldn't find user.`);
                                 return;
@@ -880,7 +878,7 @@ bot.on('message',  message => {
                                 bot.channels.get(botSpamID).send(`Can't mute that user`);
                                 return;
                             }
-                            let mutetime = args[2];
+                            let mutetime=args[2];
                             if(!mutetime){
                                 bot.channels.get(botSpamID).send(`You need to specify a time (3s/3d/3h/3y)`);
                                 return;
@@ -949,7 +947,7 @@ bot.on('message',  message => {
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team")&&
                             args[1]!=null)){
                             let toUnmute=message.guild.member(message.mentions.users.first()||message.guild.members.get(args[0]));
-                            let role = message.guild.roles.find(r=>r.name==="muted");
+                            let role=message.guild.roles.find(r=>r.name==="muted");
                             if(!toUnmute){
                                 bot.channels.get(botSpamID).send("Couldn't find user.");
                                 return;
@@ -1164,16 +1162,16 @@ bot.on('message',  message => {
                         // }
                         break;
                 }
-                if ( (hasSwearWords) || (message.member.roles.find(r => r.name === "muted")) || ((deleteMsgWhenNotInChannel) && (message.channel.id !== botChannel.id))  ) {
+                if ( (hasSwearWords) || (message.member.roles.find(r => r.name==="muted")) || ((deleteMsgWhenNotInChannel) && (message.channel.id !== botChannel.id))  ) {
                     message.delete().catch(e => console.log(e));
                 }
                 return;
             }
             // filter swear words
-            let normalizedMessage = message.content.replace(/\s+/g, '').toLowerCase();
+            let normalizedMessage=message.content.replace(/\s+/g, '').toLowerCase();
             if (swearWords.some(r => normalizedMessage.includes(r))) {
                 // There's at least one
-                hasSwearWords = true;
+                hasSwearWords=true;
                 fetch("http://proco.me/data/BroomBot/addwarning.php", {
                     method: 'POST',
                     headers: {
@@ -1185,20 +1183,20 @@ bot.on('message',  message => {
                 }).then(response => response.text())
                     .then((x) => {
                         console.log(x);
-                        nrWarnings = parseInt(x.split('|')[1]);
+                        nrWarnings=parseInt(x.split('|')[1]);
                         
-                        let postWarningMessage = checkMute(message.guild, message.member, nrWarnings);
+                        let postWarningMessage=checkMute(message.guild, message.member, nrWarnings);
                         console.log(postWarningMessage);
-                        if (postWarningMessage === 1) {
-                            botChannel.send("<@" + message.member.user.id + ">, you have been muted. You can still use commands in the bot channel. Use !pardon when your warnings expire (when you are below 3 warnings) to un-mute yourself.")
-                        } else if (postWarningMessage === 4) {
-                            botChannel.send("<@" + message.author.id + ">, No swearing! warning nr. " + nrWarnings + "! You will be muted at 3 warnings!");
+                        if (postWarningMessage===1) {
+                            botChannel.send("<@"+message.member.user.id+">, you have been muted. You can still use commands in the bot channel. Use !pardon when your warnings expire (when you are below 3 warnings) to un-mute yourself.")
+                        } else if (postWarningMessage===4) {
+                            botChannel.send("<@"+message.author.id+">, No swearing! warning nr. "+nrWarnings+"! You will be muted at 10 warnings!");
                         }
                         
                     });
             }
             
-            if ( (hasSwearWords) || (message.member.roles.find(r => r.name === "muted")) || ((deleteMsgWhenNotInChannel) && (message.channel.id !== botChannel.id))  ) {
+            if ( (hasSwearWords) || (message.member.roles.find(r => r.name==="muted")) || ((deleteMsgWhenNotInChannel) && (message.channel.id !== botChannel.id))  ) {
                 message.delete().catch(e => console.log(e));
             }
             detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse);
@@ -1430,23 +1428,23 @@ function detection(message, triggerPinballResponse, triggerClawResponse, trigger
 }
 
 // Broom Bot code Start
-let checkRole = function (server, user, exp) {
+let checkRole=function (server, user, exp) {
     
-    let currentLevelIndex = expLevels.findIndex(x => x > exp) - 1;
-    let userRoles = user.roles;
-    let roleHasBeenGiven = -1;
-    console.log("current level: is " + currentLevelIndex + " - " + expLevelNames[currentLevelIndex]);
+    let currentLevelIndex=expLevels.findIndex(x => x > exp) - 1;
+    let userRoles=user.roles;
+    let roleHasBeenGiven=-1;
+    console.log("current level: is "+currentLevelIndex+" - "+expLevelNames[currentLevelIndex]);
     
-    for (let i = 0; i < expLevels.length - 1; i++) {
-        if (i === currentLevelIndex) {
-            if (!(userRoles.find(r => r.name === expLevelNames[currentLevelIndex]))) {
-                let role = server.roles.find(role => role.name === expLevelNames[currentLevelIndex]);
+    for(let i=0; i < expLevels.length - 1; i++){
+        if(i===currentLevelIndex) {
+            if(!(userRoles.find(r => r.name===expLevelNames[currentLevelIndex]))){
+                let role=server.roles.find(role => role.name===expLevelNames[currentLevelIndex]);
                 user.addRole(role).catch(e => console.log(e));
-                roleHasBeenGiven = currentLevelIndex;
+                roleHasBeenGiven=currentLevelIndex;
             }
-        } else {
-            if (userRoles.find(r => r.name === expLevelNames[i])) {
-                let role = server.roles.find(role => role.name === expLevelNames[i]);
+        }else{
+            if(userRoles.find(r => r.name===expLevelNames[i])){
+                let role=server.roles.find(role => role.name===expLevelNames[i]);
                 user.removeRole(role).catch(e => console.log(e));
             }
         }
@@ -1457,53 +1455,53 @@ let checkRole = function (server, user, exp) {
     
 };
 
-let checkMute = function (server, user, warnings) {
+let checkMute=function (server, user, warnings) {
     
-    let roleHasBeenGiven = -1;
-    let mutedRole = server.roles.find(role => role.name === "muted");
-    let userRoles = user.roles;
+    let roleHasBeenGiven=-1;
+    let mutedRole=server.roles.find(role => role.name==="muted");
+    let userRoles=user.roles;
     
-    if (warnings >= 3) {
+    if (warnings >= 10) {
         
-        if (!( userRoles.find(r => r.name === "muted") )) {
+        if (!( userRoles.find(r => r.name==="muted") )) {
             user.addRole(mutedRole)
                 .then(e => console.log(e))
                 .catch(e => console.log(e));
-            roleHasBeenGiven = 1;
+            roleHasBeenGiven=1;
         } else {
-            roleHasBeenGiven = 2;
+            roleHasBeenGiven=2;
         }
         
     } else {
         
-        if ( userRoles.find(r => r.name === "muted") ) {
+        if ( userRoles.find(r => r.name==="muted") ) {
             user.removeRole(mutedRole)
                 .then(e => console.log(e))
                 .catch(e => console.log(e));
-            roleHasBeenGiven = 3;
+            roleHasBeenGiven=3;
         } else {
-            roleHasBeenGiven = 4;
+            roleHasBeenGiven=4;
         }
     }
-    console.log(warnings, userRoles.find(r => r.name === "muted"), roleHasBeenGiven );
+    console.log(warnings, userRoles.find(r => r.name==="muted"), roleHasBeenGiven );
     return roleHasBeenGiven;
     
 };
 
 
-let hashID = function (ID) {
-    return ( ( (parseInt(ID) + 101101001011110101) * 7 ) + 100100001010110011 );
+let hashID=function (ID) {
+    return ( ( (parseInt(ID)+101101001011110101) * 7 )+100100001010110011 );
 };
 
-let timestampToText = function (UNIX_timestamp){
-    let a = new Date(UNIX_timestamp * 1000);
-    let months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    let year = a.getFullYear();
-    let month = months[a.getMonth()];
-    let date = a.getDate();
-    let hour = a.getHours();
-    let min = a.getMinutes();
-    let sec = a.getSeconds();
-    return date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+let timestampToText=function (UNIX_timestamp){
+    let a=new Date(UNIX_timestamp * 1000);
+    let months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    let year=a.getFullYear();
+    let month=months[a.getMonth()];
+    let date=a.getDate();
+    let hour=a.getHours();
+    let min=a.getMinutes();
+    let sec=a.getSeconds();
+    return date+' '+month+' '+year+' '+hour+':'+min+':'+sec ;
 };
 // Broom Bot code End
