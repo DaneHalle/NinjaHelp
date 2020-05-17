@@ -61,27 +61,49 @@ async function announcement(game, image, numImage, channel){
                     date=new Date();
                     var curHour=(date.getHours()+8)%24;
                     var curMinute=date.getMinutes();
-                    if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==(scheduleMinute-15+60)%60){
-                        var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
-                        bot.channels.get(channel).send(out, {
-                          files: [{
-                            attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
-                            name: image+'.gif'
-                          }]
-                        });
-                        logBotActions(null, game+" Pre-Announcement");
-                    }else if(rightDay&&x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==scheduleMinute){
-                        var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
-                        bot.channels.get(channel).send(out, {
-                          files: [{
-                            attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
-                            name: image+'.gif'
-                          }]
-                        });
-                        logBotActions(null, game+" Announcement");
-                    }else if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==scheduleMinute){
-                        logBotActions(null, game+" Announcement happening soon");
+                    if((scheduleMinute-15+60)/60>1){
+                        curHour--;
+                        if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==(scheduleMinute-15+60)%60){
+                            var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                            bot.channels.get(channel).send(out, {
+                              files: [{
+                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                                name: image+'.gif'
+                              }]
+                            });
+                            logBotActions(null, game+" Pre-Announcement");
+                        }else if(rightDay&&x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==scheduleMinute){
+                            var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                            bot.channels.get(channel).send(out, {
+                              files: [{
+                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                                name: image+'.gif'
+                              }]
+                            });
+                            logBotActions(null, game+" Announcement");
+                        }
+                    }else{
+                        if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==(scheduleMinute-15+60)%60){
+                            var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                            bot.channels.get(channel).send(out, {
+                              files: [{
+                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                                name: image+'.gif'
+                              }]
+                            });
+                            logBotActions(null, game+" Pre-Announcement");
+                        }else if(rightDay&&x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==scheduleMinute){
+                            var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                            bot.channels.get(channel).send(out, {
+                              files: [{
+                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                                name: image+'.gif'
+                              }]
+                            });
+                            logBotActions(null, game+" Announcement");
+                        }
                     }
+                    
                 }
             });
         await Sleep(ms("1m")) //1 minute
@@ -239,12 +261,12 @@ async function checkToUnmute(){
 bot.on('ready', () => {
     announcement("SumoBots", "sumo", 9, "627919045420646401");
     announcement("RaceRealCars143", "race", 4, "589484542214012963");
+    // announcement("SumoBots", "sumo", 9, "707047722208854101"); //Testing
     fs.open("./database/mute.dat", "w", (err)=>{
         if(err) throw err;
     });
     checkToUnmute();
     bot.user.setActivity("Surrogate.tv", { type: "WATCHING", url: "https://www.surrogate.tv" });
-    // announcement("SumoBots", "sumo", 9, "707047722208854101"); //Testing
     newDay();
     var today=new Date();
     var day=today.getDate();
