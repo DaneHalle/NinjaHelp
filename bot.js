@@ -297,7 +297,7 @@ bot.on('ready', () => {
 });
 
 bot.on('message', async message => {
-    if(message.author.bot){
+    if(message.author.bot||message.author.id=="381655612335063040"){
         return;
     }
 
@@ -538,7 +538,8 @@ bot.on('message', async message => {
                     out+="`!top` | `!top <GAME> ?month?` - Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name\n";
                     out+="`!mute <USER> <TIME>` - Will mute <USER> for <TIME>. Time is formatted as `3m`/`3h`/`3d`/`3y`\n";
                     out+="`!unmute <USER>` - If <USER> is muted, will unmute them and remove them from the database\n";
-                    out+="`(ab:cd)` - When you have a time formated as such, it will paste a Timezone conversion link to that time in Finland"
+                    out+="`(ab:cd)` - When you have a time formated as such, it will paste a Timezone conversion link to that time in Finland\n"
+                    out+="`!name` - Gives the SumoBots that have names other than their esports team. "
                     if(message.channel.id!=modBotSpamID){
                         message.delete();
                         bot.channels.get(modBotSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
@@ -551,7 +552,8 @@ bot.on('message', async message => {
                     out+="`!roll` | `!roll xdy` - Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command\n";
                     out+="`!game` - Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games\n";
                     out+="`!schedule <GAME>` - Will give <GAME>'s current schedule for the week.\n";
-                    out+="`!top <GAME> m` - Will give <GAME>'s top players of all time. If you want the current top players of the month, put `m` after the game name";
+                    out+="`!top <GAME> m` - Will give <GAME>'s top players of all time. If you want the current top players of the month, put `m` after the game name\n";
+                    out+="`!name` - Gives the SumoBots that have names other than their esports team. "
                     if(message.channel.id!=botSpamID){
                         message.delete();
                         bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
@@ -645,9 +647,10 @@ bot.on('message', async message => {
                             message.channel.send("There is no schedule for "+command+".");
                         }else{
                             var i; var output=""; 
+                            let sortedSchedule  = x.result.schedule.sort((a,b) => a.startTime - b.startTime)
                             for(i=0; i<x.result.schedule.length; i++){
-                                var startTime=x.result.schedule[i].startTime+(3*60);
-                                var duration=x.result.schedule[i].duration;
+                                var startTime=sortedSchedule[i].startTime+(3*60);
+                                var duration=sortedSchedule[i].duration;
                                 var endTime=startTime+duration;
                                 var day=Math.floor(startTime/minDay);
                                 var startHour=Math.floor((startTime-(day*minDay))/60);
@@ -1071,13 +1074,26 @@ bot.on('message', async message => {
                 }
                 logBotActions(message, "!meme info");
                 break;
+            // !name
+            case "name":
+                var alliance=bot.emojis.get("713862601687433236").toString(); //Chad
+                var heretics=bot.emojis.get("713862601846554795").toString(); //No Name
+                var mouse=bot.emojis.get("713862041064177735").toString();    //Jerry
+                var excel=bot.emojis.get("713862601175728218").toString();    //No Name
+                var ence=bot.emojis.get("713862224271114361").toString();     //To be named
+                var empire=bot.emojis.get("713862601779707924").toString();   //Mike
+                var out="These are the names of the bots given by the Broom Gods:\n>>> ";
+                out+=alliance+"\tChad\n"+mouse+"\tJerry\n"+ence+"\tDug\n"+empire+"\tMike\n";
+                if(triggerSumoResponse){
+                    message.delete();
+                    message.channel.send(out);
+                }else if(message.channel.id!=botSpamID){
+                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for that command!\n"+out);
+                }else{
+                    bot.channels.get(botSpamID).send(out);
+                }
+                logBotActions(message, "!name");
             default:
-                // if(message.channel.id!=botSpamID){
-                //     message.delete();
-                //     bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n**__*No*__**");
-                // }else{
-                //     bot.channels.get(botSpamID).send("**__*No*__**");
-                // }
                 break;
         }
         return;
