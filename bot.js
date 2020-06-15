@@ -27,8 +27,7 @@ async function announcement(game, image, numImage, channel){
         var weekdays=new Array(
             "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
         );
-        var day=date.getDay();
-        var rand=Math.floor(Math.random()*numImage)+1;
+        var day=(date.getDay()+6)%7;
         const minDay=1440;
         var rightDay=false;
         const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId="+game.toLowerCase(), {
@@ -41,67 +40,42 @@ async function announcement(game, image, numImage, channel){
                 if(x==null||x.result==null||x.result.schedule==null){
                     var scheduleHour=null;
                 }else{
+                    date=new Date();
                     var i; var output=""; 
+                    var curHour=(date.getHours()+4);
+                    if(curHour>23){
+                        day++;
+                        curHour%=24;
+                    }
+                    var curMinute=date.getMinutes();
+                    var adjustedMinute=curMinute+curHour*60+day*minDay;
+                    x.result.schedule.sort((a,b) => a.startTime - b.startTime)
                     for(i=0; i<x.result.schedule.length; i++){
-                        var startTime=x.result.schedule[i].startTime+(3*60);
-                        var duration=x.result.schedule[i].duration;
-                        var scheduleDay=Math.floor(startTime/minDay);
-                        var scheduleHour=Math.floor((startTime-(scheduleDay*minDay))/60);
-                        var scheduleMinute=startTime-(scheduleHour*60)-(scheduleDay*minDay);
-                        if(scheduleHour>23){
-                            var addToDay=Math.floor(scheduleHour/24);
-                            scheduleHour%=24;
-                            scheduleDay+=addToDay;
-                        }
-                        if(scheduleDay==((day-1)+7)%7){
+                        var startTime=x.result.schedule[i].startTime;
+                        if(Math.abs(adjustedMinute-startTime)<20){
                             rightDay=true;
                             break;
                         }
                     }
-                    date=new Date();
-                    var curHour=(date.getHours()+8)%24;
-                    var curMinute=date.getMinutes();
-                    if((scheduleMinute-15+60)/60>1){
-                        curHour--;
-                        if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==(scheduleMinute-15+60)%60){
-                            var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
-                            bot.channels.get(channel).send(out, {
-                              files: [{
-                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
-                                name: image+'.gif'
-                              }]
-                            });
-                            logBotActions(null, game+" Pre-Announcement");
-                        }else if(rightDay&&x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==scheduleMinute){
-                            var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
-                            bot.channels.get(channel).send(out, {
-                              files: [{
-                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
-                                name: image+'.gif'
-                              }]
-                            });
-                            logBotActions(null, game+" Announcement");
-                        }
-                    }else{
-                        if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==(scheduleMinute-15+60)%60){
-                            var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
-                            bot.channels.get(channel).send(out, {
-                              files: [{
-                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
-                                name: image+'.gif'
-                              }]
-                            });
-                            logBotActions(null, game+" Pre-Announcement");
-                        }else if(rightDay&&x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==scheduleMinute){
-                            var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
-                            bot.channels.get(channel).send(out, {
-                              files: [{
-                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
-                                name: image+'.gif'
-                              }]
-                            });
-                            logBotActions(null, game+" Announcement");
-                        }
+                    var rand=Math.floor(Math.random()*numImage)+1;
+                    if(startTime-adjustedMinute==15&&rightDay){
+                        var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                        bot.channels.get(channel).send(out, {
+                          files: [{
+                            attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                            name: image+'.gif'
+                          }]
+                        });
+                        logBotActions(null, game+" Pre-Announcement");
+                    }else if(startTime-adjustedMinute==0&&rightDay){
+                        var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                        bot.channels.get(channel).send(out, {
+                          files: [{
+                            attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                            name: image+'.gif'
+                          }]
+                        });
+                        logBotActions(null, game+" Announcement");
                     }
                 }
             });
@@ -145,11 +119,11 @@ function logBotActions(message, action){
     }else{
         var out=hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | "+action;
         console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | "+action);
-        if(message.author.id!="120618883219587072"){//Damn you Grimberg
+        // if(message.author.id!="120618883219587072"){//Damn you Grimberg
             fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
               if (err) throw err;
             }); 
-        }
+        // }
     }
 }
 
@@ -263,9 +237,9 @@ async function checkToUnmute(){
         // x.result.queueCount
 
 bot.on('ready', () => {
-    announcement("SumoBots", "sumo", 9, "627919045420646401");
+    announcement("SumoBots", "sumo", 10, "627919045420646401");
     announcement("RaceRealCars143", "race", 4, "589484542214012963");
-    // announcement("SumoBots", "sumo", 9, "707047722208854101"); //Testing
+    // announcement("SumoBots", "sumo", 10, "707047722208854101"); //Testing
     fs.open("./database/mute.dat", "w", (err)=>{
         if(err) throw err;
     });
@@ -296,8 +270,8 @@ bot.on('ready', () => {
     console.info(info);
 });
 
-bot.on('message', async message => {
-    if(message.author.bot||message.author.id=="381655612335063040"){
+bot.on('message',  message => {
+    if(message.author.bot||message.author.id=="381655612335063040"||!(message.guild.id==("707047722208854098")||message.guild.id==("664556796576268298")||message.guild.id==("571388780058247179"))){
         return;
     }
 
@@ -647,10 +621,10 @@ bot.on('message', async message => {
                             message.channel.send("There is no schedule for "+command+".");
                         }else{
                             var i; var output=""; 
-                            let sortedSchedule  = x.result.schedule.sort((a,b) => a.startTime - b.startTime)
+                            x.result.schedule.sort((a,b) => a.startTime - b.startTime)
                             for(i=0; i<x.result.schedule.length; i++){
-                                var startTime=sortedSchedule[i].startTime+(3*60);
-                                var duration=sortedSchedule[i].duration;
+                                var startTime=x.result.schedule[i].startTime+(3*60);
+                                var duration=x.result.schedule[i].duration;
                                 var endTime=startTime+duration;
                                 var day=Math.floor(startTime/minDay);
                                 var startHour=Math.floor((startTime-(day*minDay))/60);
@@ -1083,7 +1057,7 @@ bot.on('message', async message => {
                 var ence=bot.emojis.get("713862224271114361").toString();     //To be named
                 var empire=bot.emojis.get("713862601779707924").toString();   //Mike
                 var out="These are the names of the bots given by the Broom Gods:\n>>> ";
-                out+=alliance+"\tChad\n"+mouse+"\tJerry\n"+ence+"\tDug\n"+empire+"\tMike\n";
+                out+=alliance+"\tChad\n"+mouse+"\tJerry\n"+ence+"\tDug\n"+empire+"\tMike\n"+heretics+"\tHercules\n";
                 if(triggerSumoResponse){
                     message.delete();
                     message.channel.send(out);
