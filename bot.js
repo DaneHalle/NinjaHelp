@@ -58,6 +58,7 @@ async function announcement(game, image, numImage, channel){
                         }
                     }
                     var rand=Math.floor(Math.random()*numImage)+1;
+
                     if(startTime-adjustedMinute==15&&rightDay){
                         var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
                         bot.channels.get(channel).send(out, {
@@ -67,6 +68,7 @@ async function announcement(game, image, numImage, channel){
                           }]
                         });
                         logBotActions(null, game+" Pre-Announcement");
+                        return;
                     }else if(startTime-adjustedMinute==0&&rightDay){
                         var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
                         bot.channels.get(channel).send(out, {
@@ -76,10 +78,11 @@ async function announcement(game, image, numImage, channel){
                           }]
                         });
                         logBotActions(null, game+" Announcement");
+                        return;
                     }
                 }
             });
-        await Sleep(ms("1m")) //1 minute
+        await Sleep(60000) //1 minute
     }
 }
 
@@ -112,6 +115,12 @@ function logBotActions(message, action){
         }); 
     }else if(message=="AUTO UNMUTE"){
         var out=hours+":"+minutes+":"+seconds+" EST | AUTO UNMUTE | "+action;
+        console.log(out);
+        fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
+          if (err) throw err;
+        }); 
+    }else if(message=="ERROR"){
+        var out=hours+":"+minutes+":"+seconds+" EST | ERROR | "+action;
         console.log(out);
         fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
           if (err) throw err;
@@ -151,7 +160,7 @@ async function newDay(){
               if (err) throw err;
             });
         }
-        await Sleep(ms("1h"));
+        await Sleep(ms("1m"));
     }
 }
 
@@ -236,10 +245,11 @@ async function checkToUnmute(){
     //Path
         // x.result.queueCount
 
-bot.on('ready', () => {
+bot.once('ready', () => {
     announcement("SumoBots", "sumo", 10, "627919045420646401");
     announcement("RaceRealCars143", "race", 4, "589484542214012963");
     // announcement("SumoBots", "sumo", 10, "707047722208854101"); //Testing
+    // announcement("SumoBots", "sumo", 10, "700390885984043188"); //Broom Bot
     fs.open("./database/mute.dat", "w", (err)=>{
         if(err) throw err;
     });
