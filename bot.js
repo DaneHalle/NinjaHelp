@@ -27,13 +27,13 @@ const expLevelNames=[
 const expLevelNamePrefix=["a", "a", "a", "an", "a", "an", "a", "a"];
 
 const swearWords=[
-    // "bastard","bitch","blowjob","boner","choad","clit","cock","coomer","cum","cunt","dick",
-    // "faggot","fuck","fck","gangbang","ginger","gook","horny","hump","inbred","jackoff",
-    // "jacking","jerk","jizz","motherfucker","mofo","nigga","nigger","nutbag","nutsack",
-    // "peepee","peehole","penis","pigshit","pissoff","porn","prick","puss","pussy","puta",
-    // "queef","ratfuck","rimjob","schlong","scum","shitbag","shitstain","shitass","shitbag",
-    // "shitbrain","shithead","shithole","shitland","slut","spank","sperm","spunk","squirt",
-    // "stiffy","sucker","tits","titty","twat","vagina","wank","whore","yankoff"
+    "bastard","bitch","blowjob","boner","choad","clit","cock","coomer","cum","cunt","dick",
+    "faggot","fuck","fck","gangbang","ginger","gook","horny","hump","inbred","jackoff",
+    "jacking","jerk","jizz","motherfucker","mofo","nigga","nigger","nutbag","nutsack",
+    "peepee","peehole","penis","pigshit","pissoff","porn","prick","puss","pussy","puta",
+    "queef","ratfuck","rimjob","schlong","scum","shitbag","shitstain","shitass","shitbag",
+    "shitbrain","shithead","shithole","shitland","slut","spank","sperm","spunk","squirt",
+    "stiffy","sucker","tits","titty","twat","vagina","wank","whore","yankoff"
     ];
 let botChannel;
 // Brrom Bot code End
@@ -79,26 +79,47 @@ async function announcement(game, image, numImage, channel){
                     date=new Date();
                     var curHour=(date.getHours()+8)%24;
                     var curMinute=date.getMinutes();
-                    if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==(scheduleMinute-15+60)%60){
-                        var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
-                        bot.channels.get(channel).send(out, {
-                          files: [{
-                            attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
-                            name: image+'.gif'
-                          }]
-                        });
-                        logBotActions(null, game+" Pre-Announcement");
-                    }else if(rightDay&&x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==scheduleMinute){
-                        var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
-                        bot.channels.get(channel).send(out, {
-                          files: [{
-                            attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
-                            name: image+'.gif'
-                          }]
-                        });
-                        logBotActions(null, game+" Announcement");
-                    }else if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==scheduleMinute){
-                        logBotActions(null, game+" Announcement happening soon");
+                    if((scheduleMinute-15+60)/60>1){
+                        curHour--;
+                        if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==(scheduleMinute-15+60)%60){
+                            var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                            bot.channels.get(channel).send(out, {
+                              files: [{
+                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                                name: image+'.gif'
+                              }]
+                            });
+                            logBotActions(null, game+" Pre-Announcement");
+                        }else if(rightDay&&x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==scheduleMinute){
+                            var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                            bot.channels.get(channel).send(out, {
+                              files: [{
+                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                                name: image+'.gif'
+                              }]
+                            });
+                            logBotActions(null, game+" Announcement");
+                        }
+                    }else{
+                        if(rightDay&&scheduleHour!=null&&curHour==scheduleHour&&curMinute==(scheduleMinute-15+60)%60){
+                            var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                            bot.channels.get(channel).send(out, {
+                              files: [{
+                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                                name: image+'.gif'
+                              }]
+                            });
+                            logBotActions(null, game+" Pre-Announcement");
+                        }else if(rightDay&&x.result.isOnline&&scheduleHour!=null&&curHour==scheduleHour+1&&curMinute==scheduleMinute){
+                            var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                            bot.channels.get(channel).send(out, {
+                              files: [{
+                                attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
+                                name: image+'.gif'
+                              }]
+                            });
+                            logBotActions(null, game+" Announcement");
+                        }
                     }
                 }
             });
@@ -139,14 +160,20 @@ function logBotActions(message, action){
         fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
           if (err) throw err;
         }); 
+    }else if(message=="ERROR"){
+        var out=hours+":"+minutes+":"+seconds+" EST | ERROR | "+action;
+        console.log(out);
+        fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
+          if (err) throw err;
+        }); 
     }else{
         var out=hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | "+action;
         console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | "+action);
-        if(message.author.id!="120618883219587072"){//Damn you Grimberg
+        // if(message.author.id!="120618883219587072"){//Damn you Grimberg
             fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", out+"\n", function (err) {
               if (err) throw err;
             }); 
-        }
+        // }
     }
 }
 
@@ -240,7 +267,7 @@ async function checkToUnmute(){
     }
 }
 
-bot.on('ready', () => {
+bot.once('ready', () => {
     // announcement("SumoBots", "sumo", 9, "627919045420646401");
     // announcement("RaceRealCars143", "race", 4, "589484542214012963");
     fs.open("./database/mute.dat", "r+", (err)=>{
@@ -299,7 +326,17 @@ bot.on('ready', () => {
 });
 
 bot.on('message',  message => {
-    if(message.author.bot){
+    if(message.author.bot||message.author.id=="381655612335063040"||!(message.guild.id==("707047722208854098")||message.guild.id==("664556796576268298")||message.guild.id==("571388780058247179"))){
+        return;
+    }
+
+    let testServer=bot.guilds.get("707047722208854098");
+    let bromBotServer=bot.guilds.get("664556796576268298");
+    let surrogateServer=bot.guilds.get("571388780058247179");
+
+    if(message.member.user.tag=="Mordecai#3257"&&message.content.includes("-test")){
+        //some test I want to do
+        //707047722208854101
         return;
     }
 
@@ -1099,7 +1136,7 @@ bot.on('message',  message => {
                                         var scores="Here are the Top "+x.result.Items.length+" "+scoreType+" scores for **"+command+"**:";
                                     }
                                     var i;
-                                    for(i=0; i<x.result.Items.length&&i<10; i++){
+                                    for(i=0; i<x.result.Items.length; i++){
                                         if(x.result.Items[i].userObject.userIcon!=null){
                                             var icon=x.result.Items[i].userObject.userIcon.toLowerCase();
                                             switch(icon){
