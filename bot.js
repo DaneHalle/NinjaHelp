@@ -7,13 +7,13 @@ const bot=new Discord.Client();
 const TOKEN=process.env.TOKEN;
 bot.login(TOKEN);
 
-var clawTrigger=[617010087457718272, 706819836071903275, 616642431219400735, 662301446036783108, 707600524727418900];
-var pinballTrigger=[617010087457718272, 613630308931207198, 616642431219400735, 707600524727418900];
-var arcadeTrigger=[617010087457718272, 706819836071903275, 613630308931207198, 616642431219400735, 662301446036783108, 707600524727418900];
-var raceTrigger=[631131278644740125, 589484542214012963, 631131301302239242, 707600524727418900];
-var sumoTrigger=[650048288787005451, 627919045420646401, 650048505380864040, 707600524727418900];
-var generalTrigger=[586955337870082082, 589485632984973332, 571600581936939049, 571388780058247185, 631391110966804510, 571390705117954049, 710104643996352633, 707600524727418900];
-var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 621355376167747594, 707600524727418900];
+var clawTrigger=[706819836071903275, 662301446036783108, 707600524727418900];
+var pinballTrigger=[613630308931207198, 702578486199713872, 707600524727418900];
+var arcadeTrigger=clawTrigger.concat(pinballTrigger);
+var raceTrigger=[589484542214012963, 707600524727418900];
+var sumoTrigger=[627919045420646401, 707600524727418900];
+var generalTrigger=[586955337870082082, 571390705117954049, 571600581936939049, 631391110966804510, 589485632984973332, 571388780058247185, 707600524727418900];
+var sneakTrigger=[631134966163701761, 662642212789551124, 707600524727418900];
 var botSpamID="710104643996352633"; 
 var modBotSpamID="593000239841935362";
 
@@ -147,6 +147,28 @@ async function newDay(){
         var checkMonth=date.getMonth()+1;
         var checkYear=date.getFullYear();
         if(checkDay>day||checkMonth>month||checkYear>year){
+            if(checkMonth==7||checkMonth==8){
+                fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRe979Ap0TpmdEDtPhZ7nwT9bkelIKUzFHf9ed6HiPBf5ZM09nNOAIjxAK1rztDqBffR8Gc6FTecoaA/pub?gid=1385749731&single=true&output=csv", {
+                method: 'GET',
+            }).then(x => x.text())
+                .then(x => {
+                    var date=new Date();
+                    var day=date.getDate();
+                    var month=date.getMonth()+1;
+                    var insert=day+"/"+month;
+                    console.log(x);
+                    let v = x.split(/\n/).map(a => a.split(","));
+                    while(v.length>10){
+                        v.pop();
+                    }
+                    let sym = ["1) ","2) ","3) ","4) ","5) ","6) ","7) ","8) ","9) ","10) "];
+                    let r = "Here are the top 10 **Oktoberfest Launch Tournament** players as of "+insert+":\n";
+                    v.forEach((a,i) => {r += "" + sym[i] + " **__" + a[0] + "__**\t" + a[1] + "\n"});
+                    r += "*Note: Some new top 10 scores may not be verified yet and will not appear here.*\n";
+                    r+= "See the full leaderboard here: http://proco.me/oktoberfest/\n"
+                    bot.channels.get("702578486199713872").send(r);
+                });
+            }
             // bot.destroy();
             fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", "Starting a new day and restarting the bot", function (err) {
               if (err) throw err;
@@ -231,20 +253,6 @@ async function checkToUnmute(){
     }
 }
 
-//Queue data for each game
-    //Pinball
-        // https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/extra/592ac917-14d2-481a-9d37-3b840ad46b19
-    //ToiletPaperClaw
-        // https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/extra/46db6268-bfc3-43ff-ba7d-02ffaf1f2867
-    //SumoBots
-        // https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/extra/953f2154-9a6e-4602-99c6-265408da6310
-    //RaceRealCars143
-        // https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/extra/953f2154-9a6e-4602-99c6-265408da6310
-    //ForceClaw
-        // https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/extra/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0
-    //Path
-        // x.result.queueCount
-
 bot.once('ready', () => {
     announcement("SumoBots", "sumo", 10, "627919045420646401");
     announcement("RaceRealCars143", "race", 4, "589484542214012963");
@@ -286,12 +294,31 @@ bot.on('message',  message => {
     }
 
     let testServer=bot.guilds.get("707047722208854098");
-    let bromBotServer=bot.guilds.get("664556796576268298");
+    let broomBotServer=bot.guilds.get("664556796576268298");
     let surrogateServer=bot.guilds.get("571388780058247179");
 
     if(message.member.user.tag=="Mordecai#3257"&&message.content.includes("!test")){
         //some test I want to do
         //707047722208854101
+        fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRe979Ap0TpmdEDtPhZ7nwT9bkelIKUzFHf9ed6HiPBf5ZM09nNOAIjxAK1rztDqBffR8Gc6FTecoaA/pub?gid=1385749731&single=true&output=csv", {
+                method: 'GET',
+                // headers: {
+                //     'Content-Type': 'application/json',
+                // },
+            }).then(x => x.text())
+                .then(x => {
+                    console.log(x);
+                    let v = x.split(/\n/).map(a => a.split(","));
+                    while(v.length>10){
+                        v.pop();
+                    }
+                    let sym = ["1) ","2) ","3) ","4) ","5) ","6) ","7) ","8) ","9) ","10) "];
+                    let r = "Here are the top 10 **Oktoberfest Launch Tournament** players as of [date]:\n";
+                    v.forEach((a,i) => {r += "" + sym[i] + " **__" + a[0] + "__**\t" + a[1] + "\n"});
+                    r += "*Note: Some new top 10 scores may not be verified yet and will not appear here.*\n";
+                    r+= "See the full leaderboard here: http://proco.me/oktoberfest/\n"
+                    bot.channels.get("700390885984043188").send(r);
+                });
         return;
     }
 
@@ -556,27 +583,24 @@ bot.on('message',  message => {
                 }else if(triggerRaceResponse){
                     message.reply("Here you go!\nhttps://surrogate.tv/game/racerealcars143");
                     message.delete()
-                }else if(triggerPinballResponse&&triggerClawResponse){
+                }else if(triggerPinballResponse){
                     var out="There are multiple games here. Here are the links!\n";
                     out+="https://surrogate.tv/game/batman66\n";
-                    out+="https://surrogate.tv/game/forceclaw\n";
-                    out+="https://surrogate.tv/game/toiletpaperclaw";
+                    out+="https://surrogate.tv/game/oktoberfest\n";
                     message.reply(out);
                     message.delete()
-                }else if(triggerClawResponse&&706819836071903275==message.channel.id){
-                    message.reply("Here you go!\nhttps://surrogate.tv/game/forceclaw");
-                    message.delete()
-                }else if(triggerClawResponse&&662301446036783108==message.channel.id){
-                    message.reply("Here you go!\nhttps://surrogate.tv/game/toiletpaperclaw");
-                    message.delete()
-                }else if(triggerPinballResponse){
-                    message.reply("Here you go!\nhttps://surrogate.tv/game/batman66");
+                }else if(triggerClawResponse){
+                    var out="There are multiple games here. Here are the links!\n";
+                    out+="https://surrogate.tv/game/forceclaw\n";
+                    out+="https://surrogate.tv/game/toiletpaperclaw\n";
+                    message.reply(out);
                     message.delete()
                 }else if(triggerGeneralResponse){
                     var out="Here are all the links to the current games:\n";
                     out+="https://surrogate.tv/game/sumobots\n";
                     out+="https://surrogate.tv/game/racerealcars143\n";
                     out+="https://surrogate.tv/game/batman66\n";
+                    out+="https://surrogate.tv/game/oktoberfest\n";
                     // out+="https://surrogate.tv/game/forceclaw\n";
                     // out+="https://surrogate.tv/game/toiletpaperclaw";
                     message.reply(out);
@@ -604,6 +628,9 @@ bot.on('message',  message => {
                 }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("batman66")){
                     url+="batman66";
                     var command="Batman66 Pinball";
+                }else if((triggerPinballResponse&&702578486199713872)||message.content.toLowerCase().includes("oktoberfest")){
+                    url+="oktoberfest";
+                    var command="Oktoberfest Pinball";
                 }else{
                     if(message.channel.id!=botSpamID){
                         if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
@@ -960,7 +987,46 @@ bot.on('message',  message => {
                         }
                         return;
                     }
-                }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("batman66")){
+                }else if((triggerPinballResponse&&702578486199713872==message.channel.id)||message.content.toLowerCase().includes("oktoberfest")){
+                    // url+="592ac917-14d2-481a-9d37-3b840ad46b19&order=";
+                    // var command="Oktoberfest Pinball";
+                    // if(args[2]!=null&&args[2]==="m"){
+                    //     url+="month";
+                    //     scoreType="Monthly";
+                    // }
+                    
+                    //IMPLEMENT TAKING FROM GOOGLE FORM 
+                    message.delete();
+                    var today=new Date();
+                    var checkMonth=today.getMonth()+1;
+                    if(checkMonth==7||checkMonth==8){
+                        fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRe979Ap0TpmdEDtPhZ7nwT9bkelIKUzFHf9ed6HiPBf5ZM09nNOAIjxAK1rztDqBffR8Gc6FTecoaA/pub?gid=1385749731&single=true&output=csv", {
+                            method: 'GET',
+                            // headers: {
+                            //     'Content-Type': 'application/json',
+                            // },
+                        }).then(x => x.text())
+                            .then(x => {
+                                var date=new Date();
+                                var day=date.getDate();
+                                var month=date.getMonth()+1;
+                                var insert=day+"/"+month;
+                                console.log(x);
+                                let v = x.split(/\n/).map(a => a.split(","));
+                                while(v.length>10){
+                                    v.pop();
+                                }
+                                let sym = ["1) ","2) ","3) ","4) ","5) ","6) ","7) ","8) ","9) ","10) "];
+                                let r = "Here are the top 10 **Oktoberfest Launch Tournament** players as of "+insert+":\n";
+                                v.forEach((a,i) => {r += "" + sym[i] + " **__" + a[0] + "__**\t" + a[1] + "\n"});
+                                r += "*Note: Some new top 10 scores may not be verified yet and will not appear here.*\n";
+                                r+= "See the full leaderboard here: http://proco.me/oktoberfest/\n"
+                                bot.channels.get("702578486199713872").send(r);
+                            });
+                    }
+                    logBotActions(message, "!top oktoberfest");
+                    return;
+                }else if((triggerPinballResponse&&613630308931207198==message.channel.id)||message.content.toLowerCase().includes("batman66")){
                     url+="592ac917-14d2-481a-9d37-3b840ad46b19&order=";
                     var command="Batman66 Pinball";
                     if(args[2]!=null&&args[2]==="m"){
@@ -1061,13 +1127,13 @@ bot.on('message',  message => {
             // !name
             case "name":
                 var alliance=bot.emojis.get("713862601687433236").toString(); //Chad
-                var heretics=bot.emojis.get("713862601846554795").toString(); //No Name
+                var heretics=bot.emojis.get("713862601846554795").toString(); //Hercules
                 var mouse=bot.emojis.get("713862041064177735").toString();    //Jerry
-                var excel=bot.emojis.get("713862601175728218").toString();    //No Name
-                var ence=bot.emojis.get("713862224271114361").toString();     //To be named
+                var excel=bot.emojis.get("713862601175728218").toString();    //Kyle
+                var ence=bot.emojis.get("713862224271114361").toString();     //Dug
                 var empire=bot.emojis.get("713862601779707924").toString();   //Mike
                 var out="These are the names of the bots given by the Broom Gods:\n>>> ";
-                out+=alliance+"\tChad\n"+mouse+"\tJerry\n"+ence+"\tDug\n"+empire+"\tMike\n"+heretics+"\tHercules\n";
+                out+=alliance+"\tChad\n"+empire+"\tMike\n"+mouse+"\tJerry\n"+ence+"\tDug\n"+heretics+"\tHercules\n"+excel+"\tKyle\n";
                 if(triggerSumoResponse){
                     message.delete();
                     message.channel.send(out);
