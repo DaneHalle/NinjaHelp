@@ -458,13 +458,11 @@ bot.on('message',  message => {
                 }
 
                 if(hours>=12){
-                    if(hours%12<10){
-                        var time="0"+(hours%12)+":"+minutes+":"+seconds+" PM";
-                    }else{
-                        var time=(hours%12)+":"+minutes+":"+seconds+" PM";
+                    var time="0"+(hours%12)+":"+minutes+":"+seconds+" PM";
+                    if(hours%12==0){
+                        var time=(hours)+":"+minutes+":"+seconds+" PM";
                     }
                 }else if(hours==0){
-
                     var time="12:"+minutes+":"+seconds+" AM";
                 }else{
                     if(hours<10){
@@ -485,6 +483,8 @@ bot.on('message',  message => {
                     var output=0; var i; 
                     if(isNaN(args[1].substring(0, args[1].indexOf("d")))||
                         isNaN(args[1].substring(args[1].indexOf("d")+1))||
+                        args[1].substring(0, args[1].indexOf("d")).toLowerCase().includes("e")||
+                        args[1].substring(args[1].indexOf("d")+1).toLowerCase().includes("e")||
                         args[1].substring(0, args[1].indexOf("d"))>2000000000||
                         args[1].substring(args[1].indexOf("d")+1)>2000000000){
                         if(message.channel.id!=botSpamID){
@@ -494,7 +494,6 @@ bot.on('message',  message => {
                             bot.channels.get(botSpamID).send("\tError: Invalid format");
                         }
                         logBotActions(message, "!roll error");
-                        console.log(hours+":"+minutes+":"+seconds+" EST | "+message.member.user.tag+" | !roll error");
                     }else{
                         for(i=0; i<args[1].substring(0, args[1].indexOf("d")); i++){
                             var roll=Math.floor(Math.random()*args[1].substring(args[1].indexOf("d")+1))+1;
@@ -502,7 +501,7 @@ bot.on('message',  message => {
                             if(output>2000000000){
                                 if(message.channel.id!=botSpamID){
                                     message.delete();
-                                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThat was too many roles, try a smaller number!"+output);
+                                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThat was too many roles, try a smaller number!");
                                 }else{
                                     bot.channels.get(botSpamID).send("That was too many roles, try a smaller number!");
                                 }
@@ -816,7 +815,8 @@ bot.on('message',  message => {
                         bot.channels.get(modBotSpamID).send(`You need to specify a time (3s/3d/3h/3y)`);
                         return;
                     }
-                    await(toMute.addRole(role.id));
+                    // await(toMute.addRole(role.id));
+                    toMute.addRole(role.id);
                     bot.channels.get(modBotSpamID).send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
                     var date=new Date();
                     var day=date.getDate();
@@ -1371,6 +1371,16 @@ function detection(message, triggerPinballResponse, triggerClawResponse, trigger
         out+="info above the chat. If you leave the queue during the game then your game will just end.";
         message.channel.send(out);
         logBotActions(message, "Detected \"how to leave queue\"");
+        return;
+    }
+
+    if(message.content.toLowerCase().includes(':emergencybutton:')){
+        message.react('🇴')
+            .then(() => message.react('🇭'))
+            .then(() => message.react('🇳'))
+            .then(() => message.react('🅾'))
+            .catch(() => console.error('One of the emojis failed to react.'));
+        logBotActions(message, "Reacted");
         return;
     }
 }
