@@ -7,13 +7,13 @@ const bot=new Discord.Client();
 const TOKEN=process.env.TOKEN;
 bot.login(TOKEN);
 
-var clawTrigger=[617010087457718272, 706819836071903275, 616642431219400735, 662301446036783108, 707600524727418900];
-var pinballTrigger=[617010087457718272, 613630308931207198, 616642431219400735, 707600524727418900];
-var arcadeTrigger=[617010087457718272, 706819836071903275, 613630308931207198, 616642431219400735, 662301446036783108, 707600524727418900];
-var raceTrigger=[631131278644740125, 589484542214012963, 631131301302239242, 707600524727418900];
-var sumoTrigger=[650048288787005451, 627919045420646401, 650048505380864040, 707600524727418900];
-var generalTrigger=[586955337870082082, 589485632984973332, 571600581936939049, 571388780058247185, 631391110966804510, 571390705117954049, 710104643996352633, 707600524727418900];
-var sneakTrigger=[702578486199713872, 631134966163701761, 662642212789551124, 621355376167747594, 707600524727418900];
+var clawTrigger=[706819836071903275, 662301446036783108, 707600524727418900];
+var pinballTrigger=[613630308931207198, 702578486199713872, 707600524727418900];
+var arcadeTrigger=clawTrigger.concat(pinballTrigger);
+var raceTrigger=[589484542214012963, 707600524727418900];
+var sumoTrigger=[627919045420646401, 707600524727418900];
+var generalTrigger=[586955337870082082, 571390705117954049, 571600581936939049, 631391110966804510, 589485632984973332, 571388780058247185, 707600524727418900];
+var sneakTrigger=[631134966163701761, 662642212789551124, 707600524727418900];
 var botSpamID="700390885984043188";
 
 var testChannelID="707600524727418900";
@@ -218,6 +218,7 @@ async function checkToUnmute(){
         fs.exists("./database/mute.dat", (exists)=>{
             if(exists){
                 fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
+                    console.log(file)
                     if (err) throw err;
                     var testData=file.toString().split("\n");
                     var i;
@@ -601,15 +602,17 @@ bot.on('message',  message => {
                         if(month<10){
                             month="0"+month;
                         }
-
+                        
                         if(hours>=12){
                             if(hours%12<10){
                                 var time="0"+(hours%12)+":"+minutes+":"+seconds+" PM";
+                                if(hours%12==0){
+                                    var time=(hours)+":"+minutes+":"+seconds+" PM";
+                                }
                             }else{
                                 var time=(hours%12)+":"+minutes+":"+seconds+" PM";
                             }
                         }else if(hours==0){
-
                             var time="12:"+minutes+":"+seconds+" AM";
                         }else{
                             if(hours<10){
