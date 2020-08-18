@@ -12,7 +12,7 @@ var pinballTrigger=[613630308931207198, 702578486199713872, 707600524727418900];
 var arcadeTrigger=clawTrigger.concat(pinballTrigger);
 var raceTrigger=[589484542214012963, 707600524727418900];
 var sumoTrigger=[627919045420646401, 707600524727418900];
-var generalTrigger=[586955337870082082, 571390705117954049, 571600581936939049, 631391110966804510, 589485632984973332, 571388780058247185, 707600524727418900];
+var generalTrigger=[586955337870082082, 571390705117954049, 571600581936939049, 631391110966804510, 589485632984973332, 571388780058247185, 710104643996352633, 707600524727418900];
 var sneakTrigger=[631134966163701761, 662642212789551124, 707600524727418900];
 var botSpamID="710104643996352633"; 
 var modBotSpamID="593000239841935362";
@@ -30,6 +30,14 @@ async function announcement(game, image, numImage, channel){
         var day=(date.getDay()+6)%7;
         const minDay=1440;
         var rightDay=false;
+
+        var at="";
+        if(game.toLowerCase().includes("sumobots")){
+            at="<@&744956818073190471>";
+        }else if(game.toLowerCase().includes("racerealcars143")){
+            at="<@&744956844233064449>";
+        }
+
         const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId="+game.toLowerCase(), {
             method: 'GET',
             headers: {
@@ -60,23 +68,25 @@ async function announcement(game, image, numImage, channel){
                     var rand=Math.floor(Math.random()*numImage)+1;
 
                     if(startTime-adjustedMinute==15&&rightDay){
-                        var out="@here **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                        var out=at+" **"+game+"** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
                         bot.channels.get(channel).send(out, {
                           files: [{
                             attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
                             name: image+'.gif'
                           }]
                         });
+                        bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>")
                         logBotActions(null, game+" Pre-Announcement");
                         return;
                     }else if(startTime-adjustedMinute==0&&rightDay){
-                        var out="@here **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
+                        var out=at+" **"+game+"** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/"+game.toLowerCase()+"\n";
                         bot.channels.get(channel).send(out, {
                           files: [{
                             attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
                             name: image+'.gif'
                           }]
                         });
+                        bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>")
                         logBotActions(null, game+" Announcement");
                         return;
                     }
@@ -136,6 +146,29 @@ function logBotActions(message, action){
     }
 }
 
+function logReactActions(user, event){
+    today=new Date();
+    var hours=today.getHours();
+    var minutes=today.getMinutes();
+    var seconds=today.getSeconds();
+    var day=today.getDate();
+    var month=today.getMonth()+1;
+    var year=today.getFullYear();
+    if(hours<10&&hours!=0){
+        hours="0"+hours;
+    }
+    if(minutes<10&&minutes!=0){
+        minutes="0"+minutes;
+    }
+    if(seconds<10&&seconds!=0){
+        seconds="0"+seconds;
+    } 
+    console.log(hours+":"+minutes+":"+seconds+" EST | "+user.tag+" | "+event);
+    fs.appendFile("./bot_logs/logs_"+month+"-"+day+"-"+year+".txt", hours+":"+minutes+":"+seconds+" EST | "+user.tag+" | "+event+"\n", function (err) {
+      if (err) throw err;
+    }); 
+}
+
 async function newDay(){
     var date=new Date();
     var day=date.getDate();
@@ -162,11 +195,22 @@ async function newDay(){
                         v.pop();
                     }
                     let sym = ["1) ","2) ","3) ","4) ","5) ","6) ","7) ","8) ","9) ","10) "];
-                    let r = "Here are the top 10 **Oktoberfest Launch Tournament** players as of "+insert+":\n";
-                    v.forEach((a,i) => {r += "" + sym[i] + " **__" + a[0] + "__**\t" + a[1] + "\n"});
-                    r += "*Note: Some new top 10 scores may not be verified yet and will not appear here.*\n";
-                    r+= "See the full leaderboard here: http://proco.me/oktoberfest/\n"
-                    bot.channels.get("702578486199713872").send(r);
+                    var scores = "";
+                    v.forEach((a,i) => {scores += "" + sym[i] + " **__" + a[0] + "__**\t" + a[1] + "\n"});
+
+                    var title="__**Oktoberfest** Current Scores__";
+                    var description="Here are the Top 10 **Oktoberfest Launch Tournament** players as of "+insert;
+                    var footer="Note: Some new top 10 scores may not be verified yet and will not appear here.";
+                    var image="https://www.american-pinball.com/s/i/h/pinslide/oktoberfest/oktoberfest-logo-tap_shadow.png";
+                    const embed = new Discord.RichEmbed()
+                      .setTitle("__"+title+"__")
+                      .setColor(0x220e41)
+                      .setURL("http://proco.me/oktoberfest/")
+                      .addField(description , scores)
+                      .setThumbnail(image)
+                      .setFooter(footer);
+
+                    bot.channels.get("702578486199713872").send({embed});
                 });
             }
             // bot.destroy();
@@ -253,6 +297,68 @@ async function checkToUnmute(){
     }
 }
 
+const events = {
+    MESSAGE_REACTION_ADD: 'messageReactionAdd',
+    MESSAGE_REACTION_REMOVE: 'messageReactionRemove',
+};
+
+bot.on('raw', async event => {
+    if (!events.hasOwnProperty(event.t)) return;
+
+    const { d: data } = event;
+    const user = bot.users.get(data.user_id);
+    const channel = bot.channels.get(data.channel_id) || await user.createDM();
+
+    if (channel.messages.has(data.message_id)) return;
+
+    const message = await channel.fetchMessage(data.message_id);
+
+    const emojiKey = (data.emoji.id) ? `${data.emoji.name}:${data.emoji.id}` : data.emoji.name;
+    const reaction = message.reactions.get(emojiKey);
+
+    bot.emit(events[event.t], reaction, user);
+});
+
+bot.on('messageReactionAdd', (reaction, user) => {
+
+    let emoji=["SumoBots", "RRC", "Pinball" , "ClawGames"];
+    let role=["SumoBots", "RRC", "Pinball" , "ClawGames"]
+
+
+    if (user && !user.bot && reaction.message.channel.guild && reaction.message.content=="" && reaction.message.id==745098642377146461){ //CHANGE AFTER GEN
+        let i;
+        for (let o in emoji){
+            if (reaction.emoji.name == emoji[o]) {
+                i = reaction.message.guild.roles.find(e => e.name == role[o]);
+                reaction.message.guild.member(user).addRole(i).catch(console.error)
+                console.log("Given "+user.tag+" role of \""+i.name+"\"");
+                logReactActions(user, "Given role of \""+i.name+"\"")
+            }
+        }
+        console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" gained a reaction from ${user.tag}`);
+        console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
+    }
+});
+
+bot.on('messageReactionRemove', (reaction, user) => {
+    let emoji=["SumoBots", "RRC", "Pinball" , "ClawGames"];
+    let role=["SumoBots", "RRC", "Pinball" , "ClawGames"]
+
+    if (user && !user.bot && reaction.message.channel.guild && reaction.message.content=="" && reaction.message.id==745098642377146461){ //CHANGE AFTER GEN
+        let i;
+        for (let o in emoji){
+            if (reaction.emoji.name == emoji[o]) {
+                i = reaction.message.guild.roles.find(e => e.name == role[o]);
+                reaction.message.guild.member(user).removeRole(i).catch(console.error)
+                console.log("Taken "+user.tag+"'s' role of \""+i.name+"\"");
+                logReactActions(user, "Taken role of \""+i.name+"\"")
+            }
+        }
+        console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" lost a reaction from ${user.tag}`);
+        console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
+    }  
+});
+
 bot.once('ready', () => {
     announcement("SumoBots", "sumo", 10, "627919045420646401");
     announcement("RaceRealCars143", "race", 4, "589484542214012963");
@@ -297,32 +403,7 @@ bot.on('message',  message => {
     let broomBotServer=bot.guilds.get("664556796576268298");
     let surrogateServer=bot.guilds.get("571388780058247179");
 
-    if(message.member.user.tag=="Mordecai#3257"&&message.content.includes("!test")){
-        //some test I want to do
-        //707047722208854101
-        fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRe979Ap0TpmdEDtPhZ7nwT9bkelIKUzFHf9ed6HiPBf5ZM09nNOAIjxAK1rztDqBffR8Gc6FTecoaA/pub?gid=1385749731&single=true&output=csv", {
-                method: 'GET',
-                // headers: {
-                //     'Content-Type': 'application/json',
-                // },
-            }).then(x => x.text())
-                .then(x => {
-                    console.log(x);
-                    let v = x.split(/\n/).map(a => a.split(","));
-                    while(v.length>10){
-                        v.pop();
-                    }
-                    let sym = ["1) ","2) ","3) ","4) ","5) ","6) ","7) ","8) ","9) ","10) "];
-                    let r = "Here are the top 10 **Oktoberfest Launch Tournament** players as of [date]:\n";
-                    v.forEach((a,i) => {r += "" + sym[i] + " **__" + a[0] + "__**\t" + a[1] + "\n"});
-                    r += "*Note: Some new top 10 scores may not be verified yet and will not appear here.*\n";
-                    r+= "See the full leaderboard here: http://proco.me/oktoberfest/\n"
-                    bot.channels.get("700390885984043188").send(r);
-                });
-        return;
-    }
-
-    //Setup triggers for channels
+     //Setup triggers for channels
     var i; 
     var triggerClawResponse=false; var triggerArcadeResponse=false; var triggerRaceResponse=false; 
     var triggerSumoResponse=false; var triggerGeneralResponse=false; var triggerSneakResponse=false;
@@ -350,6 +431,47 @@ bot.on('message',  message => {
         if(sneakTrigger[i]!=null&&sneakTrigger[i]==message.channel.id){
             triggerSneakResponse=true;
         }
+    }
+
+    if(message.member.user.tag=="Mordecai#3257"&&message.content.includes("!test")){
+        //some test I want to do
+        //707047722208854101
+
+        var args=message.content.substring(1).split(' ');
+        var cmd=args[0].toLowerCase();
+        
+        return;
+    }
+
+    if(message.member.user.tag=="Mordecai#3257" && message.content.includes("!gen")){
+        message.delete();
+
+        const sumo=bot.emojis.get("744962246848807002").toString(); 
+        const rrc=bot.emojis.get("744960028427157565").toString(); 
+        const pin=bot.emojis.get("744965333151907970").toString(); 
+        const claw=bot.emojis.get("744963655443021846").toString(); 
+
+        const embed = new Discord.RichEmbed()
+          .setTitle("Notification Subsciption")
+          .setColor(0x220e41)
+          .setDescription("React on this post to receive a role which will enable you to receive notifications about a specific game!")
+          .addField(sumo+" SumoBots "+sumo, "Get notified when the game is about to be online and for information about the tournament.")
+          .addField(rrc+" RaceRealCars143 "+rrc, "Get notified when the game is about to be online.")
+          .addField(pin+" Pinball Games "+pin, "Get notified when a game goes offline or online for maitenance. Recieve information about tournaments. ")
+          .addField(claw+" Claw Games "+claw, "Get notified of any Claw Game related events")
+          .addField("All of these fields will also be notified of any behind the scenes related content through this way for a given game.", "⠀")
+          .setFooter("To disable notification, un-react. If it appears that you haven't reacted, just react and un-react to disable them.");
+
+          bot.channels.get("745097595692515380").send({embed}).then(sentEmbed => {
+            sentEmbed.react("744962246848807002")                   
+                .then(() => sentEmbed.react("744960028427157565"))  
+                .then(() => sentEmbed.react("744965333151907970"))  
+                .then(() => sentEmbed.react("744963655443021846")); 
+          });
+
+          logReactActions(message.member.user, "Generated embed");
+
+          return;
     }
 
     //scraper for getting channel info 
@@ -540,36 +662,34 @@ bot.on('message',  message => {
             case 'gethelp':
                 if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                         message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                    var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
-                    out+="`!time` - Will tell the current time and day in Finland\n";
-                    out+="`!roll` | `!roll xdy` - Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command\n";
-                    out+="`!game` - Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games\n";
-                    out+="`!schedule` | `!schedule <GAME>` - Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified\n";
-                    out+="`!top` | `!top <GAME> ?month?` - Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name\n";
-                    out+="`!mute <USER> <TIME>` - Will mute <USER> for <TIME>. Time is formatted as `3m`/`3h`/`3d`/`3y`\n";
-                    out+="`!unmute <USER>` - If <USER> is muted, will unmute them and remove them from the database\n";
-                    out+="`(ab:cd)` - When you have a time formated as such, it will paste a Timezone conversion link to that time in Finland\n"
-                    out+="`!name` - Gives the SumoBots that have names other than their esports team. "
-                    if(message.channel.id!=modBotSpamID){
-                        message.delete();
-                        bot.channels.get(modBotSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
-                    }else{
-                        bot.channels.get(modBotSpamID).send(out);
-                    }
+                    const embed = new Discord.RichEmbed()
+                        .setTitle("Hello, I am the NinjaHelp bot")
+                        .setColor(0x220e41)
+                        .setDescription("You have access to the following commands")
+                        .addField("`!time`", "Will tell the current time and day in Finland")
+                        .addField("`!roll` | `!roll xdy`", "Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command")
+                        .addField("`!game`", "Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games")
+                        .addField("`!schedule` | `!schedule <GAME>`", "Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified")
+                        .addField("`!top` | `!top <GAME> ?month?`", "Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name")
+                        .addField("`!mute <USER> <TIME>`", "If <USER> is muted, will unmute them and remove them from the database")
+                        .addField("`!unmute <USER>`", "If <USER> is muted, will unmute them and remove them from the database")
+                        .addField("`(ab:cd)`", "When you have a time formated as such, it will paste a Timezone conversion link to that time in Finland")
+                        .addField("`!name`", "Gives the SumoBots that have names other than their esports team")
+                        .setFooter("These commands are for Mod Squad and Surrogate Team");
+                    bot.channels.get(modBotSpamID).send({embed})
                 }else{
-                    var out="Hello, I am the NinjaHelp bot. You have access to the following commands:\n";
-                    out+="`!time` - Will tell the current time and day in Finland\n";
-                    out+="`!roll` | `!roll xdy` - Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command\n";
-                    out+="`!game` - Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games\n";
-                    out+="`!schedule <GAME>` - Will give <GAME>'s current schedule for the week.\n";
-                    out+="`!top <GAME> m` - Will give <GAME>'s top players of all time. If you want the current top players of the month, put `m` after the game name\n";
-                    out+="`!name` - Gives the SumoBots that have names other than their esports team. "
-                    if(message.channel.id!=botSpamID){
-                        message.delete();
-                        bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+out);
-                    }else{
-                        bot.channels.get(botSpamID).send(out);
-                    }
+                    const embed = new Discord.RichEmbed()
+                        .setTitle("Hello, I am the NinjaHelp bot")
+                        .setColor(0x220e41)
+                        .setDescription("You have access to the following commands")
+                        .addField("`!time`", "Will tell the current time and day in Finland")
+                        .addField("`!roll` | `!roll xdy`", "Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command")
+                        .addField("`!game`", "Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games")
+                        .addField("`!schedule` | `!schedule <GAME>`", "Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified")
+                        .addField("`!top` | `!top <GAME> ?month?`", "Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name")
+                        .addField("`!name`", "Gives the SumoBots that have names other than their esports team")
+                        .setFooter("These commands are for everyone");
+                    bot.channels.get(botSpamID).send({embed})
                 }
                 message.delete();
                 logBotActions(message, "!getHelp");
@@ -615,21 +735,26 @@ bot.on('message',  message => {
                 if(triggerSumoResponse||message.content.toLowerCase().includes("sumobots")){
                     url+="sumobots";
                     var command="SumoBots";
+                    var image="https://www.surrogate.tv/img/sumo/logo_sumo.png";
                 }else if(triggerRaceResponse||message.content.toLowerCase().includes("racerealcars143")){
                     url+="racerealcars143";
                     var command="RaceRealCars143";
+                    var image="https://i.imgur.com/XETrUAa.png";
                 }else if((triggerClawResponse&&706819836071903275==message.channel.id)||message.content.toLowerCase().includes("forceclaw")){
                     url+="forceclaw";
                     var command="ForceClaw";
+                    var image="https://assets.surrogate.tv/game/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0/3458917638-48hreventforceclaw-01.png";
                 }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
                     url+="toiletpaperclaw";
                     var command="ToiletPaperClaw";
                 }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("batman66")){
                     url+="batman66";
                     var command="Batman66 Pinball";
+                    var image="https://www.surrogate.tv/img/pinball/pinball_logo.png";
                 }else if((triggerPinballResponse&&702578486199713872)||message.content.toLowerCase().includes("oktoberfest")){
                     url+="oktoberfest";
                     var command="Oktoberfest Pinball";
+                    var image="https://www.american-pinball.com/s/i/h/pinslide/oktoberfest/oktoberfest-logo-tap_shadow.png";
                 }else{
                     if(message.channel.id!=botSpamID){
                         if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
@@ -690,25 +815,25 @@ bot.on('message',  message => {
                                 }
                                 switch(day){
                                     case 0:
-                                        output+="> Monday:         ";
+                                        output+="Monday:         ";
                                         break;
                                     case 1:
-                                        output+="> Tuesday:         ";
+                                        output+="Tuesday:         ";
                                         break;
                                     case 2:
-                                        output+="> Wednesday:  ";
+                                        output+="Wednesday:  ";
                                         break;
                                     case 3:
-                                        output+="> Thursday:       ";
+                                        output+="Thursday:       ";
                                         break;
                                     case 4:
-                                        output+="> Friday:             ";
+                                        output+="Friday:             ";
                                         break;
                                     case 5:
-                                        output+="> Saturday:        ";
+                                        output+="Saturday:        ";
                                         break;
                                     case 6:
-                                        output+="> Sunday:           ";
+                                        output+="Sunday:           ";
                                         break;
                                     default:
                                         break;
@@ -774,21 +899,51 @@ bot.on('message',  message => {
                                     }
                                 }
                             }
-                            output="Here is the schedule (Finland time GMT+3) for **"+command+"** this week!\n"+output;
-                            output+="Link to **"+command+"** can be found here!\nhttps://surrogate.tv/game/";
+                            var title="Schedule for **"+command+"**"
+
+                            // output="Here is the schedule (Finland time GMT+3) for **"+command+"** this week!\n"+output;
+                            // output+="Link to **"+command+"** can be found here!\nhttps://surrogate.tv/game/";
                             command=command.split(' ');
                             command=command.splice(0);
-                            output+=command[0].toLowerCase();
+                            // output+=command[0].toLowerCase();
                             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
                                 message.delete();
-                                message.channel.send(output);
+
+                                const embed = new Discord.RichEmbed()
+                                  .setTitle("__"+title+"__")
+                                  .setColor(0x220e41)
+                                  .setURL("https://surrogate.tv/game/"+command)
+                                  .setDescription(output)
+                                  .setThumbnail(image)
+                                  .setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
+
+                                message.channel.send({embed});
                             }else{
                                 if(message.channel.id!=botSpamID){
                                     message.delete();
-                                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+output);
+
+                                    const embed = new Discord.RichEmbed()
+                                      .setTitle("__"+title+"__")
+                                      .setColor(0x220e41)
+                                      .setURL("https://surrogate.tv/game/"+command)
+                                      .setDescription(output)
+                                      .setThumbnail(image)
+                                      .setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
+
+                                    bot.channels.get(botSpamID).send({embed});
+
                                 }else{
-                                    bot.channels.get(botSpamID).send(output);
+
+                                    const embed = new Discord.RichEmbed()
+                                      .setTitle("__"+title+"__")
+                                      .setColor(0x220e41)
+                                      .setURL("https://surrogate.tv/game/"+command)
+                                      .setDescription(output)
+                                      .setThumbnail(image)
+                                      .setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
+                                    
+                                    bot.channels.get(botSpamID).send({embed});
                                 }
                             }
                         }
@@ -926,6 +1081,7 @@ bot.on('message',  message => {
             case "top":
                 var url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/scores?gameId=";
                 var scoreType="All Time";
+                var title=" Current Scores";
                 if(triggerSumoResponse||message.content.toLowerCase().includes("sumobots")){
                     url+="99ca6347-0e10-4465-8fe1-9fee8bc5fb35&order=";
                     var command="SumoBots";
@@ -944,13 +1100,16 @@ bot.on('message',  message => {
                         }
                         return;
                     }
+                    var image="https://www.surrogate.tv/img/sumo/logo_sumo.png";
                 }else if(triggerRaceResponse||message.content.toLowerCase().includes("racerealcars143")){
                     url+="953f2154-9a6e-4602-99c6-265408da6310&order=";
                     var command="RaceRealCars143";
                     if(args[2]!=null&&args[2]==="m"){
                         url+="month";
                         scoreType="Monthly";
+                        title=" Current Scores of the Month";
                     }
+                    var image="https://i.imgur.com/XETrUAa.png";
                 }else if((triggerClawResponse&&706819836071903275==message.channel.id)||message.content.toLowerCase().includes("forceclaw")){
                     url+="ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0&order=";
                     var command="ForceClaw";
@@ -969,6 +1128,7 @@ bot.on('message',  message => {
                         }
                         return;
                     }
+                    var image="https://assets.surrogate.tv/game/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0/3458917638-48hreventforceclaw-01.png"; 
                 }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
                     url+="46db6268-bfc3-43ff-ba7d-02ffaf1f2867&order=";
                     var command="ToiletPaperClaw";
@@ -988,13 +1148,6 @@ bot.on('message',  message => {
                         return;
                     }
                 }else if((triggerPinballResponse&&702578486199713872==message.channel.id)||message.content.toLowerCase().includes("oktoberfest")){
-                    // url+="592ac917-14d2-481a-9d37-3b840ad46b19&order=";
-                    // var command="Oktoberfest Pinball";
-                    // if(args[2]!=null&&args[2]==="m"){
-                    //     url+="month";
-                    //     scoreType="Monthly";
-                    // }
-                    
                     //IMPLEMENT TAKING FROM GOOGLE FORM 
                     message.delete();
                     var today=new Date();
@@ -1002,9 +1155,6 @@ bot.on('message',  message => {
                     if(checkMonth==7||checkMonth==8){
                         fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRe979Ap0TpmdEDtPhZ7nwT9bkelIKUzFHf9ed6HiPBf5ZM09nNOAIjxAK1rztDqBffR8Gc6FTecoaA/pub?gid=1385749731&single=true&output=csv", {
                             method: 'GET',
-                            // headers: {
-                            //     'Content-Type': 'application/json',
-                            // },
                         }).then(x => x.text())
                             .then(x => {
                                 var date=new Date();
@@ -1017,11 +1167,22 @@ bot.on('message',  message => {
                                     v.pop();
                                 }
                                 let sym = ["1) ","2) ","3) ","4) ","5) ","6) ","7) ","8) ","9) ","10) "];
-                                let r = "Here are the top 10 **Oktoberfest Launch Tournament** players as of "+insert+":\n";
-                                v.forEach((a,i) => {r += "" + sym[i] + " **__" + a[0] + "__**\t" + a[1] + "\n"});
-                                r += "*Note: Some new top 10 scores may not be verified yet and will not appear here.*\n";
-                                r+= "See the full leaderboard here: http://proco.me/oktoberfest/\n"
-                                bot.channels.get("702578486199713872").send(r);
+                                var scores = "";
+                                v.forEach((a,i) => {scores += "" + sym[i] + " **__" + a[0] + "__**\t" + a[1] + "\n"});
+
+                                var title="__**Oktoberfest** Current Scores__";
+                                var description="Here are the Top 10 **Oktoberfest Launch Tournament** players as of "+insert;
+                                var footer="Note: Some new top 10 scores may not be verified yet and will not appear here.";
+                                var image="https://www.american-pinball.com/s/i/h/pinslide/oktoberfest/oktoberfest-logo-tap_shadow.png";
+                                const embed = new Discord.RichEmbed()
+                                  .setTitle("__"+title+"__")
+                                  .setColor(0x220e41)
+                                  .setURL("http://proco.me/oktoberfest/")
+                                  .addField(description , scores)
+                                  .setThumbnail(image)
+                                  .setFooter(footer);
+
+                                bot.channels.get("702578486199713872").send({embed});
                             });
                     }
                     logBotActions(message, "!top oktoberfest");
@@ -1032,7 +1193,9 @@ bot.on('message',  message => {
                     if(args[2]!=null&&args[2]==="m"){
                         url+="month";
                         scoreType="Monthly";
+                        title=" Current Scores of the Month";
                     }
+                    var image="https://www.surrogate.tv/img/pinball/pinball_logo.png";
                 }else{
                     if(message.channel.id!=botSpamID){
                         if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
@@ -1048,6 +1211,7 @@ bot.on('message',  message => {
                     }
                     return;
                 }
+                title="**"+command+"**"+title;
                 var minDay=1440;
                 var {list}=fetch(url, {
                     method: 'GET',
@@ -1060,11 +1224,11 @@ bot.on('message',  message => {
                             message.channel.send("There were no scores for "+command+".");
                         }else{
                             if(x.result.Items.length>10){
-                                var scores="Here are the Top 10 "+scoreType+" scores for **"+command+"**:";
+                                var description="These are the Top 10 scores for **"+command+"**";
                             }else{
-                                var scores="Here are the Top "+x.result.Items.length+" "+scoreType+" scores for **"+command+"**:";
+                                var description="These are the Top "+x.result.Items.length+" scores for **"+command+"**";
                             }
-                            var i;
+                            var i; var scores="";
                             for(i=0; i<x.result.Items.length&&i<10; i++){
                                 if(x.result.Items[i].userObject.userIcon!=null){
                                     var icon=x.result.Items[i].userObject.userIcon.toLowerCase();
@@ -1085,27 +1249,50 @@ bot.on('message',  message => {
                                             icon=bot.emojis.get("700736528967532564").toString();
                                             break;
                                     }
-                                    scores+="\n\t"+(i+1)+") "+icon+" **__"+x.result.Items[i].userObject.username+"__**:\t"+x.result.Items[i].points;
+                                    scores+=(i+1)+") "+icon+" **__"+x.result.Items[i].userObject.username+"__**:    "+x.result.Items[i].points;
                                 }else{
-                                    scores+="\n\t"+(i+1)+") **__"+x.result.Items[i].userObject.username+"__**:\t"+x.result.Items[i].points;
+                                    scores+=(i+1)+") **__"+x.result.Items[i].userObject.username+"__**:    "+x.result.Items[i].points;
+                                }
+                                if(i+1!=x.result.Items.length && i+1!=10){
+                                    scores+="\n"
                                 }
                             }
 
                             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
                                     message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
                                 message.delete();
-                                message.channel.send(scores);
+
+                                const embed = new Discord.RichEmbed()
+                                  .setTitle("__"+title+"__")
+                                  .setColor(0x220e41)
+                                  .setThumbnail(image)
+                                  .addField( description , scores);
+
+                                message.channel.send({embed});
                             }else{
                                 if(message.channel.id!=botSpamID){
                                     message.delete();
-                                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\n"+scores);
+                                    const embed = new Discord.RichEmbed()
+                                      .setTitle("__"+title+"__")
+                                      .setColor(0x220e41)
+                                      .setThumbnail(image)
+                                      .addField( description , scores)
+                                      .setFooter("<@"+message.member.user.id+"> Please use this channel for bot commands!");
+
+                                    bot.channels.get(botSpamID).send({embed});
                                 }else{
-                                    bot.channels.get(botSpamID).send(scores);
+                                    const embed = new Discord.RichEmbed()
+                                      .setTitle("__"+title+"__")
+                                      .setColor(0x220e41)
+                                      .setThumbnail(image)
+                                      .addField( description , scores);
+
+                                    message.channel.send({embed});
                                 }
                             }
                         }
                     });
-                logBotActions(message, "!top");
+                logBotActions(message, "!top "+command);
                 break;
             // !meme
             case "meme":
@@ -1132,15 +1319,31 @@ bot.on('message',  message => {
                 var excel=bot.emojis.get("713862601175728218").toString();    //Kyle
                 var ence=bot.emojis.get("713862224271114361").toString();     //Dug
                 var empire=bot.emojis.get("713862601779707924").toString();   //Mike
-                var out="These are the names of the bots given by the Broom Gods:\n>>> ";
-                out+=alliance+"\tChad\n"+empire+"\tMike\n"+mouse+"\tJerry\n"+ence+"\tDug\n"+heretics+"\tHercules\n"+excel+"\tKyle\n";
+                var title="__The names of the bots given by the Broom Gods__";
+                var description=alliance+"\tChad\n"+empire+"\tMike\n"+mouse+"\tJerry\n"+ence+"\tDug\n"+heretics+"\tHercules\n"+excel+"\tKyle";
                 if(triggerSumoResponse){
                     message.delete();
-                    message.channel.send(out);
+                    const embed = new Discord.RichEmbed()
+                      .setTitle("__"+title+"__")
+                      .setColor(0x220e41)
+                      .setDescription(description);
+
+                    message.channel.send({embed});
                 }else if(message.channel.id!=botSpamID){
-                    bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for that command!\n"+out);
+                    const embed = new Discord.RichEmbed()
+                      .setTitle("__"+title+"__")
+                      .setColor(0x220e41)
+                      .setDescription(description)
+                      .setFooter("<@"+message.member.user.id+"> Please use this channel for that command!");
+
+                    bot.channels.get(botSpamID).send({embed});
                 }else{
-                    bot.channels.get(botSpamID).send(out);
+                    const embed = new Discord.RichEmbed()
+                      .setTitle("__"+title+"__")
+                      .setColor(0x220e41)
+                      .setDescription(description);
+
+                    message.channel.send({embed});
                 }
                 logBotActions(message, "!name");
             default:
@@ -1276,6 +1479,7 @@ function detection(message, triggerPinballResponse, triggerClawResponse, trigger
     }
     //"Ball stuck" for Pinball
     if(triggerPinballResponse&&
+        !message.channel.id=="702578486199713872"&&
         message.content.toLowerCase().includes("ball")&&
         message.content.toLowerCase().includes("stuck")&&
         !((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
@@ -1315,6 +1519,7 @@ function detection(message, triggerPinballResponse, triggerClawResponse, trigger
     }
     //"Two balls" Pinball
     if(triggerPinballResponse&&
+        !message.channel.id=="702578486199713872"&&
         message.content.toLowerCase().includes("two")&&
         message.content.toLowerCase().includes("ball")&&
         !message.content.toLowerCase().includes("flipper")&&
