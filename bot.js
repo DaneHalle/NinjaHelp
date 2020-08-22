@@ -321,11 +321,11 @@ bot.on('raw', async event => {
 
 bot.on('messageReactionAdd', (reaction, user) => {
 
-    let emoji=["SumoBots", "RRC", "Pinball" , "ClawGames"];
-    let role=["SumoBots", "RRC", "Pinball" , "ClawGames"]
+    let emoji=["SumoBots", "RRC", "Pinball" , "ClawGames", "Experiences"];
+    let role=["SumoBots", "RRC", "Pinball" , "ClawGames", "Experiences"]
 
 
-    if (user && !user.bot && reaction.message.channel.guild && reaction.message.content=="" && reaction.message.id==745098642377146461){ //CHANGE AFTER GEN
+    if (user && !user.bot && reaction.message.channel.guild && reaction.message.content=="" && reaction.message.id==745995420617932830){ //CHANGE AFTER GEN
         let i;
         for (let o in emoji){
             if (reaction.emoji.name == emoji[o]) {
@@ -341,10 +341,10 @@ bot.on('messageReactionAdd', (reaction, user) => {
 });
 
 bot.on('messageReactionRemove', (reaction, user) => {
-    let emoji=["SumoBots", "RRC", "Pinball" , "ClawGames"];
-    let role=["SumoBots", "RRC", "Pinball" , "ClawGames"]
+    let emoji=["SumoBots", "RRC", "Pinball" , "ClawGames", "Experiences"];
+    let role=["SumoBots", "RRC", "Pinball" , "ClawGames", "Experiences"]
 
-    if (user && !user.bot && reaction.message.channel.guild && reaction.message.content=="" && reaction.message.id==745098642377146461){ //CHANGE AFTER GEN
+    if (user && !user.bot && reaction.message.channel.guild && reaction.message.content=="" && reaction.message.id==745995420617932830){ //CHANGE AFTER GEN
         let i;
         for (let o in emoji){
             if (reaction.emoji.name == emoji[o]) {
@@ -439,7 +439,11 @@ bot.on('message',  message => {
 
         var args=message.content.substring(1).split(' ');
         var cmd=args[0].toLowerCase();
-        
+        // bot.channels.get("745097595692515380").fetchMessage("745098642377146461")
+        //     .then((message) => {
+        //         console.log(message.reactions)
+        //     })
+
         return;
     }
 
@@ -450,6 +454,7 @@ bot.on('message',  message => {
         const rrc=bot.emojis.get("744960028427157565").toString(); 
         const pin=bot.emojis.get("744965333151907970").toString(); 
         const claw=bot.emojis.get("744963655443021846").toString(); 
+        const experience=bot.emojis.get("745993436620128326").toString();
 
         const embed = new Discord.RichEmbed()
           .setTitle("Notification Subsciption")
@@ -459,17 +464,19 @@ bot.on('message',  message => {
           .addField(rrc+" RaceRealCars143 "+rrc, "Get notified when the game is about to be online.")
           .addField(pin+" Pinball Games "+pin, "Get notified when a game goes offline or online for maitenance. Recieve information about tournaments. ")
           .addField(claw+" Claw Games "+claw, "Get notified of any Claw Game related events")
+          .addField(experience+" Experiences "+experience, "Get notified of any special experiences happening")
           .addField("All of these fields will also be notified of any behind the scenes related content through this way for a given game.", "⠀")
           .setFooter("To disable notification, un-react. If it appears that you haven't reacted, just react and un-react to disable them.");
+          
+        // bot.channels.get("745097595692515380").send({embed}).then(sentEmbed => {
+        //     sentEmbed.react("744962246848807002")                   
+        //         .then(() => sentEmbed.react("744960028427157565"))  
+        //         .then(() => sentEmbed.react("744965333151907970"))  
+        //         .then(() => sentEmbed.react("744963655443021846"))
+        //         .then(() => sentEmbed.react("745993436620128326")); 
+        // });
 
-          bot.channels.get("745097595692515380").send({embed}).then(sentEmbed => {
-            sentEmbed.react("744962246848807002")                   
-                .then(() => sentEmbed.react("744960028427157565"))  
-                .then(() => sentEmbed.react("744965333151907970"))  
-                .then(() => sentEmbed.react("744963655443021846")); 
-          });
-
-          logReactActions(message.member.user, "Generated embed");
+        logReactActions(message.member.user, "Generated embed");
 
           return;
     }
@@ -595,6 +602,7 @@ bot.on('message',  message => {
                 }
                 var date=day+"/"+month+"/"+year;
                 var timeDate=time+" "+date;
+                
                 var sendOut="It is currently **"+timeDate+"** in Finland (Where the games are located)."
                 message.channel.send(sendOut);
                 logBotActions(message, "!time");
