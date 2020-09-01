@@ -74,8 +74,9 @@ async function announcement(game, image, numImage, channel){
                             attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
                             name: image+'.gif'
                           }]
-                        });
-                        bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>")
+                        })
+                            .then(bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
+                        
                         logBotActions(null, game+" Pre-Announcement");
                         return;
                     }else if(startTime-adjustedMinute==0&&rightDay){
@@ -85,8 +86,9 @@ async function announcement(game, image, numImage, channel){
                             attachment: './gifs/'+image+'/'+image+'_'+rand+'.gif',
                             name: image+'.gif'
                           }]
-                        });
-                        bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>")
+                        })
+                            .then(bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
+                        
                         logBotActions(null, game+" Announcement");
                         return;
                     }
@@ -180,7 +182,7 @@ async function newDay(){
         var checkMonth=date.getMonth()+1;
         var checkYear=date.getFullYear();
         if(checkDay>day||checkMonth>month||checkYear>year){
-            if(checkMonth==7||checkMonth==8){
+            if(checkMonth==7||checkMonth==8||(checkMonth==9&&checkDay<=11)){
                 fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRe979Ap0TpmdEDtPhZ7nwT9bkelIKUzFHf9ed6HiPBf5ZM09nNOAIjxAK1rztDqBffR8Gc6FTecoaA/pub?gid=1385749731&single=true&output=csv", {
                 method: 'GET',
             }).then(x => x.text())
@@ -189,7 +191,7 @@ async function newDay(){
                     var day=date.getDate();
                     var month=date.getMonth()+1;
                     var insert=day+"/"+month;
-                    console.log(x);
+                    // console.log(x);
                     let v = x.split(/\n/).map(a => a.split(","));
                     while(v.length>10){
                         v.pop();
@@ -364,8 +366,19 @@ bot.once('ready', () => {
     announcement("RaceRealCars143", "race", 4, "589484542214012963");
     // announcement("SumoBots", "sumo", 10, "707047722208854101"); //Testing
     // announcement("SumoBots", "sumo", 10, "700390885984043188"); //Broom Bot
-    fs.open("./database/mute.dat", "w", (err)=>{
-        if(err) throw err;
+    fs.exists("./database/mute.dat", (exists)=>{
+        if(!exists){
+            fs.open("./database/mute.dat", "w+", (err)=>{
+                if(err) throw err;
+            });
+        }
+    });
+    fs.exists("./database/connect.dat", (exists)=>{
+        if(!exists){
+            fs.open("./database/connect.dat", "w+", (err)=>{
+                if(err) throw err;
+            });
+        }
     });
     checkToUnmute();
     bot.user.setActivity("Surrogate.tv", { type: "WATCHING", url: "https://www.surrogate.tv" });
@@ -395,13 +408,15 @@ bot.once('ready', () => {
 });
 
 bot.on('message',  message => {
-    if(message.author.bot||message.author.id=="381655612335063040"||!(message.guild.id==("707047722208854098")||message.guild.id==("664556796576268298")||message.guild.id==("571388780058247179"))){
+    if(message.author.bot||message.author.id=="381655612335063040"||!((message.guild.id==("707047722208854098")||message.guild.id==("664556796576268298")||message.guild.id==("571388780058247179")))){
         return;
     }
 
     let testServer=bot.guilds.get("707047722208854098");
     let broomBotServer=bot.guilds.get("664556796576268298");
     let surrogateServer=bot.guilds.get("571388780058247179");
+
+    checkLevel(message);
 
      //Setup triggers for channels
     var i; 
@@ -683,6 +698,10 @@ bot.on('message',  message => {
                         .addField("`!unmute <USER>`", "If <USER> is muted, will unmute them and remove them from the database")
                         .addField("`(ab:cd)`", "When you have a time formated as such, it will paste a Timezone conversion link to that time in Finland")
                         .addField("`!name`", "Gives the SumoBots that have names other than their esports team")
+                        .addField("`!connect <USERNAME>`", "Connect your Discord account to your Surrogate.TV (STV) account. `<USERNAME>` should be your STV username. Should you change your STV username at any point, just type the command with the new username.")
+                        .addField("`!modupdate <DISCORD_USER_@> <USERNAME>`", "Force update `<DISCORD_USER_@>`'s connection to discord with STV account associated with `<USERNAME>`")
+                        .addField("`!modremove <DISCORD_USER_@>`", "Remove the connection associated with `<DISCORD_USER_@>`")
+                        .addField("`!search <USERNAME>`", "Get information on the STV account associated with `<USERNAME>.")
                         .setFooter("These commands are for Mod Squad and Surrogate Team");
                     bot.channels.get(modBotSpamID).send({embed})
                 }else{
@@ -696,6 +715,8 @@ bot.on('message',  message => {
                         .addField("`!schedule` | `!schedule <GAME>`", "Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified")
                         .addField("`!top` | `!top <GAME> ?month?`", "Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name")
                         .addField("`!name`", "Gives the SumoBots that have names other than their esports team")
+                        .addField("`!connect <USERNAME>`", "Connect your Discord account to your Surrogate.TV (STV) account. `<USERNAME>` should be your STV username. Should you change your STV username at any point, just type the command with the new username.")
+                        .addField("`!search <USERNAME>`", "Get information on the STV account associated with `<USERNAME>`.")
                         .setFooter("These commands are for everyone");
                     bot.channels.get(botSpamID).send({embed})
                 }
@@ -719,7 +740,7 @@ bot.on('message',  message => {
                 }else if(triggerClawResponse){
                     var out="There are multiple games here. Here are the links!\n";
                     out+="https://surrogate.tv/game/forceclaw\n";
-                    out+="https://surrogate.tv/game/toiletpaperclaw\n";
+                    // out+="https://surrogate.tv/game/toiletpaperclaw\n";
                     message.reply(out);
                     message.delete()
                 }else if(triggerGeneralResponse){
@@ -728,7 +749,7 @@ bot.on('message',  message => {
                     out+="https://surrogate.tv/game/racerealcars143\n";
                     out+="https://surrogate.tv/game/batman66\n";
                     out+="https://surrogate.tv/game/oktoberfest\n";
-                    // out+="https://surrogate.tv/game/forceclaw\n";
+                    out+="https://surrogate.tv/game/forceclaw\n";
                     // out+="https://surrogate.tv/game/toiletpaperclaw";
                     message.reply(out);
                     message.delete()
@@ -752,9 +773,10 @@ bot.on('message',  message => {
                     url+="forceclaw";
                     var command="ForceClaw";
                     var image="https://assets.surrogate.tv/game/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0/3458917638-48hreventforceclaw-01.png";
-                }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
-                    url+="toiletpaperclaw";
-                    var command="ToiletPaperClaw";
+                // }
+                // else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
+                //     url+="toiletpaperclaw";
+                //     var command="ToiletPaperClaw";
                 }else if((triggerPinballResponse&&613630308931207198)||message.content.toLowerCase().includes("batman66")){
                     url+="batman66";
                     var command="Batman66 Pinball";
@@ -908,9 +930,6 @@ bot.on('message',  message => {
                                 }
                             }
                             var title="Schedule for **"+command+"**"
-
-                            // output="Here is the schedule (Finland time GMT+3) for **"+command+"** this week!\n"+output;
-                            // output+="Link to **"+command+"** can be found here!\nhttps://surrogate.tv/game/";
                             command=command.split(' ');
                             command=command.splice(0);
                             // output+=command[0].toLowerCase();
@@ -942,7 +961,6 @@ bot.on('message',  message => {
                                     bot.channels.get(botSpamID).send({embed});
 
                                 }else{
-
                                     const embed = new Discord.RichEmbed()
                                       .setTitle("__"+title+"__")
                                       .setColor(0x220e41)
@@ -1137,30 +1155,31 @@ bot.on('message',  message => {
                         return;
                     }
                     var image="https://assets.surrogate.tv/game/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0/3458917638-48hreventforceclaw-01.png"; 
-                }else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
-                    url+="46db6268-bfc3-43ff-ba7d-02ffaf1f2867&order=";
-                    var command="ToiletPaperClaw";
-                    if(args[2]!=null&&args[2]==="m"){
-                        if(message.channel.id!=botSpamID){
-                            if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
-                                message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-                                bot.channels.get(modBotSpamID).send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
-                                message.delete();
-                            }else{
-                                bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
-                                message.delete();
-                            }
-                        }else{
-                            message.channel.send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
-                        }
-                        return;
-                    }
+                // }
+                // else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
+                //     url+="46db6268-bfc3-43ff-ba7d-02ffaf1f2867&order=";
+                //     var command="ToiletPaperClaw";
+                //     if(args[2]!=null&&args[2]==="m"){
+                //         if(message.channel.id!=botSpamID){
+                //             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                //                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
+                //                 bot.channels.get(modBotSpamID).send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
+                //                 message.delete();
+                //             }else{
+                //                 bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
+                //                 message.delete();
+                //             }
+                //         }else{
+                //             message.channel.send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
+                //         }
+                //         return;
+                //     }
                 }else if((triggerPinballResponse&&702578486199713872==message.channel.id)||message.content.toLowerCase().includes("oktoberfest")){
                     //IMPLEMENT TAKING FROM GOOGLE FORM 
                     message.delete();
                     var today=new Date();
                     var checkMonth=today.getMonth()+1;
-                    if(checkMonth==7||checkMonth==8){
+                    if(checkMonth==7||checkMonth==8||(checkMonth==9&&checkDay<=7)){
                         fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRe979Ap0TpmdEDtPhZ7nwT9bkelIKUzFHf9ed6HiPBf5ZM09nNOAIjxAK1rztDqBffR8Gc6FTecoaA/pub?gid=1385749731&single=true&output=csv", {
                             method: 'GET',
                         }).then(x => x.text())
@@ -1285,9 +1304,10 @@ bot.on('message',  message => {
                                       .setColor(0x220e41)
                                       .setThumbnail(image)
                                       .addField( description , scores)
-                                      .setFooter("<@"+message.member.user.id+"> Please use this channel for bot commands!");
+                                      .setFooter("Please use this channel for bot commands!");
 
-                                    bot.channels.get(botSpamID).send({embed});
+                                    bot.channels.get(botSpamID).send({embed})
+                                        .then(bot.channels.get(botSpamID).send("<@"+message.author.id+">"));
                                 }else{
                                     const embed = new Discord.RichEmbed()
                                       .setTitle("__"+title+"__")
@@ -1342,9 +1362,10 @@ bot.on('message',  message => {
                       .setTitle("__"+title+"__")
                       .setColor(0x220e41)
                       .setDescription(description)
-                      .setFooter("<@"+message.member.user.id+"> Please use this channel for that command!");
+                      .setFooter("Please use this channel for that command!");
 
-                    bot.channels.get(botSpamID).send({embed});
+                    bot.channels.get(botSpamID).send({embed})
+                        .then(bot.channels.get(botSpamID).send("<@"+message.author.id+">"));
                 }else{
                     const embed = new Discord.RichEmbed()
                       .setTitle("__"+title+"__")
@@ -1354,6 +1375,341 @@ bot.on('message',  message => {
                     message.channel.send({embed});
                 }
                 logBotActions(message, "!name");
+            case "connect":
+                // var botSpamID="700390885984043188";
+                if(args[1]==null){
+                    bot.channels.get(botSpamID).send("<@"+message.author.id+">, You need to supply your Surrogate.TV Username which can be found on your user profile at https://surrogate.tv/user");
+                }else{
+                    const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/users?search="+args[1], {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                    }).then(response => response.json())
+                    .then((x) => {
+                        if(x.result[0]==null){
+                            bot.channels.get(botSpamID).send("<@"+message.author.id+">, I cannot find a user by that name. Names are case sensitive so make sure it is correct.");
+                        }else{
+                            let uid=x.result[0].userId;
+                            fs.exists("./database/connect.dat", (exists)=>{
+                                if(exists){
+                                    fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
+                                        if (err) throw err;
+                                        var testData=file.toString().split("\n");
+                                        var i; var holdD=-1; var hold=-2;
+                                        var dIDFound=false; var uIDFound=false; var userFound=false;
+                                        for(i=0; i<testData.length; i++){
+                                            if(!testData[i]=="\n"){
+                                                var inHere=testData[i].split("|");
+                                                if(inHere[0]==message.author.id){
+                                                    dIDFound=true;
+                                                    // break;
+                                                    holdD=i;
+                                                }
+                                                if(inHere[1]==uid){
+                                                    uIDFound=true;
+                                                    // break;
+                                                    hold=i;
+                                                }
+                                                if(inHere[2]==args[1]){
+                                                    userFound=true;
+                                                    // break;
+                                                    hold=i;
+                                                }
+                                            }
+                                        }
+                                        if(dIDFound && userFound && (hold==holdD)){
+                                            bot.channels.get(botSpamID).send("<@"+message.author.id+">, You have already connected that Surrogate profile with your discord account. Please DM Mordecai if you feel this is a mistake.");
+                                        }else if((userFound || uIDFound) && !dIDFound){
+                                            var inHere=testData[hold].split("|");
+                                            bot.channels.get(botSpamID).send("<@"+message.author.id+">, The Surrogate profile "+args[1]+" has already been connected to discord user <@"+inHere[0]+">. Please DM Mordecai if you feel this is a mistake");
+                                        }else if(dIDFound){
+                                            let id=message.author.id;
+                                            fs.exists("./database/connect.dat", (exists)=>{
+                                                if(exists){
+                                                    fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
+                                                        if (err) throw err;
+                                                        var testData=file.toString().split("\n");
+                                                        var i;
+                                                        var dIDFound=false; var uid=false; var userFound=false;
+                                                        for(i=0; i<testData.length; i++){
+                                                            if(!testData[i]=="\n"){
+                                                                var inHere=testData[i].split("|");
+                                                                if(inHere[0]==id){
+                                                                    dIDFound=true;
+                                                                    uid=inHere[1];
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                        const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/users?search="+args[1], {
+                                                            method: 'GET',
+                                                            headers: {
+                                                                'Content-Type': 'application/json'
+                                                            },
+                                                        }).then(response => response.json())
+                                                        .then((x) => {
+                                                            if(x.result[0]==null){
+                                                                bot.channels.get(botSpamID).send("<@"+message.author.id+">, I cannot find a user by that name. Names are case sensitive so make sure it is correct.");
+                                                            }else{
+                                                                if(!dIDFound){
+                                                                    bot.channels.get(botSpamID).send("<@"+message.author.id+">, There is no Surrogate profile associated with you rdiscord account, please DM Mordecai if you feel this is a mistake.");
+                                                                }else if(x.result[0].userId!=uid){
+                                                                    bot.channels.get(botSpamID).send("<@"+message.author.id+">, That Surrogate profile is not the same one you previously connected with the username of "+inHere[2]+". Please DM Mordecai if you feel this is a mistake.");
+                                                                }else{
+                                                                    testData[i]=id+"|"+uid+"|"+args[1];
+                                                                    var insert=""; var z;
+                                                                    for(z=0; z<testData.length; z++){
+                                                                        if(z+1==testData.length){
+                                                                            insert+=testData[z];
+                                                                            break;
+                                                                        }
+                                                                        insert+=testData[z]+"\n";
+                                                                    }
+                                                                    fs.writeFile("./database/connect.dat", insert, (err) => {
+                                                                        if (err) throw err;
+                                                                    });
+                                                                    bot.channels.get(botSpamID).send("<@"+message.author.id+">, Your Surrogate profile has been successfully updated!");
+                                                                }
+                                                            }
+                                                        });
+                                                        
+                                                    });
+                                                }
+                                            });
+                                        }else{
+                                            fs.appendFile("./database/connect.dat", message.author.id+"|"+uid+"|"+args[1]+"\n", (err) => {
+                                                if (err) throw err;
+                                            });
+                                            bot.channels.get(botSpamID).send("<@"+message.author.id+">, Your Surrogate profile has been successfully connected to your discord account!");
+                                        }
+                                        
+                                    });
+                                }
+                            });
+
+                        }
+                    });
+                }
+                // if(message.channel.id!=botSpamID || message.channel.id!=modBotSpamID){
+                //     message.delete();
+                // }
+                logBotActions(message, message.content);
+                checkLevel(message);
+                break;
+            case "modupdate":
+                // botSpamID="700390885984043188";
+                if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                        message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team")&&
+                    args[1]!=null)&&args[2]!=null){
+                    var infoID=args[1].substring(3, args[1].length-1);
+
+                    fs.exists("./database/connect.dat", (exists)=>{
+                        if(exists){
+                            fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
+                                if (err) throw err;
+                                var testData=file.toString().split("\n");
+                                var i; 
+                                var dIDFound=false;
+                                for(i=0; i<testData.length; i++){
+                                    if(!testData[i]=="\n"){
+                                        var inHere=testData[i].split("|");
+                                        if(inHere[0]==infoID){
+                                            dIDFound=true;
+                                            console.log(testData[i])
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if(dIDFound){
+                                    const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/users?search="+args[2], {
+                                        method: 'GET',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                    }).then(response => response.json())
+                                    .then((x) => {
+                                        if(x.result[0]==null){
+                                            bot.channels.get(modBotSpamID).send("Unable to find the username "+args[2]+". The names are case sensitive.");
+                                        }else{
+                                            var k; 
+                                            var uID=false; var user=false;
+                                            for(k=0; k<testData.length; k++){
+                                                if(!testData[k]=="\n"){
+                                                    var inHere=testData[k].split("|");
+                                                    if(inHere[1]==x.result[0].userId){
+                                                        uID=true;
+                                                    }
+                                                    if(inHere[2]==x.result[0].username){
+                                                        user=true;
+                                                    }
+                                                }
+                                            }
+                                            if(uID || user){
+                                                bot.channels.get(modBotSpamID).send("That username is already claimed by another user. Cannot overwrite.");
+                                            }else{
+                                                var insert="";
+                                                var z;
+                                                for(z=0; z<testData.length; z++){
+                                                    if(z==i){
+                                                        insert+=infoID+"|"+x.result[0].userId+"|"+x.result[0].username;
+                                                    }else{
+                                                        insert+=testData[z];
+                                                    }
+                                                    if(z+1!=testData.length){
+                                                        insert+="\n";
+                                                    }
+                                                }
+                                                fs.writeFile("./database/connect.dat", insert, (err) => {
+                                                    if (err) throw err;
+                                                });
+                                                bot.channels.get(modBotSpamID).send("Successfully updated "+args[1]+"'s connection. ")
+                                            }
+                                        }
+                                    });
+                                }else{
+                                    bot.channels.get(modBotSpamID).send("Cannot find that user's information in my database. They can connect themselves.")
+                                }
+                            });
+                        }
+                    });
+                }
+                // if(message.channel.id!=botSpamID || message.channel.id!=modBotSpamID){
+                //     message.delete();
+                // }
+                logBotActions(message, message.content);
+                checkLevel(message)
+                break;
+            case "modremove":
+                // botSpamID="700390885984043188";
+                if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
+                        message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team")&&
+                    args[1]!=null)){
+                    var infoID=args[1].substring(3, args[1].length-1);
+
+                    fs.exists("./database/connect.dat", (exists)=>{
+                        if(exists){
+                            fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
+                                if (err) throw err;
+                                var testData=file.toString().split("\n");
+                                var i; 
+                                var dIDFound=false;
+                                for(i=0; i<testData.length; i++){
+                                    if(!testData[i]=="\n"){
+                                        var inHere=testData[i].split("|");
+                                        if(inHere[0]==infoID){
+                                            dIDFound=true;
+                                            console.log(testData[i])
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if(dIDFound){
+                                    var insert="";
+                                    var z;
+                                    for(z=0; z<testData.length; z++){
+                                        if(z==i){
+                                            continue;
+                                        }else{
+                                            insert+=testData[z];
+                                        }
+                                        if(z+1!=testData.length){
+                                            insert+="\n";
+                                        }
+                                    }
+                                    fs.writeFile("./database/connect.dat", insert, (err) => {
+                                        if (err) throw err;
+                                    });
+                                    bot.channels.get(modBotSpamID).send("Successfully removed "+args[1]+"'s connection. ")
+                                }else{
+                                    bot.channels.get(modBotSpamID).send("Cannot find that user's information in my database. They don't need to be removed.")
+                                }
+                            });
+                        }
+                    });
+                }
+                // if(message.channel.id!=botSpamID || message.channel.id!=modBotSpamID){
+                //     message.delete();
+                // }
+                logBotActions(message, message.content);
+                break;
+            case "search":
+                // botSpamID="700390885984043188";
+                fs.exists("./database/connect.dat", (exists)=>{
+                if(exists && args[1]!=null){
+                    fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
+                        if (err) throw err;
+                        var testData=file.toString().split("\n");
+                        var i; 
+                        var user=false;
+                        for(i=0; i<testData.length; i++){
+                            if(!testData[i]=="\n"){
+                                var inHere=testData[i].split("|");
+                                if(inHere[2]==args[1]){
+                                    user=true;
+                                    break;
+                                }
+                            }
+                        }
+                        const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/users?search="+args[1], {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                        }).then(response => response.json())
+                            .then((x) => {
+                                if(x.result[0]==null){
+                                    bot.channels.get(botSpamID).send("I cannot find that username on the website. ")
+                                }else{
+                                    let embed=new Discord.RichEmbed()
+                                        .setTitle("User Information")
+                                        .setColor(0x220e41)
+                                        .setDescription("Here is the user description for "+args[1])
+                                        .setThumbnail(x.result[0].profilePicture)
+                                        .setFooter("If nothing shows up, the user has no experience, no icon set, no flag set, and doesn't have the account connected to their discord.");
+
+                                    if(x.result[0].experience!=null){
+                                        embed.addField("The user has this much experience", x.result[0].experience);
+                                    }
+                                    if(x.result[0].userIcon!=null){
+                                        var surrogateTeam=bot.emojis.get("700737595734491237").toString(); 
+                                        var patreonSupproter=bot.emojis.get("700736949631188993").toString(); 
+                                        var broomSquad=bot.emojis.get("700736528803954769").toString();    
+                                        var alphaTester=bot.emojis.get("700736528967532564").toString();    
+                                        var modSquad=bot.emojis.get("700736529043161139").toString();     
+                                        if(x.result[0].userIcon=="surrogateTeam"){
+                                            embed.addField("The user has this icon", surrogateTeam);
+                                        }else if(x.result[0].userIcon=="broomSquad"){
+                                            embed.addField("The user has this icon", broomSquad);
+                                        }else if(x.result[0].userIcon=="patreonSupporter"){
+                                            embed.addField("The user has this icon", patreonSupproter);
+                                        }else if(x.result[0].userIcon=="moderator"){
+                                            embed.addField("The user has this icon", modSquad);
+                                        }else if(x.result[0].userIcon=="alphaTester"){
+                                            embed.addField("The user has this icon", alphaTester);
+                                        }
+                                    }
+                                    if(x.result[0].flag!=null){
+                                        embed.addField("The user's flag is", x.result[0].flag);
+                                    }
+                                    if(user){
+                                        embed.addField("The STV account is connected to the discord to the following user", "<@!"+inHere[0]+">");
+                                    }
+
+                                    bot.channels.get(botSpamID).send({embed})
+                                }
+                            });
+                        
+                        });
+                    }
+                });
+                // if(message.channel.id!=botSpamID || message.channel.id!=modBotSpamID){
+                //     message.delete();
+                // }
+                logBotActions(message, message.content);
+                break;
             default:
                 break;
         }
@@ -1596,4 +1952,88 @@ function detection(message, triggerPinballResponse, triggerClawResponse, trigger
         logBotActions(message, "Reacted");
         return;
     }
+}
+
+function checkLevel(message){
+    // if(message.member.guild.name=="Broom Bot Test"){
+        // var botSpamID="700390885984043188";
+        fs.exists("./database/connect.dat", (exists)=>{
+            if(exists){
+                fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
+                    if (err) throw err;
+                    var testData=file.toString().split("\n");
+                    var i; var toSearch="THISISNOTAUSERANDSHOULDRETURNNULL";
+                    var dIDFound=false;
+                    for(i=0; i<testData.length; i++){
+                        if(!testData[i]=="\n"){
+                            var inHere=testData[i].split("|");
+                            if(inHere[0]==message.author.id){
+                                dIDFound=true;
+                                toSearch=inHere[2];
+                                break;
+                            }
+                        }
+                    }
+                    // console.log(toSearch);
+                    const {list}=fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/users?search="+toSearch, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                    }).then(response => response.json())
+                    .then((x) => {
+                        const starter=message.guild.roles.find(e => e.name == "Starter Robot Ninja");
+                        const advanced=message.guild.roles.find(e => e.name == "Advanced Robot Ninja");
+                        const veteran=message.guild.roles.find(e => e.name == "Veteran Robot Ninja");
+                        const ultimate=message.guild.roles.find(e => e.name == "Ultimate Robot Ninja");
+                        // console.log(x);
+                        if(x.result[0]==null){
+                            if(message.member.roles.find(r => r.name === "Starter Robot Ninja") || message.member.roles.find(r => r.name === "Advanced Robot Ninja") || message.member.roles.find(r => r.name === "Veteran Robot Ninja") || message.member.roles.find(r => r.name === "Ultimate Robot Ninja")){
+                                // message.channel.send("I cannot find that user, make sure you have it correct");
+                                message.guild.member(message.member).removeRole(starter).catch(console.error);
+                                message.guild.member(message.member).removeRole(advanced).catch(console.error);
+                                message.guild.member(message.member).removeRole(veteran).catch(console.error);
+                                message.guild.member(message.member).removeRole(ultimate).catch(console.error);
+                                logReactActions(message.member.user, "Taken Tier roles");
+                            }
+                        }else{
+                            if((x.result[0].experience==null || x.result[0].experience<25600) && !message.member.roles.find(r => r.name === "Starter Robot Ninja")){
+                                message.guild.member(message.member).addRole(starter).catch(console.error);
+                                message.guild.member(message.member).removeRole(advanced).catch(console.error);
+                                message.guild.member(message.member).removeRole(veteran).catch(console.error);
+                                message.guild.member(message.member).removeRole(ultimate).catch(console.error);
+                                logReactActions(message.member.user, "Given role of \"Starter Robot Ninja\"")
+                            }else if(x.result[0].experience>=25600 && x.result[0].experience<175000 && !message.member.roles.find(r => r.name === "Advanced Robot Ninja")){
+                                message.guild.member(message.member).removeRole(starter).catch(console.error);
+                                message.guild.member(message.member).addRole(advanced).catch(console.error);
+                                message.guild.member(message.member).removeRole(veteran).catch(console.error);
+                                message.guild.member(message.member).removeRole(ultimate).catch(console.error);
+                                logReactActions(message.member.user, "Given role of \"Advanced Robot Ninja\"")
+                            }else if(x.result[0].experience>=175000 && x.result[0].experience<1668000 && !message.member.roles.find(r => r.name === "Veteran Robot Ninja")){
+                                message.guild.member(message.member).removeRole(starter).catch(console.error);
+                                message.guild.member(message.member).removeRole(advanced).catch(console.error);
+                                message.guild.member(message.member).addRole(veteran).catch(console.error);
+                                message.guild.member(message.member).removeRole(ultimate).catch(console.error);
+                                logReactActions(message.member.user, "Given role of \"Veteran Robot Ninja\"")
+                            }else if(x.result[0].experience>=1668000 && !message.member.roles.find(r => r.name === "Ultimate Robot Ninja")){
+                                message.guild.member(message.member).removeRole(starter).catch(console.error);
+                                message.guild.member(message.member).removeRole(advanced).catch(console.error);
+                                message.guild.member(message.member).removeRole(veteran).catch(console.error);
+                                message.guild.member(message.member).addRole(ultimate).catch(console.error);
+                                logReactActions(message.member.user, "Given role of \"Ultimate Robot Ninja\"")
+                            }else if(!message.member.roles.find(r => r.name === "Starter Robot Ninja") && !message.member.roles.find(r => r.name === "Advanced Robot Ninja") && !message.member.roles.find(r => r.name === "Veteran Robot Ninja") && !message.member.roles.find(r => r.name === "Ultimate Robot Ninja")){
+                                message.guild.member(message.member).addRole(starter).catch(console.error);
+                                message.guild.member(message.member).removeRole(advanced).catch(console.error);
+                                message.guild.member(message.member).removeRole(veteran).catch(console.error);
+                                message.guild.member(message.member).removeRole(ultimate).catch(console.error);
+                                logReactActions(message.member.user, "Given role of \"Starter Robot Ninja\"")
+                            }
+            
+                        }
+                    });
+                    
+                });
+            }
+        });
+    // }
 }
