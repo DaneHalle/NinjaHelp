@@ -3,9 +3,9 @@ const Discord = require('discord.js');
 const fetch = require('node-fetch');
 const ms = require("ms");
 const fs = require('fs');
-const bot_1 = new Discord.Client();
+const bot = new Discord.Client();
 const TOKEN = process.env.TOKEN;
-bot_1.login(TOKEN);
+bot.login(TOKEN);
 
 const clawTrigger = ["706819836071903275", "662301446036783108", "707600524727418900"];
 const pinballTrigger = ["613630308931207198", "702578486199713872", "707600524727418900"];
@@ -55,9 +55,10 @@ async function announcement(game, image, numImage, channel) {
 					}
 					let curMinute = date.getMinutes();
 					let adjustedMinute = curMinute + curHour * 60 + day * minDay;
+					var startTime;
 					x.result.schedule.sort((a, b) => a.startTime - b.startTime)
 					for (let i = 0; i < x.result.schedule.length; i++) {
-						let startTime = x.result.schedule[i].startTime;
+						startTime = x.result.schedule[i].startTime;
 						if (Math.abs(adjustedMinute - startTime) < 20) {
 							rightDay = true;
 							break;
@@ -67,22 +68,22 @@ async function announcement(game, image, numImage, channel) {
 					
 					if (startTime - adjustedMinute === 15 && rightDay) {
 						let out = at + " **" + game + "** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/" + game.toLowerCase() + "\n";
-						bot_1.channels.get(channel).send(out, {
+						bot.channels.get(channel).send(out, {
 							files: [{
 								attachment: './gifs/' + image + '/' + image + '_' + rand + '.gif', name: image + '.gif',
 							}],
 						})
-							.then(bot_1.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
+							.then(bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
 						
 						logBotActions(null, game + " Pre-Announcement");
 					} else if (startTime - adjustedMinute === 0 && rightDay) {
 						let out = at + " **" + game + "** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/" + game.toLowerCase() + "\n";
-						bot_1.channels.get(channel).send(out, {
+						bot.channels.get(channel).send(out, {
 							files: [{
 								attachment: './gifs/' + image + '/' + image + '_' + rand + '.gif', name: image + '.gif',
 							}],
 						})
-							.then(bot_1.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
+							.then(bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
 						
 						logBotActions(null, game + " Announcement");
 					}
@@ -206,7 +207,7 @@ async function newDay() {
 							.setThumbnail(image)
 							.setFooter(footer);
 						
-						bot_1.channels.get("702578486199713872").send({embed});
+						bot.channels.get("702578486199713872").send({embed});
 					});
 			}
 			// bot.destroy();
@@ -227,9 +228,9 @@ async function newDay() {
 }
 
 async function checkToUnmute() {
-	let testServer = bot_1.guilds.get("707047722208854098");
-	let bromBotServer = bot_1.guilds.get("664556796576268298");
-	let surrogateServer = bot_1.guilds.get("571388780058247179");
+	let testServer = bot.guilds.get("707047722208854098");
+	let bromBotServer = bot.guilds.get("664556796576268298");
+	let surrogateServer = bot.guilds.get("571388780058247179");
 	let role = surrogateServer.roles.find(r => r.name === "muted");
 	while (true) {
 		let date = new Date();
@@ -260,7 +261,7 @@ async function checkToUnmute() {
 									if (!u.user.bot) {
 										if (remove[0] === u.user.id) {
 											u.removeRole(role.id);
-											bot_1.channels.get(modBotSpamID).send(`<@${u.user.id}> has been unmuted!`);
+											bot.channels.get(modBotSpamID).send(`<@${u.user.id}> has been unmuted!`);
 											logBotActions("AUTO UNMUTE", u.user.tag + " unmuted automatically");
 											success = true;
 										}
@@ -294,12 +295,12 @@ const events = {
 	MESSAGE_REACTION_ADD: 'messageReactionAdd', MESSAGE_REACTION_REMOVE: 'messageReactionRemove',
 };
 
-bot_1.on('raw', async event => {
+bot.on('raw', async event => {
 	if (!events.hasOwnProperty(event.t)) return;
 	
 	const {d: data} = event;
-	const user = bot_1.users.get(data.user_id);
-	const channel = bot_1.channels.get(data.channel_id) || await user.createDM();
+	const user = bot.users.get(data.user_id);
+	const channel = bot.channels.get(data.channel_id) || await user.createDM();
 	
 	if (channel.messages.has(data.message_id)) return;
 	
@@ -308,10 +309,10 @@ bot_1.on('raw', async event => {
 	const emojiKey = (data.emoji.id) ? `${data.emoji.name}:${data.emoji.id}` : data.emoji.name;
 	const reaction = message.reactions.get(emojiKey);
 	
-	bot_1.emit(events[event.t], reaction, user);
+	bot.emit(events[event.t], reaction, user);
 });
 
-bot_1.on('messageReactionAdd', (reaction, user) => {
+bot.on('messageReactionAdd', (reaction, user) => {
 	
 	const emoji = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
 	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
@@ -330,7 +331,7 @@ bot_1.on('messageReactionAdd', (reaction, user) => {
 	}
 });
 
-bot_1.on('messageReactionRemove', (reaction, user) => {
+bot.on('messageReactionRemove', (reaction, user) => {
 	const emoji = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
 	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
 	
@@ -348,7 +349,7 @@ bot_1.on('messageReactionRemove', (reaction, user) => {
 	}
 });
 
-bot_1.once('ready', () => {
+bot.once('ready', () => {
 	announcement("SumoBots", "sumo", 10, "627919045420646401");
 	announcement("RaceRealCars143", "race", 4, "589484542214012963");
 	// announcement("SumoBots", "sumo", 10, "707047722208854101"); //Testing
@@ -368,7 +369,7 @@ bot_1.once('ready', () => {
 		}
 	});
 	checkToUnmute();
-	bot_1.user.setActivity("Surrogate.tv", {type: "WATCHING", url: "https://www.surrogate.tv"});
+	bot.user.setActivity("Surrogate.tv", {type: "WATCHING", url: "https://www.surrogate.tv"});
 	newDay();
 	let today = new Date();
 	let day = today.getDate();
@@ -389,19 +390,19 @@ bot_1.once('ready', () => {
 	fs.open("./bot_logs/logs_" + month + "-" + day + "-" + year + ".txt", 'a', function (err, file) {
 		if (err) throw err;
 	});
-	let info = "We are up and running as " + bot_1.user.tag + " at " + hours + ":" + minutes + ":" + seconds + " EST\n";
+	let info = "We are up and running as " + bot.user.tag + " at " + hours + ":" + minutes + ":" + seconds + " EST\n";
 	info += "=======================================================";
 	console.info(info);
 });
 
-bot_1.on('message', message => {
+bot.on('message', message => {
 	if (message.author.bot || message.author.id === "381655612335063040" || !((message.guild.id === ("707047722208854098") || message.guild.id === ("664556796576268298") || message.guild.id === ("571388780058247179")))) {
 		return;
 	}
 	
-	let testServer = bot_1.guilds.get("707047722208854098");
-	let broomBotServer = bot_1.guilds.get("664556796576268298");
-	let surrogateServer = bot_1.guilds.get("571388780058247179");
+	let testServer = bot.guilds.get("707047722208854098");
+	let broomBotServer = bot.guilds.get("664556796576268298");
+	let surrogateServer = bot.guilds.get("571388780058247179");
 	
 	checkLevel(message);
 	
@@ -455,11 +456,11 @@ bot_1.on('message', message => {
 	if (message.member.user.tag === "Mordecai#3257" && message.content.includes("!gen")) {
 		message.delete();
 		
-		const sumo = bot_1.emojis.get("744962246848807002").toString();
-		const rrc = bot_1.emojis.get("744960028427157565").toString();
-		const pin = bot_1.emojis.get("744965333151907970").toString();
-		const claw = bot_1.emojis.get("744963655443021846").toString();
-		const experience = bot_1.emojis.get("745993436620128326").toString();
+		const sumo = bot.emojis.get("744962246848807002").toString();
+		const rrc = bot.emojis.get("744960028427157565").toString();
+		const pin = bot.emojis.get("744965333151907970").toString();
+		const claw = bot.emojis.get("744963655443021846").toString();
+		const experience = bot.emojis.get("745993436620128326").toString();
 		
 		const embed = new Discord.RichEmbed()
 			.setTitle("Notification Subsciption")
@@ -622,9 +623,9 @@ bot_1.on('message', message => {
 					if (isNaN(args[1].substring(0, args[1].indexOf("d"))) || isNaN(args[1].substring(args[1].indexOf("d") + 1)) || args[1].substring(0, args[1].indexOf("d")).toLowerCase().includes("e") || args[1].substring(args[1].indexOf("d") + 1).toLowerCase().includes("e") || args[1].substring(0, args[1].indexOf("d")) > 2000000000 || args[1].substring(args[1].indexOf("d") + 1) > 2000000000) {
 						if (message.channel.id !== botSpamID) {
 							message.delete();
-							bot_1.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n\tError: Invalid format");
+							bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n\tError: Invalid format");
 						} else {
-							bot_1.channels.get(botSpamID).send("\tError: Invalid format");
+							bot.channels.get(botSpamID).send("\tError: Invalid format");
 						}
 						logBotActions(message, "!roll error");
 					} else {
@@ -634,9 +635,9 @@ bot_1.on('message', message => {
 							if (output > 2000000000) {
 								if (message.channel.id !== botSpamID) {
 									message.delete();
-									bot_1.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThat was too many roles, try a smaller number!");
+									bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThat was too many roles, try a smaller number!");
 								} else {
-									bot_1.channels.get(botSpamID).send("That was too many roles, try a smaller number!");
+									bot.channels.get(botSpamID).send("That was too many roles, try a smaller number!");
 								}
 								logBotActions(message, "!roll xdy error");
 								return;
@@ -644,27 +645,27 @@ bot_1.on('message', message => {
 						}
 						if (message.channel.id !== botSpamID) {
 							message.delete();
-							bot_1.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nRolling " + args[1] + ":\n\tTotal: " + output);
+							bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nRolling " + args[1] + ":\n\tTotal: " + output);
 						} else {
-							bot_1.channels.get(botSpamID).send("Rolling " + args[1] + ":\n\tTotal: " + output);
+							bot.channels.get(botSpamID).send("Rolling " + args[1] + ":\n\tTotal: " + output);
 						}
 						logBotActions(message, "!roll xdy");
 					}
 				} else if (args[1] != null) {
 					if (message.channel.id !== botSpamID) {
 						message.delete();
-						bot_1.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n\tError: Invalid format or too big of a number");
+						bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n\tError: Invalid format or too big of a number");
 					} else {
-						bot_1.channels.get(botSpamID).send("\tError: Invalid format or too big of a number");
+						bot.channels.get(botSpamID).send("\tError: Invalid format or too big of a number");
 					}
 					logBotActions(message, "!roll error");
 				} else {
 					let roll = Math.floor(Math.random() * 20) + 1;
 					if (message.channel.id !== botSpamID) {
 						message.delete();
-						bot_1.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nRolling 1d20:\n\tTotal: " + roll);
+						bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nRolling 1d20:\n\tTotal: " + roll);
 					} else {
-						bot_1.channels.get(botSpamID).send("Rolling 1d20:\n\tTotal: " + roll);
+						bot.channels.get(botSpamID).send("Rolling 1d20:\n\tTotal: " + roll);
 					}
 					logBotActions(message, "!roll");
 				}
@@ -691,7 +692,7 @@ bot_1.on('message', message => {
 						.addField("`!modremove <DISCORD_USER_@>`", "Remove the connection associated with `<DISCORD_USER_@>`")
 						.addField("`!search <USERNAME>`", "Get information on the STV account associated with `<USERNAME>.")
 						.setFooter("These commands are for Mod Squad and Surrogate Team");
-					bot_1.channels.get(modBotSpamID).send({embed});
+					bot.channels.get(modBotSpamID).send({embed});
 				} else {
 					const embed = new Discord.RichEmbed()
 						.setTitle("Hello, I am the NinjaHelp bot")
@@ -706,7 +707,7 @@ bot_1.on('message', message => {
 						.addField("`!connect <USERNAME>`", "Connect your Discord account to your Surrogate.TV (STV) account. `<USERNAME>` should be your STV username. Should you change your STV username at any point, just type the command with the new username.")
 						.addField("`!search <USERNAME>`", "Get information on the STV account associated with `<USERNAME>`.")
 						.setFooter("These commands are for everyone");
-					bot_1.channels.get(botSpamID).send({embed});
+					bot.channels.get(botSpamID).send({embed});
 				}
 				message.delete();
 				logBotActions(message, "!getHelp");
@@ -780,14 +781,14 @@ bot_1.on('message', message => {
 				} else {
 					if (message.channel.id !== botSpamID) {
 						if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
-							bot_1.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> Can't find that game");
+							bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> Can't find that game");
 							message.delete();
 						} else {
-							bot_1.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nCan't find that game. Try a different one.");
+							bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nCan't find that game. Try a different one.");
 							message.delete();
 						}
 					} else {
-						bot_1.channels.get(botSpamID).send("<@" + message.member.user.id + "> Can't find that game. Try a different one.");
+						bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Can't find that game. Try a different one.");
 					}
 					return;
 				}
@@ -947,7 +948,7 @@ bot_1.on('message', message => {
 										.setThumbnail(image)
 										.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
 									
-									bot_1.channels.get(botSpamID).send({embed});
+									bot.channels.get(botSpamID).send({embed});
 									
 								} else {
 									const embed = new Discord.RichEmbed()
@@ -958,7 +959,7 @@ bot_1.on('message', message => {
 										.setThumbnail(image)
 										.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
 									
-									bot_1.channels.get(botSpamID).send({embed});
+									bot.channels.get(botSpamID).send({embed});
 								}
 							}
 						}
@@ -972,21 +973,21 @@ bot_1.on('message', message => {
 					let toMute = message.guild.member(message.mentions.users.first());
 					let role = message.guild.roles.find(r => r.name === "muted");
 					if (!toMute) {
-						bot_1.channels.get(modBotSpamID).send(`Couldn't find user.`);
+						bot.channels.get(modBotSpamID).send(`Couldn't find user.`);
 						return;
 					}
 					if (toMute.hasPermission("MANAGE_MESSAGES")) {
-						bot_1.channels.get(modBotSpamID).send(`Can't mute that user`);
+						bot.channels.get(modBotSpamID).send(`Can't mute that user`);
 						return;
 					}
 					let mutetime = args[2];
 					if (!mutetime) {
-						bot_1.channels.get(modBotSpamID).send(`You need to specify a time (3s/3d/3h/3y)`);
+						bot.channels.get(modBotSpamID).send(`You need to specify a time (3s/3d/3h/3y)`);
 						return;
 					}
 					// await(toMute.addRole(role.id));
 					toMute.addRole(role.id);
-					bot_1.channels.get(modBotSpamID).send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
+					bot.channels.get(modBotSpamID).send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
 					let date = new Date();
 					let day = date.getDate();
 					let month = date.getMonth() + 1;
@@ -1048,16 +1049,16 @@ bot_1.on('message', message => {
 					let toUnmute = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
 					let role = message.guild.roles.find(r => r.name === "muted");
 					if (!toUnmute) {
-						bot_1.channels.get(modBotSpamID).send("Couldn't find user.");
+						bot.channels.get(modBotSpamID).send("Couldn't find user.");
 						return;
 					} else if (!toUnmute.roles.find(r => r.name.toLowerCase() === "muted")) {
-						bot_1.channels.get(modBotSpamID).send(`<@${toUnmute} is not muted.`);
+						bot.channels.get(modBotSpamID).send(`<@${toUnmute} is not muted.`);
 						return;
 					}
 					
 					await(toUnmute.addRole(role.id));
 					toUnmute.removeRole(role.id);
-					bot_1.channels.get(modBotSpamID).send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
+					bot.channels.get(modBotSpamID).send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
 					logBotActions(message, "!unmute " + toUnmute.user.tag);
 					
 					fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
@@ -1100,10 +1101,10 @@ bot_1.on('message', message => {
 					if (args[2] != null && args[2] === "m") {
 						if (message.channel.id !== botSpamID) {
 							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
-								bot_1.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
+								bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
 								message.delete();
 							} else {
-								bot_1.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
+								bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
 								message.delete();
 							}
 						} else {
@@ -1127,10 +1128,10 @@ bot_1.on('message', message => {
 					if (args[2] != null && args[2] === "m") {
 						if (message.channel.id !== botSpamID) {
 							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
-								bot_1.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
+								bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
 								message.delete();
 							} else {
-								bot_1.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
+								bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
 								message.delete();
 							}
 						} else {
@@ -1193,7 +1194,7 @@ bot_1.on('message', message => {
 									.setThumbnail(image)
 									.setFooter(footer);
 								
-								bot_1.channels.get("702578486199713872").send({embed});
+								bot.channels.get("702578486199713872").send({embed});
 							});
 					}
 					logBotActions(message, "!top oktoberfest");
@@ -1210,10 +1211,10 @@ bot_1.on('message', message => {
 				} else {
 					if (message.channel.id !== botSpamID) {
 						if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
-							bot_1.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> Can't find that game.");
+							bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> Can't find that game.");
 							message.delete();
 						} else {
-							bot_1.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nCan't find that game.");
+							bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nCan't find that game.");
 							message.delete();
 						}
 					} else {
@@ -1244,23 +1245,23 @@ bot_1.on('message', message => {
 									let icon = x.result.Items[i].userObject.userIcon.toLowerCase();
 									switch (icon) {
 										case "broomsquad": {
-											icon = bot_1.emojis.get("700736528803954769").toString();
+											icon = bot.emojis.get("700736528803954769").toString();
 											break;
 										}
 										case "moderator": {
-											icon = bot_1.emojis.get("700736529043161139").toString();
+											icon = bot.emojis.get("700736529043161139").toString();
 											break;
 										}
 										case "patreonsupporter": {
-											icon = bot_1.emojis.get("700736949631188993").toString();
+											icon = bot.emojis.get("700736949631188993").toString();
 											break;
 										}
 										case "surrogateteam": {
-											icon = bot_1.emojis.get("700737595734491237").toString();
+											icon = bot.emojis.get("700737595734491237").toString();
 											break;
 										}
 										case "alphatester": {
-											icon = bot_1.emojis.get("700736528967532564").toString();
+											icon = bot.emojis.get("700736528967532564").toString();
 											break;
 										}
 										default: {
@@ -1296,8 +1297,8 @@ bot_1.on('message', message => {
 										.addField(description, scores)
 										.setFooter("Please use this channel for bot commands!");
 									
-									bot_1.channels.get(botSpamID).send({embed})
-										.then(bot_1.channels.get(botSpamID).send("<@" + message.author.id + ">"));
+									bot.channels.get(botSpamID).send({embed})
+										.then(bot.channels.get(botSpamID).send("<@" + message.author.id + ">"));
 								} else {
 									const embed = new Discord.RichEmbed()
 										.setTitle("__" + title + "__")
@@ -1324,21 +1325,21 @@ bot_1.on('message', message => {
 				out += "Until someone does these steps, I will not go about implementing a `!meme` command.";
 				if (message.channel.id !== botSpamID) {
 					message.delete();
-					bot_1.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n" + out);
+					bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n" + out);
 				} else {
-					bot_1.channels.get(botSpamID).send(out);
+					bot.channels.get(botSpamID).send(out);
 				}
 				logBotActions(message, "!meme info");
 				break;
 			}
 			// !name
 			case "name": {
-				const alliance = bot_1.emojis.get("713862601687433236").toString(); //Chad
-				const heretics = bot_1.emojis.get("713862601846554795").toString(); //Hercules
-				const mouse = bot_1.emojis.get("713862041064177735").toString();    //Jerry
-				const excel = bot_1.emojis.get("713862601175728218").toString();    //Kyle
-				const ence = bot_1.emojis.get("713862224271114361").toString();     //Dug
-				const empire = bot_1.emojis.get("713862601779707924").toString();   //Mike
+				const alliance = bot.emojis.get("713862601687433236").toString(); //Chad
+				const heretics = bot.emojis.get("713862601846554795").toString(); //Hercules
+				const mouse = bot.emojis.get("713862041064177735").toString();    //Jerry
+				const excel = bot.emojis.get("713862601175728218").toString();    //Kyle
+				const ence = bot.emojis.get("713862224271114361").toString();     //Dug
+				const empire = bot.emojis.get("713862601779707924").toString();   //Mike
 				let title = "__The names of the bots given by the Broom Gods__";
 				let description = alliance + "\tChad\n" + empire + "\tMike\n" + mouse + "\tJerry\n" + ence + "\tDug\n" + heretics + "\tHercules\n" + excel + "\tKyle";
 				if (triggerSumoResponse) {
@@ -1356,8 +1357,8 @@ bot_1.on('message', message => {
 						.setDescription(description)
 						.setFooter("Please use this channel for that command!");
 					
-					bot_1.channels.get(botSpamID).send({embed})
-						.then(bot_1.channels.get(botSpamID).send("<@" + message.author.id + ">"));
+					bot.channels.get(botSpamID).send({embed})
+						.then(bot.channels.get(botSpamID).send("<@" + message.author.id + ">"));
 				} else {
 					const embed = new Discord.RichEmbed()
 						.setTitle("__" + title + "__")
@@ -1372,7 +1373,7 @@ bot_1.on('message', message => {
 			case "connect": {
 				// var botSpamID="700390885984043188";
 				if (args[1] == null) {
-					bot_1.channels.get(botSpamID).send("<@" + message.author.id + ">, You need to supply your Surrogate.TV Username which can be found on your user profile at https://surrogate.tv/user");
+					bot.channels.get(botSpamID).send("<@" + message.author.id + ">, You need to supply your Surrogate.TV Username which can be found on your user profile at https://surrogate.tv/user");
 				} else {
 					const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/users?search=" + args[1], {
 						method: 'GET', headers: {
@@ -1381,7 +1382,7 @@ bot_1.on('message', message => {
 					}).then(response => response.json())
 						.then((x) => {
 							if (x.result[0] == null) {
-								bot_1.channels.get(botSpamID).send("<@" + message.author.id + ">, I cannot find a user by that name. Names are case sensitive so make sure it is correct.");
+								bot.channels.get(botSpamID).send("<@" + message.author.id + ">, I cannot find a user by that name. Names are case sensitive so make sure it is correct.");
 							} else {
 								let uid = x.result[0].userId;
 								fs.exists("./database/connect.dat", (exists) => {
@@ -1416,10 +1417,10 @@ bot_1.on('message', message => {
 												}
 											}
 											if (dIDFound && userFound && (hold === holdD)) {
-												bot_1.channels.get(botSpamID).send("<@" + message.author.id + ">, You have already connected that Surrogate profile with your discord account. Please DM Mordecai if you feel this is a mistake.");
+												bot.channels.get(botSpamID).send("<@" + message.author.id + ">, You have already connected that Surrogate profile with your discord account. Please DM Mordecai if you feel this is a mistake.");
 											} else if ((userFound || uIDFound) && !dIDFound) {
 												let inHere = testData[hold].split("|");
-												bot_1.channels.get(botSpamID).send("<@" + message.author.id + ">, The Surrogate profile " + args[1] + " has already been connected to discord user <@" + inHere[0] + ">. Please DM Mordecai if you feel this is a mistake");
+												bot.channels.get(botSpamID).send("<@" + message.author.id + ">, The Surrogate profile " + args[1] + " has already been connected to discord user <@" + inHere[0] + ">. Please DM Mordecai if you feel this is a mistake");
 											} else if (dIDFound) {
 												let id = message.author.id;
 												fs.exists("./database/connect.dat", (exists) => {
@@ -1447,12 +1448,12 @@ bot_1.on('message', message => {
 															}).then(response => response.json())
 																.then((x) => {
 																	if (x.result[0] == null) {
-																		bot_1.channels.get(botSpamID).send("<@" + message.author.id + ">, I cannot find a user by that name. Names are case sensitive so make sure it is correct.");
+																		bot.channels.get(botSpamID).send("<@" + message.author.id + ">, I cannot find a user by that name. Names are case sensitive so make sure it is correct.");
 																	} else {
 																		if (!dIDFound) {
-																			bot_1.channels.get(botSpamID).send("<@" + message.author.id + ">, There is no Surrogate profile associated with you rdiscord account, please DM Mordecai if you feel this is a mistake.");
+																			bot.channels.get(botSpamID).send("<@" + message.author.id + ">, There is no Surrogate profile associated with you rdiscord account, please DM Mordecai if you feel this is a mistake.");
 																		} else if (x.result[0].userId !== uid) {
-																			bot_1.channels.get(botSpamID).send("<@" + message.author.id + ">, That Surrogate profile is not the same one you previously connected with the username of " + inHere[2] + ". Please DM Mordecai if you feel this is a mistake.");
+																			bot.channels.get(botSpamID).send("<@" + message.author.id + ">, That Surrogate profile is not the same one you previously connected with the username of " + inHere[2] + ". Please DM Mordecai if you feel this is a mistake.");
 																		} else {
 																			testData[i] = id + "|" + uid + "|" + args[1];
 																			let insert = "";
@@ -1466,7 +1467,7 @@ bot_1.on('message', message => {
 																			fs.writeFile("./database/connect.dat", insert, (err) => {
 																				if (err) throw err;
 																			});
-																			bot_1.channels.get(botSpamID).send("<@" + message.author.id + ">, Your Surrogate profile has been successfully updated!");
+																			bot.channels.get(botSpamID).send("<@" + message.author.id + ">, Your Surrogate profile has been successfully updated!");
 																		}
 																	}
 																});
@@ -1478,7 +1479,7 @@ bot_1.on('message', message => {
 												fs.appendFile("./database/connect.dat", message.author.id + "|" + uid + "|" + args[1] + "\n", (err) => {
 													if (err) throw err;
 												});
-												bot_1.channels.get(botSpamID).send("<@" + message.author.id + ">, Your Surrogate profile has been successfully connected to your discord account!");
+												bot.channels.get(botSpamID).send("<@" + message.author.id + ">, Your Surrogate profile has been successfully connected to your discord account!");
 											}
 											
 										});
@@ -1506,7 +1507,7 @@ bot_1.on('message', message => {
 								if (err) throw err;
 								let testData = file.toString().split("\n");
 								let dIDFound = false;
-								for (let i = 0; i < testData.length; i++) {
+								for (var i = 0; i < testData.length; i++) {
 									if (!(testData[i] === "\n")) {
 										let inHere = testData[i].split("|");
 										if (inHere[0] === infoID) {
@@ -1525,7 +1526,7 @@ bot_1.on('message', message => {
 									}).then(response => response.json())
 										.then((x) => {
 											if (x.result[0] == null) {
-												bot_1.channels.get(modBotSpamID).send("Unable to find the username " + args[2] + ". The names are case sensitive.");
+												bot.channels.get(modBotSpamID).send("Unable to find the username " + args[2] + ". The names are case sensitive.");
 											} else {
 												let uID = false;
 												let user = false;
@@ -1541,7 +1542,7 @@ bot_1.on('message', message => {
 													}
 												}
 												if (uID || user) {
-													bot_1.channels.get(modBotSpamID).send("That username is already claimed by another user. Cannot overwrite.");
+													bot.channels.get(modBotSpamID).send("That username is already claimed by another user. Cannot overwrite.");
 												} else {
 													let insert = "";
 													for (let z = 0; z < testData.length; z++) {
@@ -1557,12 +1558,12 @@ bot_1.on('message', message => {
 													fs.writeFile("./database/connect.dat", insert, (err) => {
 														if (err) throw err;
 													});
-													bot_1.channels.get(modBotSpamID).send("Successfully updated " + args[1] + "'s connection. ");
+													bot.channels.get(modBotSpamID).send("Successfully updated " + args[1] + "'s connection. ");
 												}
 											}
 										});
 								} else {
-									bot_1.channels.get(modBotSpamID).send("Cannot find that user's information in my database. They can connect themselves.");
+									bot.channels.get(modBotSpamID).send("Cannot find that user's information in my database. They can connect themselves.");
 								}
 							});
 						}
@@ -1586,12 +1587,12 @@ bot_1.on('message', message => {
 								if (err) throw err;
 								let testData = file.toString().split("\n");
 								let dIDFound = false;
-								for (let i = 0; i < testData.length; i++) {
+								for (var i = 0; i < testData.length; i++) {
 									if (!(testData[i] === "\n")) {
 										let inHere = testData[i].split("|");
 										if (inHere[0] === infoID) {
 											dIDFound = true;
-											console.log(testData[i]);
+											// console.log(testData[i]);
 											break;
 										}
 									}
@@ -1600,7 +1601,7 @@ bot_1.on('message', message => {
 								if (dIDFound) {
 									let insert = "";
 									for (let z = 0; z < testData.length; z++) {
-										if (z === i) {
+										if (z == i) {
 											continue;
 										} else {
 											insert += testData[z];
@@ -1612,9 +1613,9 @@ bot_1.on('message', message => {
 									fs.writeFile("./database/connect.dat", insert, (err) => {
 										if (err) throw err;
 									});
-									bot_1.channels.get(modBotSpamID).send("Successfully removed " + args[1] + "'s connection. ");
+									bot.channels.get(modBotSpamID).send("Successfully removed " + args[1] + "'s connection. ");
 								} else {
-									bot_1.channels.get(modBotSpamID).send("Cannot find that user's information in my database. They don't need to be removed.");
+									bot.channels.get(modBotSpamID).send("Cannot find that user's information in my database. They don't need to be removed.");
 								}
 							});
 						}
@@ -1636,7 +1637,7 @@ bot_1.on('message', message => {
 							let user = false;
 							for (let i = 0; i < testData.length; i++) {
 								if (!(testData[i] === "\n")) {
-									let inHere = testData[i].split("|");
+									var inHere = testData[i].split("|");
 									if (inHere[2] === args[1]) {
 										user = true;
 										break;
@@ -1650,7 +1651,7 @@ bot_1.on('message', message => {
 							}).then(response => response.json())
 								.then((x) => {
 									if (x.result[0] == null) {
-										bot_1.channels.get(botSpamID).send("I cannot find that username on the website. ");
+										bot.channels.get(botSpamID).send("I cannot find that username on the website. ");
 									} else {
 										let embed = new Discord.RichEmbed()
 											.setTitle("User Information")
@@ -1663,11 +1664,11 @@ bot_1.on('message', message => {
 											embed.addField("The user has this much experience", x.result[0].experience);
 										}
 										if (x.result[0].userIcon != null) {
-											const surrogateTeam = bot_1.emojis.get("700737595734491237").toString();
-											const patreonSupproter = bot_1.emojis.get("700736949631188993").toString();
-											const broomSquad = bot_1.emojis.get("700736528803954769").toString();
-											const alphaTester = bot_1.emojis.get("700736528967532564").toString();
-											const modSquad = bot_1.emojis.get("700736529043161139").toString();
+											const surrogateTeam = bot.emojis.get("700737595734491237").toString();
+											const patreonSupproter = bot.emojis.get("700736949631188993").toString();
+											const broomSquad = bot.emojis.get("700736528803954769").toString();
+											const alphaTester = bot.emojis.get("700736528967532564").toString();
+											const modSquad = bot.emojis.get("700736529043161139").toString();
 											if (x.result[0].userIcon === "surrogateTeam") {
 												embed.addField("The user has this icon", surrogateTeam);
 											} else if (x.result[0].userIcon === "broomSquad") {
@@ -1687,7 +1688,7 @@ bot_1.on('message', message => {
 											embed.addField("The STV account is connected to the discord to the following user", "<@!" + inHere[0] + ">");
 										}
 										
-										bot_1.channels.get(botSpamID).send({embed});
+										bot.channels.get(botSpamID).send({embed});
 									}
 								});
 							
