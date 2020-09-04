@@ -186,9 +186,8 @@ async function checkToUnmute() {
 					if (err) throw err;
 					let testData = file.toString().split("\n");
 					for (let i = 0; i < testData.length; i++) {
-						if (!testData[i] === "\n") {
-							let removeUserLine = testData[i];
-							let remove = removeUserLine.split("|");
+						if (testData[i].length!=0) {
+							let remove = testData[i].split("|");
 							let removeTime = remove[1].split("~");
 							let removeDate = removeTime[0].split("/");
 							let removeSpecificTime = removeTime[1].split(":");
@@ -956,7 +955,7 @@ bot.on('message', message => {
 				}
 				break;
 			}
-			// !top <GAME> month(?)
+			// !top <GAME> m(?)
 			case "top": {
 				let url = "https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/scores?gameId=";
 				let scoreType = "All Time";
@@ -966,7 +965,7 @@ bot.on('message', message => {
 				if (triggerSumoResponse || message.content.toLowerCase().includes("sumobots")) {
 					url += "99ca6347-0e10-4465-8fe1-9fee8bc5fb35&order=";
 					command = "SumoBots";
-					if (args[2] != null && args[2] === "m") {
+					if (args[2] != null && args[2] === "month") {
 						if (message.channel.id !== botSpamID) {
 							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
 								bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
@@ -984,7 +983,7 @@ bot.on('message', message => {
 				} else if (triggerRaceResponse || message.content.toLowerCase().includes("racerealcars143")) {
 					url += "953f2154-9a6e-4602-99c6-265408da6310&order=";
 					command = "RaceRealCars143";
-					if (args[2] != null && args[2] === "m") {
+					if (args[2] != null && args[2] === "month") {
 						url += "month";
 						scoreType = "Monthly";
 						title = " Current Scores of the Month";
@@ -993,7 +992,7 @@ bot.on('message', message => {
 				} else if ((triggerClawResponse && message.channel.id === "706819836071903275") || message.content.toLowerCase().includes("forceclaw")) {
 					url += "ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0&order=";
 					command = "ForceClaw";
-					if (args[2] != null && args[2] === "m") {
+					if (args[2] != null && args[2] === "month") {
 						if (message.channel.id !== botSpamID) {
 							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
 								bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
@@ -1047,7 +1046,7 @@ bot.on('message', message => {
 				} else if ((triggerPinballResponse && message.channel.id === "613630308931207198") || message.content.toLowerCase().includes("batman66")) {
 					url += "592ac917-14d2-481a-9d37-3b840ad46b19&order=";
 					let command = "Batman66 Pinball";
-					if (args[2] != null && args[2] === "m") {
+					if (args[2] != null && args[2] === "month") {
 						url += "month";
 						scoreType = "Monthly";
 						title = " Current Scores of the Month";
@@ -1226,7 +1225,7 @@ bot.on('message', message => {
 						},
 					}).then(response => response.json())
 						.then((x) => {
-							if (x.result[0] == null) {
+							if (x.status === "failure" || x.result[0] == null) {
 								bot.channels.get(botSpamID).send("<@" + message.author.id + ">, I cannot find a user by that name. Names are case sensitive so make sure it is correct.");
 							} else {
 								let uid = x.result[0].userId;
@@ -1259,8 +1258,8 @@ bot.on('message', message => {
 												}
 											}
 											if (dIDFound && userFound && (hold === holdD)) {
-												bot.channels.get(botSpamID).send("<@" + message.author.id + ">, You have already connected that Surrogate profile with your discord account. Please DM Mordecai if you feel this is a mistake.");
-											} else if ((userFound || uIDFound) && !dIDFound) {
+												bot.channels.get(botSpamID).send("<@" + message.author.id + ">, You have already connected that Surrogate profile with your discord account.");
+											} else if ((userFound || uIDFound)) {
 												let inHere = testData[hold].split("|");
 												bot.channels.get(botSpamID).send("<@" + message.author.id + ">, The Surrogate profile " + args[1] + " has already been connected to discord user <@" + inHere[0] + ">. Please DM Mordecai if you feel this is a mistake");
 											} else if (dIDFound) {
@@ -1275,7 +1274,7 @@ bot.on('message', message => {
 															let userFound = false;
 															for (let i = 0; i < testData.length; i++) {
 																if (!(testData[i] === "\n")) {
-																	let inHere = testData[i].split("|");
+																	var inHere = testData[i].split("|");
 																	if (inHere[0] === id) {
 																		dIDFound = true;
 																		uid = inHere[1];
@@ -1480,7 +1479,7 @@ bot.on('message', message => {
 							const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/users?search=" + args[1], {
 								method: 'GET', headers: {
 									'Content-Type': 'application/json',
-								},
+								}, 
 							}).then(response => response.json())
 								.then((x) => {
 									if (x.result[0] == null) {
@@ -1565,8 +1564,6 @@ function detection(message, triggerPinballResponse, triggerClawResponse, trigger
 }
 
 function checkLevel(message) {
-	// if(message.member.guild.name=="Broom Bot Test"){
-	// var botSpamID="700390885984043188";
 	fs.exists("./database/connect.dat", (exists) => {
 		if (exists) {
 			fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
@@ -1584,7 +1581,6 @@ function checkLevel(message) {
 						}
 					}
 				}
-				// console.log(toSearch);
 				const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/users?search=" + toSearch, {
 					method: 'GET', headers: {
 						'Content-Type': 'application/json',
@@ -1595,10 +1591,8 @@ function checkLevel(message) {
 						const advanced = message.guild.roles.find(e => e.name === "Advanced Robot Ninja");
 						const veteran = message.guild.roles.find(e => e.name === "Veteran Robot Ninja");
 						const ultimate = message.guild.roles.find(e => e.name === "Ultimate Robot Ninja");
-						// console.log(x);
 						if (x.result[0] == null) {
 							if (message.member.roles.find(r => r.name === "Starter Robot Ninja") || message.member.roles.find(r => r.name === "Advanced Robot Ninja") || message.member.roles.find(r => r.name === "Veteran Robot Ninja") || message.member.roles.find(r => r.name === "Ultimate Robot Ninja")) {
-								// message.channel.send("I cannot find that user, make sure you have it correct");
 								message.guild.member(message.member).removeRole(starter).catch(console.error);
 								message.guild.member(message.member).removeRole(advanced).catch(console.error);
 								message.guild.member(message.member).removeRole(veteran).catch(console.error);
@@ -1644,7 +1638,6 @@ function checkLevel(message) {
 			});
 		}
 	});
-	// }
 }
 
 function getDateObject(timezoneOffset) {
