@@ -46,12 +46,11 @@ async function announcement(game, image, numImage, channel) {
 					const date = getDateObject(TIMEZONE_OFFSET_GMT);
 					let output = "";
 					let adjustedMinute = date.minute + date.hour * 60 + date.day * 1440;
-					let nearestStartTime = x.result.schedule.findIndex(x => Math.abs(ad - x.startTime) < 20);
-					let startTime = 0;
+					let nearestStartTime = x.result.schedule.findIndex(x => Math.abs(adjustedMinute - x.startTime) < 20);
 					let rand = Math.floor(Math.random() * numImage) + 1;
-					
 					if (!(nearestStartTime === -1)) {
-						if (startTime - adjustedMinute === 15 && rightDay) {
+						let	startTime = x.result.schedule[nearestStartTime].startTime;
+						if (startTime - adjustedMinute === 15 ) {
 							let out = at + " **" + game + "** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/" + game.toLowerCase() + "\n";
 							bot.channels.get(channel).send(out, {
 								files: [{
@@ -61,7 +60,7 @@ async function announcement(game, image, numImage, channel) {
 								.then(bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
 							
 							logBotActions(null, game + " Pre-Announcement");
-						} else if (startTime - adjustedMinute === 0 && rightDay) {
+						} else if (startTime - adjustedMinute === 0 ) {
 							let out = at + " **" + game + "** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/" + game.toLowerCase() + "\n";
 							bot.channels.get(channel).send(out, {
 								files: [{
@@ -106,18 +105,16 @@ function logBotActions(message, action) {
 	} else {
 		let out = date.timeString + " EST | " + message.member.user.tag + " | " + action;
 		console.log(date.timeString + " EST | " + message.member.user.tag + " | " + action);
-		// if(message.author.id!="120618883219587072"){//Damn you Grimberg
-		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_dash + ".txt", out + "\n", function (err) {
+		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", out + "\n", function (err) {
 			if (err) throw err;
 		});
-		// }
 	}
 }
 
 function logReactActions(user, event) {
 	const date = getDateObject(0);
 	console.log(date.timeString + " EST | " + user.tag + " | " + event);
-	fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_dash + ".txt", date.timeString + " EST | " + user.tag + " | " + event + "\n", function (err) {
+	fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", date.timeString + " EST | " + user.tag + " | " + event + "\n", function (err) {
 		if (err) throw err;
 	});
 }
@@ -139,7 +136,6 @@ async function newDayCheck() {
 					method: 'GET',
 				}).then(x => x.text())
 					.then(x => {
-						// console.log(x);
 						let v = x.split(/\n/).map(a => a.split(","));
 						while (v.length > 10) {
 							v.pop();
@@ -163,13 +159,10 @@ async function newDayCheck() {
 						bot.channels.get("702578486199713872").send({embed});
 					});
 			}
-			// bot.destroy();
 			fs.appendFile("./bot_logs/logs_" + checkDate.dateString_MDY_dash + ".txt", "Starting a new day and restarting the bot", function (err) {
 				if (err) throw err;
 			});
 			console.log("Starting a new day\n\n\n\n\n");
-			// bot.login(TOKEN);
-			
 			lastNewDaySeconds += 86000;
 			fs.open("./bot_logs/logs_" + checkDate.dateString_MDY_dash + ".txt", 'a', function (err, file) {
 				if (err) throw err;
@@ -193,7 +186,7 @@ async function checkToUnmute() {
 					if (err) throw err;
 					let testData = file.toString().split("\n");
 					for (let i = 0; i < testData.length; i++) {
-						if (!(testData[i] === "\n")) {
+						if (!testData[i] === "\n") {
 							let removeUserLine = testData[i];
 							let remove = removeUserLine.split("|");
 							let removeTime = remove[1].split("~");
@@ -295,9 +288,9 @@ bot.on('messageReactionRemove', (reaction, user) => {
 });
 
 bot.once('ready', () => {
-	announcement("SumoBots", "sumo", 10, "627919045420646401");
-	announcement("RaceRealCars143", "race", 4, "589484542214012963");
-	// announcement("SumoBots", "sumo", 10, "707047722208854101"); //Testing
+	// announcement("SumoBots", "sumo", 10, "627919045420646401");
+	// announcement("RaceRealCars143", "race", 4, "589484542214012963");
+	announcement("SumoBots", "sumo", 10, "707047722208854101"); //Testing
 	// announcement("SumoBots", "sumo", 10, "700390885984043188"); //Broom Bot
 	fs.exists("./database/mute.dat", (exists) => {
 		if (!exists) {
@@ -316,7 +309,10 @@ bot.once('ready', () => {
 	checkToUnmute();
 	bot.user.setActivity("Surrogate.tv", {type: "WATCHING", url: "https://www.surrogate.tv"});
 	newDayCheck();
-	let info = "We are up and running as " + bot.user.tag + " at " + hours + ":" + minutes + ":" + seconds + " EST\n";
+
+
+	const date = getDateObject(0);
+	let info = "We are up and running as " + bot.user.tag + " at " + date.timeStringAMPM + " EST\n";
 	info += "=======================================================";
 	console.info(info);
 });
@@ -371,10 +367,6 @@ bot.on('message', message => {
 		
 		let args = message.content.substring(1).split(' ');
 		let cmd = args[0].toLowerCase();
-		// bot.channels.get("745097595692515380").fetchMessage("745098642377146461")
-		//     .then((message) => {
-		//         console.log(message.reactions)
-		//     })
 		
 		return;
 	}
@@ -495,7 +487,7 @@ bot.on('message', message => {
 			// !time
 			case 'time': {
 				const date = getDateObject(TIMEZONE_OFFSET_FINLAND);
-				let sendOut = "It is currently **" + date.timeStringAMPM + " " + date.dateString_YMD_dash + "** in Finland (Where the games are located).";
+				let sendOut = "It is currently **" + date.timeStringAMPM + " " + date.dateString_DMY_slash + "** in Finland (Where the games are located).";
 				message.channel.send(sendOut);
 				logBotActions(message, "!time");
 				break;
@@ -614,7 +606,6 @@ bot.on('message', message => {
 				} else if (triggerClawResponse) {
 					let out = "There are multiple games here. Here are the links!\n";
 					out += "https://surrogate.tv/game/forceclaw\n";
-					// out+="https://surrogate.tv/game/toiletpaperclaw\n";
 					message.reply(out);
 					message.delete();
 				} else if (triggerGeneralResponse) {
@@ -624,7 +615,6 @@ bot.on('message', message => {
 					out += "https://surrogate.tv/game/batman66\n";
 					out += "https://surrogate.tv/game/oktoberfest\n";
 					out += "https://surrogate.tv/game/forceclaw\n";
-					// out+="https://surrogate.tv/game/toiletpaperclaw";
 					message.reply(out);
 					message.delete();
 				} else {
@@ -650,10 +640,6 @@ bot.on('message', message => {
 					url += "forceclaw";
 					command = "ForceClaw";
 					image = "https://assets.surrogate.tv/game/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0/3458917638-48hreventforceclaw-01.png";
-					// }
-					// else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
-					//     url+="toiletpaperclaw";
-					//     command="ToiletPaperClaw";
 				} else if ((triggerPinballResponse && message.channel.id === "613630308931207198") || message.content.toLowerCase().includes("batman66")) {
 					url += "batman66";
 					command = "Batman66 Pinball";
@@ -807,7 +793,6 @@ bot.on('message', message => {
 							let title = "Schedule for **" + command + "**";
 							command = command.split(' ');
 							command = command.splice(0);
-							// output+=command[0].toLowerCase();
 							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
 								message.delete();
 								
@@ -869,7 +854,6 @@ bot.on('message', message => {
 						bot.channels.get(modBotSpamID).send(`You need to specify a time (3s/3d/3h/3y)`);
 						return;
 					}
-					// await(toMute.addRole(role.id));
 					toMute.addRole(role.id);
 					bot.channels.get(modBotSpamID).send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
 					let date = getDateObject();
@@ -1024,25 +1008,6 @@ bot.on('message', message => {
 						return;
 					}
 					image = "https://assets.surrogate.tv/game/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0/3458917638-48hreventforceclaw-01.png";
-					// }
-					// else if((triggerClawResponse&&662301446036783108==message.channel.id)||message.content.toLowerCase().includes("toiletpaperclaw")){
-					//     url+="46db6268-bfc3-43ff-ba7d-02ffaf1f2867&order=";
-					//     var command="ToiletPaperClaw";
-					//     if(args[2]!=null&&args[2]==="m"){
-					//         if(message.channel.id!=botSpamID){
-					//             if((message.member.roles.find(r=>r.name.toLowerCase()==="mod squad")||
-					//                 message.member.roles.find(r=>r.name.toLowerCase()==="surrogate team"))){
-					//                 bot.channels.get(modBotSpamID).send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
-					//                 message.delete();
-					//             }else{
-					//                 bot.channels.get(botSpamID).send("<@"+message.member.user.id+"> Please use this channel for bot commands!\nThere are no monthly scores for "+command);
-					//                 message.delete();
-					//             }
-					//         }else{
-					//             message.channel.send("<@"+message.member.user.id+"> There are no monthly scores for "+command);
-					//         }
-					//         return;
-					//     }
 				} else if ((triggerPinballResponse && message.channel.id === "702578486199713872") || message.content.toLowerCase().includes("oktoberfest")) {
 					//IMPLEMENT TAKING FROM GOOGLE FORM
 					message.delete();
@@ -1250,8 +1215,8 @@ bot.on('message', message => {
 				logBotActions(message, "!name");
 				break;
 			}
+			//!connect <USERNAME>
 			case "connect": {
-				// var botSpamID="700390885984043188";
 				if (args[1] == null) {
 					bot.channels.get(botSpamID).send("<@" + message.author.id + ">, You need to supply your Surrogate.TV Username which can be found on your user profile at https://surrogate.tv/user");
 				} else {
@@ -1281,17 +1246,14 @@ bot.on('message', message => {
 													let inHere = testData[i].split("|");
 													if (inHere[0] === message.author.id) {
 														dIDFound = true;
-														// break;
 														holdD = i;
 													}
 													if (inHere[1] === uid) {
 														uIDFound = true;
-														// break;
 														hold = i;
 													}
 													if (inHere[2] === args[1]) {
 														userFound = true;
-														// break;
 														hold = i;
 													}
 												}
@@ -1369,15 +1331,12 @@ bot.on('message', message => {
 							}
 						});
 				}
-				// if(message.channel.id!=botSpamID || message.channel.id!=modBotSpamID){
-				//     message.delete();
-				// }
 				logBotActions(message, message.content);
 				checkLevel(message);
 				break;
 			}
+			//!modupdate <USER> <USERNAME>
 			case "modupdate": {
-				// botSpamID="700390885984043188";
 				if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null) && args[2] != null) {
 					let infoID = args[1].substring(3, args[1].length - 1);
 					
@@ -1449,18 +1408,14 @@ bot.on('message', message => {
 						}
 					});
 				}
-				// if(message.channel.id!=botSpamID || message.channel.id!=modBotSpamID){
-				//     message.delete();
-				// }
 				logBotActions(message, message.content);
 				checkLevel(message);
 				break;
 			}
+			//!modremove <USER>
 			case "modremove": {
-				// botSpamID="700390885984043188";
 				if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null)) {
 					let infoID = args[1].substring(3, args[1].length - 1);
-					
 					fs.exists("./database/connect.dat", (exists) => {
 						if (exists) {
 							fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
@@ -1473,7 +1428,6 @@ bot.on('message', message => {
 										let inHere = testData[i].split("|");
 										if (inHere[0] === infoID) {
 											dIDFound = true;
-											// console.log(testData[i]);
 											break;
 										}
 									}
@@ -1502,14 +1456,11 @@ bot.on('message', message => {
 						}
 					});
 				}
-				// if(message.channel.id!=botSpamID || message.channel.id!=modBotSpamID){
-				//     message.delete();
-				// }
 				logBotActions(message, message.content);
 				break;
 			}
+			//!search <USERNAME>
 			case "search": {
-				// botSpamID="700390885984043188";
 				fs.exists("./database/connect.dat", (exists) => {
 					if (exists && args[1] != null) {
 						fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
@@ -1577,9 +1528,6 @@ bot.on('message', message => {
 						});
 					}
 				});
-				// if(message.channel.id!=botSpamID || message.channel.id!=modBotSpamID){
-				//     message.delete();
-				// }
 				logBotActions(message, message.content);
 				break;
 			}
@@ -1603,101 +1551,6 @@ function detection(message, triggerPinballResponse, triggerClawResponse, trigger
 			message.channel.send(out2);
 			logBotActions(message, "Detected \"refill\" claw");
 		}
-		return;
-	}
-	
-	//"How do I play" for Sumo
-	if (triggerSumoResponse && message.content.toLowerCase().includes("how") && message.content.toLowerCase().includes("play") && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers") || message.member.roles.find(r => r.name.toLowerCase() === "patreon suppporter") || message.member.roles.find(r => r.name.toLowerCase() === "verified players") || message.member.roles.find(r => r.name.toLowerCase() === "broom squad"))))) {
-		let out = "*(Robot Ninja Auto Help)*\n";
-		out += "**How to play SumoBots:**\n\t";
-		out += "1. Join the queue by clicking the \"Click Here to Play Next\" button in the top right corner.\n\t";
-		out += "2. When your game starts use [WASD] or the arrow keys to drive around.\n\t";
-		out += "3. Knock others into the holes of the arena and be the last one standing.";
-		message.channel.send(out);
-		logBotActions(message, "Detected \"how to play\" Sumo");
-		return;
-	}
-	
-	//"How do I play" for RealRacing
-	if (triggerRaceResponse && message.content.toLowerCase().includes("how") && message.content.toLowerCase().includes("play") && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers") || message.member.roles.find(r => r.name.toLowerCase() === "patreon suppporter") || message.member.roles.find(r => r.name.toLowerCase() === "verified players") || message.member.roles.find(r => r.name.toLowerCase() === "broom squad"))))) {
-		let out = "*(Robot Ninja Auto Help)*\n";
-		out += "**How to play RRC:**\n\t";
-		out += "1. Join the queue by clicking the \"Click Here to Play Next\" button in the top right corner.\n\t";
-		out += "2. When your game starts use [WASD] or the arrow keys to drive around.\n\t";
-		out += "3. Drive to the start / finish line during the warm up phase.\n\t";
-		out += "4. After the race starts, complete 4 laps to finish the race.";
-		message.channel.send(out);
-		logBotActions(message, "Detected \"how to play\" RealRacing");
-		return;
-	}
-	
-	//"How do I play" for Pinball
-	if (triggerPinballResponse && message.content.toLowerCase().includes("how") && (message.content.toLowerCase().includes("play") && !message.content.toLowerCase.includes("player")) && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers") || message.member.roles.find(r => r.name.toLowerCase() === "patreon suppporter") || message.member.roles.find(r => r.name.toLowerCase() === "verified players") || message.member.roles.find(r => r.name.toLowerCase() === "broom squad"))))) {
-		let out = "*(Robot Ninja Auto Help)*\n";
-		out += "**How to play RRC:**\n\t";
-		out += "1. Join the queue by clicking the \"Click Here to Play Next\" button in the top right corner.\n\t";
-		out += "2. When your game starts use the left and right [CTRL] buttons to use the flippers and use [SPACEBAR] to launch the ball. ";
-		out += "You have 3 balls per game with the players taking turns.";
-		message.channel.send(out);
-		logBotActions(message, "Detected \"how to play\" Pinball");
-		return;
-	}
-	//"Ball stuck" for Pinball
-	if (triggerPinballResponse && !(message.channel.id === "702578486199713872") && message.content.toLowerCase().includes("ball") && message.content.toLowerCase().includes("stuck") && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers") || message.member.roles.find(r => r.name.toLowerCase() === "patreon suppporter") || message.member.roles.find(r => r.name.toLowerCase() === "verified players") || message.member.roles.find(r => r.name.toLowerCase() === "broom squad"))))) {
-		let out = "*(Robot Ninja Auto Help)*\n";
-		out += "**What if a ball gets stuck:**\n\t";
-		out += "If a ball gets stuck somewhere, for example inside the Turntable, ";
-		out += "the machine tries to free it by firing all coils. ";
-		out += "Be ready to catch your ball when it returns! ";
-		out += "If the machine can’t find the ball after two tries, ";
-		out += "it will say “Missing Pinball” and the next player continues.";
-		message.channel.send(out);
-		logBotActions(message, "Detected \"ball stuck\" Pinball");
-		return;
-	}
-	//"Why AFK check" Pinball
-	if (triggerPinballResponse && message.content.toLowerCase().includes("afk") && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers") || message.member.roles.find(r => r.name.toLowerCase() === "patreon suppporter") || message.member.roles.find(r => r.name.toLowerCase() === "verified players") || message.member.roles.find(r => r.name.toLowerCase() === "broom squad"))))) {
-		let out = "*(Robot Ninja Auto Help)*\n";
-		out += "**Why is there an AFK check:**\n\t";
-		out += "The AFK check was added because after a popular post we had 30 players in the queue, ";
-		out += "but many weren’t playing when it was their turn because of the long wait times. ";
-		out += "The AFK check ensures that only players who are ready to play are put in the game.";
-		message.channel.send(out);
-		logBotActions(message, "Detected \"AFK check\" Pinball");
-		return;
-	}
-	//"Two balls" Pinball
-	if (triggerPinballResponse && !(message.channel.id === "702578486199713872") && message.content.toLowerCase().includes("two") && message.content.toLowerCase().includes("ball") && !message.content.toLowerCase().includes("flipper") && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers") || message.member.roles.find(r => r.name.toLowerCase() === "patreon suppporter") || message.member.roles.find(r => r.name.toLowerCase() === "verified players") || message.member.roles.find(r => r.name.toLowerCase() === "broom squad"))))) {
-		let out = "*(Robot Ninja Auto Help)*\n";
-		out += "**Why are two balls launched:**\n\t";
-		out += "For some unknown reason and very rarely, the machine launches two balls. ";
-		out += "Sometimes it will fix itself if one of the balls drains during ball save. ";
-		out += "Sometimes it will be fixed for the next player. And in the worst case, it will last the whole game. ";
-		out += "There is nothing we can do about it. Just play another game afterwards.";
-		message.channel.send(out);
-		logBotActions(message, "Detected \"two balls\" Pinball");
-		return;
-	}
-	
-	//"How do I queue up" for all
-	if (message.content.toLowerCase().includes("how") && message.content.toLowerCase().includes("queue") && (message.content.toLowerCase().includes("join") || message.content.toLowerCase().includes("up")) && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers") || message.member.roles.find(r => r.name.toLowerCase() === "patreon suppporter") || message.member.roles.find(r => r.name.toLowerCase() === "verified players") || message.member.roles.find(r => r.name.toLowerCase() === "broom squad"))))) {
-		let out = "*(Robot Ninja Auto Help)*\n";
-		out += "**How to join the queue in SumoBots:**\n\t";
-		out += "Join the queue by clicking the \"Click Here to Play Next\" button in the top right corner. ";
-		out += "You can leave the queue (only before the game starts) by clicking on the ";
-		out += "[X] button in the same location.";
-		message.channel.send(out);
-		logBotActions(message, "Detected \"how to queue\"");
-		return;
-	}
-	//"How do I leave queue" for all
-	if (message.content.toLowerCase().includes("how") && message.content.toLowerCase().includes("queue") && message.content.toLowerCase().includes("leave") && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers") || message.member.roles.find(r => r.name.toLowerCase() === "patreon suppporter") || message.member.roles.find(r => r.name.toLowerCase() === "verified players") || message.member.roles.find(r => r.name.toLowerCase() === "broom squad"))))) {
-		let out = "*(Robot Ninja Auto Help)*\n";
-		out += "**How to leave the queue in SumoBots:**\n\t";
-		out += "You can leave the queue (only before the game starts) by clicking on the [X] button in the queue ";
-		out += "info above the chat. If you leave the queue during the game then your game will just end.";
-		message.channel.send(out);
-		logBotActions(message, "Detected \"how to leave queue\"");
 		return;
 	}
 	
@@ -1823,10 +1676,12 @@ function getDateObject(timezoneOffset) {
 		timeValueSeconds: Math.floor(date.valueOf() / 1000),
 		
 		timeString: hourLeadZero + ":" + minuteLeadZero + ":" + secondLeadZero,
-		timeStringAMPM: hourAMPMLeadZero + ":" + minuteLeadZero + " " + ((date.getHours() < 12) ? "AM" : "PM"),
+		timeStringAMPM: hourAMPMLeadZero + ":" + minuteLeadZero + ":" + secondLeadZero + " " + ((date.getHours() < 12) ? "AM" : "PM"),
 		
 		dateString_MDY_dash: monthLeadZero + "-" + dayLeadZero + "-" + date.getFullYear().toString(),
 		dateString_YMD_dash: date.getFullYear().toString() + "-" + monthLeadZero + "-" + dayLeadZero,
+		dateString_DMY_slash: dayLeadZero + "/" + monthLeadZero + "/" + date.getFullYear().toString(),
+		dateString_MDY_noLead:  (date.getMonth() + 1).toString() + "-" +date.getDate().toString() + "-" + date.getFullYear().toString(),
 		dateString_MD_slash: (date.getMonth() + 1).toString() + "/" + date.getDate(),
 	};
 }
