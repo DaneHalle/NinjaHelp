@@ -17,23 +17,22 @@ const raceTrigger = ["589484542214012963", "707600524727418900"];
 const sumoTrigger = ["627919045420646401", "707600524727418900"];
 const generalTrigger = ["586955337870082082", "571390705117954049", "571600581936939049", "631391110966804510", "589485632984973332", "571388780058247185", "710104643996352633", "707600524727418900"];
 const sneakTrigger = ["631134966163701761", "662642212789551124", "707600524727418900"];
+const communityTrigger = ["751846589039116360", "751846612937998356", "707600524727418900"];
 const botSpamID = "710104643996352633";
 const modBotSpamID = "593000239841935362";
 
 const testChannelID = "707600524727418900";
-const surrogateChannelID = "0";
+const surrogateChannelID = "710104643996352633";
 
 //Game Announcements
 async function announcement(game, image, numImage, channel) {
 	while (true) {
 		let at = "";
-		
 		if (game.toLowerCase().includes("sumobots")) {
 			at = "<@&744956818073190471>";
 		} else if (game.toLowerCase().includes("racerealcars143")) {
 			at = "<@&744956844233064449>";
 		}
-		
 		const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=" + game.toLowerCase(), {
 			method: 'GET', headers: {
 				'Content-Type': 'application/json',
@@ -58,7 +57,6 @@ async function announcement(game, image, numImage, channel) {
 								}],
 							})
 								.then(bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
-							
 							logBotActions(null, game + " Pre-Announcement");
 						} else if (startTime - adjustedMinute === 0 ) {
 							let out = at + " **" + game + "** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/" + game.toLowerCase() + "\n";
@@ -68,7 +66,6 @@ async function announcement(game, image, numImage, channel) {
 								}],
 							})
 								.then(bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
-							
 							logBotActions(null, game + " Announcement");
 						}
 					}
@@ -234,26 +231,19 @@ const events = {
 
 bot.on('raw', async event => {
 	if (!events.hasOwnProperty(event.t)) return;
-	
 	const {d: data} = event;
 	const user = bot.users.get(data.user_id);
 	const channel = bot.channels.get(data.channel_id) || await user.createDM();
-	
 	if (channel.messages.has(data.message_id)) return;
-	
 	const message = await channel.fetchMessage(data.message_id);
-	
 	const emojiKey = (data.emoji.id) ? `${data.emoji.name}:${data.emoji.id}` : data.emoji.name;
 	const reaction = message.reactions.get(emojiKey);
-	
 	bot.emit(events[event.t], reaction, user);
 });
 
 bot.on('messageReactionAdd', (reaction, user) => {
-	
 	const emoji = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
 	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
-	
 	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === 745995420617932830) { //CHANGE AFTER GEN
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
@@ -271,7 +261,6 @@ bot.on('messageReactionAdd', (reaction, user) => {
 bot.on('messageReactionRemove', (reaction, user) => {
 	const emoji = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
 	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
-	
 	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === 745995420617932830) { //CHANGE AFTER GEN
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
@@ -287,9 +276,9 @@ bot.on('messageReactionRemove', (reaction, user) => {
 });
 
 bot.once('ready', () => {
-	// announcement("SumoBots", "sumo", 10, "627919045420646401");
-	// announcement("RaceRealCars143", "race", 4, "589484542214012963");
-	announcement("SumoBots", "sumo", 10, "707047722208854101"); //Testing
+	announcement("SumoBots", "sumo", 10, "627919045420646401");
+	announcement("RaceRealCars143", "race", 4, "589484542214012963");
+	// announcement("SumoBots", "sumo", 10, "707047722208854101"); //Testing
 	// announcement("SumoBots", "sumo", 10, "700390885984043188"); //Broom Bot
 	fs.exists("./database/mute.dat", (exists) => {
 		if (!exists) {
@@ -306,10 +295,8 @@ bot.once('ready', () => {
 		}
 	});
 	checkToUnmute();
-	bot.user.setActivity("Surrogate.tv", {type: "WATCHING", url: "https://www.surrogate.tv"});
 	newDayCheck();
-
-
+	bot.user.setActivity("Surrogate.tv", {type: "WATCHING", url: "https://www.surrogate.tv"});
 	const date = getDateObject(0);
 	let info = "We are up and running as " + bot.user.tag + " at " + date.timeStringAMPM + " EST\n";
 	info += "=======================================================";
@@ -335,7 +322,8 @@ bot.on('message', message => {
 	let triggerGeneralResponse = false;
 	let triggerSneakResponse = false;
 	let triggerPinballResponse = false;
-	let maxCheck = Math.max(clawTrigger.length, arcadeTrigger.length, raceTrigger.length, sumoTrigger.length, generalTrigger.length, sneakTrigger.length, pinballTrigger.length);
+	let triggerCommunityResponse = false;
+	let maxCheck = Math.max(clawTrigger.length, arcadeTrigger.length, raceTrigger.length, sumoTrigger.length, generalTrigger.length, sneakTrigger.length, pinballTrigger.length, communityTrigger.length);
 	for (let i = 0; i < maxCheck; i++) {
 		if (clawTrigger[i] != null && clawTrigger[i] === message.channel.id) {
 			triggerClawResponse = true;
@@ -357,6 +345,9 @@ bot.on('message', message => {
 		}
 		if (sneakTrigger[i] != null && sneakTrigger[i] === message.channel.id) {
 			triggerSneakResponse = true;
+		}
+		if (communityTrigger[i] != null && communityTrigger[i] === message.channel.id) {
+			triggerCommunityResponse = true;
 		}
 	}
 	
@@ -794,7 +785,6 @@ bot.on('message', message => {
 							command = command.splice(0);
 							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
 								message.delete();
-								
 								const embed = new Discord.RichEmbed()
 									.setTitle("__" + title + "__")
 									.setColor(0x220e41)
@@ -802,7 +792,6 @@ bot.on('message', message => {
 									.setDescription(output)
 									.setThumbnail(image)
 									.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
-								
 								message.channel.send({embed});
 							} else {
 								if (message.channel.id !== botSpamID) {
@@ -815,7 +804,6 @@ bot.on('message', message => {
 										.setDescription(output)
 										.setThumbnail(image)
 										.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
-									
 									bot.channels.get(botSpamID).send({embed});
 									
 								} else {
@@ -826,7 +814,6 @@ bot.on('message', message => {
 										.setDescription(output)
 										.setThumbnail(image)
 										.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
-									
 									bot.channels.get(botSpamID).send({embed});
 								}
 							}
@@ -881,7 +868,6 @@ bot.on('message', message => {
 							}
 						}
 						if (toRemove !== -1) {
-							
 							let removeUserData = testData[toRemove];
 							let reinsert = "";
 							for (let j = 0; j < testData.length; j++) {
@@ -922,7 +908,6 @@ bot.on('message', message => {
 						bot.channels.get(modBotSpamID).send(`<@${toUnmute} is not muted.`);
 						return;
 					}
-					
 					await(toUnmute.addRole(role.id));
 					toUnmute.removeRole(role.id);
 					bot.channels.get(modBotSpamID).send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
@@ -1010,14 +995,13 @@ bot.on('message', message => {
 				} else if ((triggerPinballResponse && message.channel.id === "702578486199713872") || message.content.toLowerCase().includes("oktoberfest")) {
 					//IMPLEMENT TAKING FROM GOOGLE FORM
 					message.delete();
-					let today = new Date();
-					let checkMonth = today.getMonth() + 1;
-					if (checkMonth === 7 || checkMonth === 8 || (checkMonth === 9 && checkDay <= 7)) {
+					let today = getDateObject(0);
+					if (today.month === 7 || today.month === 8 || (today.month === 9 && today.day <= 7)) {
 						fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRe979Ap0TpmdEDtPhZ7nwT9bkelIKUzFHf9ed6HiPBf5ZM09nNOAIjxAK1rztDqBffR8Gc6FTecoaA/pub?gid=1385749731&single=true&output=csv", {
 							method: 'GET',
 						}).then(x => x.text())
 							.then(x => {
-								console.log(x);
+								// console.log(x);
 								let v = x.split(/\n/).map(a => a.split(","));
 								while (v.length > 10) {
 									v.pop();
@@ -1025,7 +1009,6 @@ bot.on('message', message => {
 								let sym = ["1) ", "2) ", "3) ", "4) ", "5) ", "6) ", "7) ", "8) ", "9) ", "10) "];
 								let scores = "";
 								v.forEach((a, i) => {scores += "" + sym[i] + " **__" + a[0] + "__**\t" + a[1] + "\n"});
-								
 								let title = "__**Oktoberfest** Current Scores__";
 								let description = "Here are the Top 10 **Oktoberfest Launch Tournament** players as of " + getDateObject(TIMEZONE_OFFSET_FINLAND).dateString_MD_slash;
 								let footer = "Note: Some new top 10 scores may not be verified yet and will not appear here.";
@@ -1037,21 +1020,22 @@ bot.on('message', message => {
 									.addField(description, scores)
 									.setThumbnail(image)
 									.setFooter(footer);
-								
 								bot.channels.get("702578486199713872").send({embed});
 							});
+					} else {
+						message.channel.send("The **Oktoberfest Launch Tournament** has ended.");
 					}
 					logBotActions(message, "!top oktoberfest");
 					return;
 				} else if ((triggerPinballResponse && message.channel.id === "613630308931207198") || message.content.toLowerCase().includes("batman66")) {
 					url += "592ac917-14d2-481a-9d37-3b840ad46b19&order=";
-					let command = "Batman66 Pinball";
+					command = "Batman66 Pinball";
 					if (args[2] != null && args[2] === "month") {
 						url += "month";
 						scoreType = "Monthly";
 						title = " Current Scores of the Month";
 					}
-					let image = "https://www.surrogate.tv/img/pinball/pinball_logo.png";
+					image = "https://www.surrogate.tv/img/pinball/pinball_logo.png";
 				} else {
 					if (message.channel.id !== botSpamID) {
 						if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
@@ -1120,7 +1104,6 @@ bot.on('message', message => {
 									scores += "\n";
 								}
 							}
-							
 							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
 								message.delete();
 								
@@ -1140,7 +1123,6 @@ bot.on('message', message => {
 										.setThumbnail(image)
 										.addField(description, scores)
 										.setFooter("Please use this channel for bot commands!");
-									
 									bot.channels.get(botSpamID).send({embed})
 										.then(bot.channels.get(botSpamID).send("<@" + message.author.id + ">"));
 								} else {
@@ -1149,7 +1131,6 @@ bot.on('message', message => {
 										.setColor(0x220e41)
 										.setThumbnail(image)
 										.addField(description, scores);
-									
 									message.channel.send({embed});
 								}
 							}
@@ -1219,6 +1200,7 @@ bot.on('message', message => {
 				if (args[1] == null) {
 					bot.channels.get(botSpamID).send("<@" + message.author.id + ">, You need to supply your Surrogate.TV Username which can be found on your user profile at https://surrogate.tv/user");
 				} else {
+					args[1]=encodeURI(args[1]);
 					const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/users?search=" + args[1], {
 						method: 'GET', headers: {
 							'Content-Type': 'application/json',
@@ -1312,7 +1294,6 @@ bot.on('message', message => {
 																		}
 																	}
 																});
-															
 														});
 													}
 												});
@@ -1326,7 +1307,6 @@ bot.on('message', message => {
 										});
 									}
 								});
-								
 							}
 						});
 				}
@@ -1338,7 +1318,7 @@ bot.on('message', message => {
 			case "modupdate": {
 				if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null) && args[2] != null) {
 					let infoID = args[1].substring(3, args[1].length - 1);
-					
+					args[1]=encodeURI(args[1]);
 					fs.exists("./database/connect.dat", (exists) => {
 						if (exists) {
 							fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
@@ -1355,7 +1335,6 @@ bot.on('message', message => {
 										}
 									}
 								}
-								
 								if (dIDFound) {
 									const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/users?search=" + args[2], {
 										method: 'GET', headers: {
@@ -1415,6 +1394,7 @@ bot.on('message', message => {
 			case "modremove": {
 				if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null)) {
 					let infoID = args[1].substring(3, args[1].length - 1);
+					args[1]=encodeURI(args[1]);
 					fs.exists("./database/connect.dat", (exists) => {
 						if (exists) {
 							fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
@@ -1431,7 +1411,6 @@ bot.on('message', message => {
 										}
 									}
 								}
-								
 								if (dIDFound) {
 									let insert = "";
 									for (let z = 0; z < testData.length; z++) {
@@ -1462,6 +1441,7 @@ bot.on('message', message => {
 			case "search": {
 				fs.exists("./database/connect.dat", (exists) => {
 					if (exists && args[1] != null) {
+						args[1]=encodeURI(args[1]);
 						fs.readFile("./database/connect.dat", 'ascii', function (err, file) {
 							if (err) throw err;
 							let testData = file.toString().split("\n");
@@ -1536,10 +1516,10 @@ bot.on('message', message => {
 		}
 		return;
 	}
-	detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse);
+	detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse);
 });
 
-function detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse) {
+function detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse) {
 	//"Refill the machine" for Claw
 	if (triggerClawResponse && ((message.content.toLowerCase().includes("filled") || message.content.toLowerCase().includes("refill") || message.content.toLowerCase().includes("restock")) && !message.content.includes("www.")) && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers"))))) {
 		const date = getDateObject(TIMEZONE_OFFSET_FINLAND);
@@ -1631,10 +1611,8 @@ function checkLevel(message) {
 								message.guild.member(message.member).removeRole(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Starter Robot Ninja\"");
 							}
-							
 						}
 					});
-				
 			});
 		}
 	});
