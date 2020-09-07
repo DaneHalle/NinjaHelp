@@ -84,19 +84,19 @@ function logBotActions(message, action) {
 	if (message == null) {
 		let out = date.timeString + " EST | AUTO ANNOUNCE | " + action;
 		console.log(out);
-		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_dash + ".txt", out + "\n", function (err) {
+		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", out + "\n", function (err) {
 			if (err) throw err;
 		});
 	} else if (message === "AUTO UNMUTE") {
 		let out = date.timeString + " EST | AUTO UNMUTE | " + action;
 		console.log(out);
-		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_dash + ".txt", out + "\n", function (err) {
+		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", out + "\n", function (err) {
 			if (err) throw err;
 		});
 	} else if (message === "ERROR") {
 		let out = date.timeString + " EST | ERROR | " + action;
 		console.log(out);
-		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_dash + ".txt", out + "\n", function (err) {
+		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", out + "\n", function (err) {
 			if (err) throw err;
 		});
 	} else {
@@ -117,51 +117,21 @@ function logReactActions(user, event) {
 }
 
 async function newDayCheck() {
-	const startingDate = getDateObject(0);
+	let startingDate = getDateObject(0);
 	
-	fs.open("./bot_logs/logs_" + startingDate.dateString_MDY_dash + ".txt", 'a', function (err, file) {
+	fs.open("./bot_logs/logs_" + startingDate.dateString_MDY_noLead + ".txt", 'a', function (err, file) {
 		if (err) throw err;
 	});
 	
-	let lastNewDaySeconds = startingDate.timeValue;
-	
 	while (true) {
 		const checkDate = getDateObject(0);
-		if (checkDate.timeValueSeconds >= (lastNewDaySeconds + 86000)) {
-			if (checkDate.month === 7 || checkDate.month === 8 || (checkDate.month === 9 && checkDate.day <= 11)) {
-				fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRe979Ap0TpmdEDtPhZ7nwT9bkelIKUzFHf9ed6HiPBf5ZM09nNOAIjxAK1rztDqBffR8Gc6FTecoaA/pub?gid=1385749731&single=true&output=csv", {
-					method: 'GET',
-				}).then(x => x.text())
-					.then(x => {
-						let v = x.split(/\n/).map(a => a.split(","));
-						while (v.length > 10) {
-							v.pop();
-						}
-						let sym = ["1) ", "2) ", "3) ", "4) ", "5) ", "6) ", "7) ", "8) ", "9) ", "10) "];
-						let scores = "";
-						v.forEach((a, i) => scores += "" + sym[i] + " **__" + a[0] + "__**\t" + a[1] + "\n");
-						
-						let title = "__**Oktoberfest** Current Scores__";
-						let description = "Here are the Top 10 **Oktoberfest Launch Tournament** players as of " + checkDate.dateString_MD_slash;
-						let footer = "Note: Some new top 10 scores may not be verified yet and will not appear here.";
-						let image = "https://www.american-pinball.com/s/i/h/pinslide/oktoberfest/oktoberfest-logo-tap_shadow.png";
-						const embed = new Discord.RichEmbed()
-							.setTitle("__" + title + "__")
-							.setColor(0x220e41)
-							.setURL("http://proco.me/oktoberfest/")
-							.addField(description, scores)
-							.setThumbnail(image)
-							.setFooter(footer);
-						
-						bot.channels.get("702578486199713872").send({embed});
-					});
-			}
-			fs.appendFile("./bot_logs/logs_" + checkDate.dateString_MDY_dash + ".txt", "Starting a new day and restarting the bot", function (err) {
+		if (checkDate.day > startingDate.day || checkDate.month > startingDate.month || checkDate.year > startingDate.year) {
+			fs.appendFile("./bot_logs/logs_" + startingDate.dateString_MDY_noLead + ".txt", "Starting a new day and restarting the bot", function (err) {
 				if (err) throw err;
 			});
 			console.log("Starting a new day\n\n\n\n\n");
-			lastNewDaySeconds += 86000;
-			fs.open("./bot_logs/logs_" + checkDate.dateString_MDY_dash + ".txt", 'a', function (err, file) {
+			startingDate=checkDate;
+			fs.open("./bot_logs/logs_" + startingDate.dateString_MDY_noLead + ".txt", 'a', function (err, file) {
 				if (err) throw err;
 			});
 		}
@@ -304,7 +274,7 @@ bot.once('ready', () => {
 });
 
 bot.on('message', message => {
-	if (message.author.bot || message.author.id === "381655612335063040" || !((message.guild.id === ("707047722208854098") || message.guild.id === ("664556796576268298") || message.guild.id === ("571388780058247179")))) {
+	if (message.author.bot || message.author.id === "381655612335063040" || message.guild.id == null || !((message.guild.id === ("707047722208854098") || message.guild.id === ("664556796576268298") || message.guild.id === ("571388780058247179")))) {
 		return;
 	}
 	
