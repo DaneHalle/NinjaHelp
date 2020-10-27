@@ -8,13 +8,14 @@ const TOKEN = process.env.TOKEN;
 bot.login(TOKEN);
 
 const TIMEZONE_OFFSET_GMT = 4;
-const TIMEZONE_OFFSET_FINLAND = 7;
+const TIMEZONE_OFFSET_FINLAND = 6;
 
 const clawTrigger = ["706819836071903275", "662301446036783108", "707600524727418900"];
 const pinballTrigger = ["613630308931207198", "702578486199713872", "707600524727418900"];
 const arcadeTrigger = clawTrigger.concat(pinballTrigger);
 const raceTrigger = ["589484542214012963", "707600524727418900"];
 const sumoTrigger = ["627919045420646401", "707600524727418900"];
+const kartTrigger = ["768112471860576297", "707600524727418900"];
 const generalTrigger = ["586955337870082082", "571390705117954049", "571600581936939049", "631391110966804510", "589485632984973332", "571388780058247185", "710104643996352633", "707600524727418900"];
 const sneakTrigger = ["631134966163701761", "662642212789551124", "707600524727418900"];
 const communityTrigger = ["751846589039116360", "751846612937998356", "707600524727418900"];
@@ -32,6 +33,8 @@ async function announcement(game, image, numImage, channel) {
 			at = "<@&744956818073190471>";
 		} else if (game.toLowerCase().includes("racerealcars143")) {
 			at = "<@&744956844233064449>";
+		} else if (game.toLowerCase().includes("mariokartlive")) {
+			at = "<@&768263821739032578>";
 		}
 		const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=" + game.toLowerCase(), {
 			method: 'GET', headers: {
@@ -44,11 +47,12 @@ async function announcement(game, image, numImage, channel) {
 				} else {
 					const date = getDateObject(TIMEZONE_OFFSET_GMT);
 					let output = "";
-					let adjustedMinute = date.minute + date.hour * 60 + date.day * 1440;
-					let nearestStartTime = x.result.schedule.findIndex(x => Math.abs(adjustedMinute - x.startTime) < 20);
+					let adjustedMinute = date.minute + date.hour * 60 +( date.weekdayNr-1) * 1440;
+					let nearestStartTime = x.result.schedule.findIndex(z => Math.abs(adjustedMinute - z.startTime) < 20);
 					let rand = Math.floor(Math.random() * numImage) + 1;
 					if (!(nearestStartTime === -1)) {
 						let	startTime = x.result.schedule[nearestStartTime].startTime;
+						// console.log(startTime-adjustedMinute)
 						if (startTime - adjustedMinute === 15 ) {
 							let out = at + " **" + game + "** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/" + game.toLowerCase() + "\n";
 							bot.channels.get(channel).send(out, {
@@ -131,6 +135,9 @@ async function newDayCheck() {
 			});
 			console.log("Starting a new day\n\n\n\n\n");
 			startingDate=checkDate;
+			if (startingDate.weekday == "Wednesday") {
+				bot.channels.get("668884637694558228").send("<@!120618883219587072> , <@152200419043442688> , and <@161617853819125760> \n Are you good to host SumoBots this weekend for your normal sessions?");
+			}
 			fs.open("./bot_logs/logs_" + startingDate.dateString_MDY_noLead + ".txt", 'a', function (err, file) {
 				if (err) throw err;
 			});
@@ -212,9 +219,9 @@ bot.on('raw', async event => {
 });
 
 bot.on('messageReactionAdd', (reaction, user) => {
-	const emoji = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
-	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
-	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === 745995420617932830) { //CHANGE AFTER GEN
+	const emoji = ["Battling", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
+	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
+	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "745995420617932830") { //CHANGE AFTER GEN
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
 				let i = reaction.message.guild.roles.find(e => e.name === role[o]);
@@ -229,9 +236,9 @@ bot.on('messageReactionAdd', (reaction, user) => {
 });
 
 bot.on('messageReactionRemove', (reaction, user) => {
-	const emoji = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
-	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences"];
-	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === 745995420617932830) { //CHANGE AFTER GEN
+	const emoji = ["Battling", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
+	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
+	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "745995420617932830") { //CHANGE AFTER GEN
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
 				let i = reaction.message.guild.roles.find(e => e.name === role[o]);
@@ -246,8 +253,9 @@ bot.on('messageReactionRemove', (reaction, user) => {
 });
 
 bot.once('ready', () => {
-	announcement("SumoBots", "sumo", 10, "627919045420646401");
+	announcement("SumoBots", "sumo", 15, "627919045420646401");
 	announcement("RaceRealCars143", "race", 4, "589484542214012963");
+	announcement("MarioKartLive", "mario", 4, "768112471860576297");
 	// announcement("SumoBots", "sumo", 10, "707047722208854101"); //Testing
 	// announcement("SumoBots", "sumo", 10, "700390885984043188"); //Broom Bot
 	fs.exists("./database/mute.dat", (exists) => {
@@ -289,11 +297,12 @@ bot.on('message', message => {
 	let triggerArcadeResponse = false;
 	let triggerRaceResponse = false;
 	let triggerSumoResponse = false;
+	let triggerKartResponse = false;
 	let triggerGeneralResponse = false;
 	let triggerSneakResponse = false;
 	let triggerPinballResponse = false;
 	let triggerCommunityResponse = false;
-	let maxCheck = Math.max(clawTrigger.length, arcadeTrigger.length, raceTrigger.length, sumoTrigger.length, generalTrigger.length, sneakTrigger.length, pinballTrigger.length, communityTrigger.length);
+	let maxCheck = Math.max(clawTrigger.length, arcadeTrigger.length, raceTrigger.length, sumoTrigger.length, kartTrigger.length, generalTrigger.length, sneakTrigger.length, pinballTrigger.length, communityTrigger.length);
 	for (let i = 0; i < maxCheck; i++) {
 		if (clawTrigger[i] != null && clawTrigger[i] === message.channel.id) {
 			triggerClawResponse = true;
@@ -309,6 +318,9 @@ bot.on('message', message => {
 		}
 		if (sumoTrigger[i] != null && sumoTrigger[i] === message.channel.id) {
 			triggerSumoResponse = true;
+		}
+		if (kartTrigger[i] != null && kartTrigger[i] === message.channel.id) {
+			triggerKartResponse = true;
 		}
 		if (generalTrigger[i] != null && generalTrigger[i] === message.channel.id) {
 			triggerGeneralResponse = true;
@@ -339,28 +351,41 @@ bot.on('message', message => {
 		const pin = bot.emojis.get("744965333151907970").toString();
 		const claw = bot.emojis.get("744963655443021846").toString();
 		const experience = bot.emojis.get("745993436620128326").toString();
+		const consoles = bot.emojis.get("770308599045029889").toString();
+		const other = bot.emojis.get("770308616800043048").toString();
 		
 		const embed = new Discord.RichEmbed()
 			.setTitle("Notification Subsciption")
 			.setColor(0x220e41)
 			.setDescription("React on this post to receive a role which will enable you to receive notifications about a specific game!")
-			.addField(sumo + " SumoBots " + sumo, "Get notified when the game is about to be online and for information about the tournament.")
-			.addField(rrc + " RaceRealCars143 " + rrc, "Get notified when the game is about to be online.")
-			.addField(pin + " Pinball Games " + pin, "Get notified when a game goes offline or online for maitenance. Recieve information about tournaments. ")
-			.addField(claw + " Claw Games " + claw, "Get notified of any Claw Game related events")
-			.addField(experience + " Experiences " + experience, "Get notified of any special experiences happening")
+			.addField(sumo + " SumoBots " + sumo, "Get notified of any SumoBots news and when the game is about to go live.")
+			.addField(rrc + " RaceRealCars " + rrc, "Get notified of any RRC news and when the game is about to go live.")
+			.addField(pin + " Pinball Games " + pin, "Get notified of any Pinball news and when a game goes offline or online for maitenance. Recieve information about tournaments. ")
+			.addField(claw + " Claw Games " + claw, "Get notified of any Claw Game news or related events.")
+			.addField(experience + " Experiences " + experience, "Get notified of any special experiences happening.")
+			.addField(consoles + " Game Consoles " + consoles, "Get notified of any Game Console news and when games are about to go live.")
+			.addField(other + " Other " + other, "Get notified of anything of games and experiences in the Other category")
 			.addField("All of these fields will also be notified of any behind the scenes related content through this way for a given game.", "⠀")
 			.setFooter("To disable notification, un-react. If it appears that you haven't reacted, just react and un-react to disable them.");
 		
-		// bot.channels.get("745097595692515380").send({embed}).then(sentEmbed => {
+		// bot.channels.get("593000239841935362").send({embed}).then(sentEmbed => {
 		//     sentEmbed.react("744962246848807002")
 		//         .then(() => sentEmbed.react("744960028427157565"))
 		//         .then(() => sentEmbed.react("744965333151907970"))
 		//         .then(() => sentEmbed.react("744963655443021846"))
 		//         .then(() => sentEmbed.react("745993436620128326"));
 		// });
+
+        message.channel.fetchMessage("745995420617932830")
+          .then(msg => {
+            msg.edit(embed).then(sentEmbed => {
+            	sentEmbed.react("770308599045029889")
+            		.then(() => sentEmbed.react("770308616800043048"));
+            });
+          })
+          .catch(console.error);
 		
-		logReactActions(message.member.user, "Generated embed");
+		logReactActions(message.member.user, "Edited embed");
 		
 		return;
 	}
@@ -426,7 +451,7 @@ bot.on('message', message => {
 				if (month < 10) {
 					month = "0" + month;
 				}
-				let sendOut = "*Beep boop*\nThe time is given in GMT+3 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso=" + year + "" + month + "" + day + "T" + hours + "" + minutes + "&p1=101\n*Beep boop*";
+				let sendOut = "*Beep boop*\nThe time is given in GMT+2 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso=" + year + "" + month + "" + day + "T" + hours + "" + minutes + "&p1=101\n*Beep boop*";
 				message.channel.send(sendOut);
 				logBotActions(message, "Link");
 			}
@@ -554,7 +579,10 @@ bot.on('message', message => {
 				if (triggerSumoResponse) {
 					message.reply("Here you go!\nhttps://surrogate.tv/game/sumobots");
 					message.delete();
-				} else if (triggerRaceResponse) {
+				} else if (triggerKartResponse) {
+					message.reply("Here you go!\nhttps://surrogate.tv/game/mariokartlive");
+					message.delete();
+				}else if (triggerRaceResponse) {
 					message.reply("Here you go!\nhttps://surrogate.tv/game/racerealcars143");
 					message.delete();
 				} else if (triggerPinballResponse) {
@@ -571,6 +599,7 @@ bot.on('message', message => {
 				} else if (triggerGeneralResponse) {
 					let out = "Here are all the links to the current games:\n";
 					out += "https://surrogate.tv/game/sumobots\n";
+					out += "https://surrogate.tv/game/mariokartlive\n"
 					out += "https://surrogate.tv/game/racerealcars143\n";
 					out += "https://surrogate.tv/game/batman66\n";
 					out += "https://surrogate.tv/game/oktoberfest\n";
@@ -592,6 +621,10 @@ bot.on('message', message => {
 					url += "sumobots";
 					command = "SumoBots";
 					image = "https://www.surrogate.tv/img/sumo/logo_sumo.png";
+				} else if (triggerKartResponse || message.content.toLowerCase().includes("mariokartlive")) {
+					url += "mariokartlive";
+					command = "MarioKartLive";
+					image = "https://assets.surrogate.tv/game/7488f823-4fb2-468f-9100-a092a46d4de4/0849495794-Asset22x.png";
 				} else if (triggerRaceResponse || message.content.toLowerCase().includes("racerealcars143")) {
 					url += "racerealcars143";
 					command = "RaceRealCars143";
@@ -635,7 +668,7 @@ bot.on('message', message => {
 							let output = "";
 							x.result.schedule.sort((a, b) => a.startTime - b.startTime)
 							for (let i = 0; i < x.result.schedule.length; i++) {
-								let startTime = x.result.schedule[i].startTime + (3 * 60);
+								let startTime = x.result.schedule[i].startTime + (2 * 60);
 								let duration = x.result.schedule[i].duration;
 								let endTime = startTime + duration;
 								let day = Math.floor(startTime / minDay);
@@ -761,7 +794,7 @@ bot.on('message', message => {
 									.setURL("https://surrogate.tv/game/" + command)
 									.setDescription(output)
 									.setThumbnail(image)
-									.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
+									.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
 								message.channel.send({embed});
 							} else {
 								if (message.channel.id !== botSpamID) {
@@ -773,7 +806,7 @@ bot.on('message', message => {
 										.setURL("https://surrogate.tv/game/" + command)
 										.setDescription(output)
 										.setThumbnail(image)
-										.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
+										.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
 									bot.channels.get(botSpamID).send({embed});
 									
 								} else {
@@ -783,7 +816,7 @@ bot.on('message', message => {
 										.setURL("https://surrogate.tv/game/" + command)
 										.setDescription(output)
 										.setThumbnail(image)
-										.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
+										.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
 									bot.channels.get(botSpamID).send({embed});
 								}
 							}
@@ -935,6 +968,15 @@ bot.on('message', message => {
 						return;
 					}
 					image = "https://www.surrogate.tv/img/sumo/logo_sumo.png";
+				} else if (triggerKartResponse || message.content.toLowerCase().includes("mariokartlive")) {
+					url += "7488f823-4fb2-468f-9100-a092a46d4de4&order=";
+					command = "MarioKartLive";
+					if (args[2] != null && args[2] === "month") {
+						url += "month";
+						scoreType = "Monthly";
+						title = " Current Scores of the Month";
+					}
+					image = "https://assets.surrogate.tv/game/7488f823-4fb2-468f-9100-a092a46d4de4/0849495794-Asset22x.png";
 				} else if (triggerRaceResponse || message.content.toLowerCase().includes("racerealcars143")) {
 					url += "953f2154-9a6e-4602-99c6-265408da6310&order=";
 					command = "RaceRealCars143";
@@ -1480,6 +1522,10 @@ bot.on('message', message => {
 				logBotActions(message, message.content);
 				break;
 			}
+			case "burr":{
+				message.reply("burrrrrrrrrrrr");
+				break
+			}
 			default: {
 				break;
 			}
@@ -1605,6 +1651,7 @@ function getDateObject(timezoneOffset) {
 		monthName: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][date.getMonth()],
 		monthNameShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][date.getMonth()],
 		day: date.getDate(),
+		weekdayNr: (date.getDay() === 0) ? 7 : date.getDay(),
 		day00: dayLeadZero,
 		dayOrdinal: date.getDate().toString() + ["th", "st", "nd", "rd"][(date.getDate() === 11 || date.getDate() === 12 || (date.getDate() % 10 > 3)) ? 0 : date.getDate() % 10],
 		weekday: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][date.getDay()],
