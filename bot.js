@@ -7,8 +7,8 @@ const bot = new Discord.Client();
 const TOKEN = process.env.TOKEN;
 bot.login(TOKEN);
 
-const TIMEZONE_OFFSET_GMT = 4;
-const TIMEZONE_OFFSET_FINLAND = 6;
+const TIMEZONE_OFFSET_GMT = 5;
+const TIMEZONE_OFFSET_FINLAND = 7;
 
 const clawTrigger = ["706819836071903275", "662301446036783108", "707600524727418900"];
 const pinballTrigger = ["613630308931207198", "702578486199713872", "707600524727418900"];
@@ -16,6 +16,7 @@ const arcadeTrigger = clawTrigger.concat(pinballTrigger);
 const raceTrigger = ["589484542214012963", "707600524727418900"];
 const sumoTrigger = ["627919045420646401", "707600524727418900"];
 const kartTrigger = ["768112471860576297", "707600524727418900"];
+const kombatTrigger = ["770352589149569024", "707600524727418900"];
 const generalTrigger = ["586955337870082082", "571390705117954049", "571600581936939049", "631391110966804510", "589485632984973332", "571388780058247185", "710104643996352633", "707600524727418900"];
 const sneakTrigger = ["631134966163701761", "662642212789551124", "707600524727418900"];
 const communityTrigger = ["751846589039116360", "751846612937998356", "707600524727418900"];
@@ -47,7 +48,7 @@ async function announcement(game, image, numImage, channel) {
 				} else {
 					const date = getDateObject(TIMEZONE_OFFSET_GMT);
 					let output = "";
-					let adjustedMinute = date.minute + date.hour * 60 +( date.weekdayNr-1) * 1440;
+					let adjustedMinute = date.minute + date.hour * 60 +(date.weekdayNr-1) * 1440;
 					let nearestStartTime = x.result.schedule.findIndex(z => Math.abs(adjustedMinute - z.startTime) < 20);
 					let rand = Math.floor(Math.random() * numImage) + 1;
 					if (!(nearestStartTime === -1)) {
@@ -255,8 +256,8 @@ bot.on('messageReactionRemove', (reaction, user) => {
 bot.once('ready', () => {
 	announcement("SumoBots", "sumo", 15, "627919045420646401");
 	announcement("RaceRealCars143", "race", 4, "589484542214012963");
-	announcement("MarioKartLive", "mario", 4, "768112471860576297");
-	// announcement("SumoBots", "sumo", 10, "707047722208854101"); //Testing
+	announcement("MarioKartLive", "mario", 5, "768112471860576297");
+	// announcement("MarioKartLive", "mario", 5, "707047722208854101"); //Testing
 	// announcement("SumoBots", "sumo", 10, "700390885984043188"); //Broom Bot
 	fs.exists("./database/mute.dat", (exists) => {
 		if (!exists) {
@@ -302,7 +303,8 @@ bot.on('message', message => {
 	let triggerSneakResponse = false;
 	let triggerPinballResponse = false;
 	let triggerCommunityResponse = false;
-	let maxCheck = Math.max(clawTrigger.length, arcadeTrigger.length, raceTrigger.length, sumoTrigger.length, kartTrigger.length, generalTrigger.length, sneakTrigger.length, pinballTrigger.length, communityTrigger.length);
+	let triggerKombatResponse = false;
+	let maxCheck = Math.max(clawTrigger.length, arcadeTrigger.length, raceTrigger.length, sumoTrigger.length, kartTrigger.length, kombatTrigger.length, generalTrigger.length, sneakTrigger.length, pinballTrigger.length, communityTrigger.length);
 	for (let i = 0; i < maxCheck; i++) {
 		if (clawTrigger[i] != null && clawTrigger[i] === message.channel.id) {
 			triggerClawResponse = true;
@@ -321,6 +323,9 @@ bot.on('message', message => {
 		}
 		if (kartTrigger[i] != null && kartTrigger[i] === message.channel.id) {
 			triggerKartResponse = true;
+		}
+		if (kombatTrigger[i] != null && kombatTrigger[i] === message.channel.id) {
+			triggerKombatResponse = true;
 		}
 		if (generalTrigger[i] != null && generalTrigger[i] === message.channel.id) {
 			triggerGeneralResponse = true;
@@ -472,7 +477,7 @@ bot.on('message', message => {
 			// !time
 			case 'time': {
 				const date = getDateObject(TIMEZONE_OFFSET_FINLAND);
-				let sendOut = "It is currently **" + date.timeStringAMPM + " " + date.dateString_DMY_slash + "** in Finland (Where the games are located).";
+				let sendOut = "It is currently **" + date.timeStringAMPM + " " + date.dateString_DMY_slash + "** in Finland (Where most of the games are located).";
 				message.channel.send(sendOut);
 				logBotActions(message, "!time");
 				break;
@@ -582,28 +587,38 @@ bot.on('message', message => {
 				} else if (triggerKartResponse) {
 					message.reply("Here you go!\nhttps://surrogate.tv/game/mariokartlive");
 					message.delete();
-				}else if (triggerRaceResponse) {
+				} else if (triggerRaceResponse) {
 					message.reply("Here you go!\nhttps://surrogate.tv/game/racerealcars143");
 					message.delete();
-				} else if (triggerPinballResponse) {
+				} else if (triggerKombatResponse) {
+					message.reply("Here you go!\nhttps://surrogate.tv/game/robotkombat");
+					message.delete();
+				}  else if (triggerPinballResponse) {
 					let out = "There are multiple games here. Here are the links!\n";
 					out += "https://surrogate.tv/game/batman66\n";
 					out += "https://surrogate.tv/game/oktoberfest\n";
 					message.reply(out);
 					message.delete();
-				} else if (triggerClawResponse) {
-					let out = "There are multiple games here. Here are the links!\n";
-					out += "https://surrogate.tv/game/forceclaw\n";
-					message.reply(out);
-					message.delete();
-				} else if (triggerGeneralResponse) {
+				} 
+
+				// else if (triggerClawResponse) {
+				// 	let out = "There are multiple games here. Here are the links!\n";
+				// 	out += "https://surrogate.tv/game/forceclaw\n";
+				// 	message.reply(out);
+				// 	message.delete();
+				// } 
+
+				else if (triggerGeneralResponse) {
 					let out = "Here are all the links to the current games:\n";
 					out += "https://surrogate.tv/game/sumobots\n";
 					out += "https://surrogate.tv/game/mariokartlive\n"
+					out += "https://surrogate.tv/game/robotkombat\n"
 					out += "https://surrogate.tv/game/racerealcars143\n";
 					out += "https://surrogate.tv/game/batman66\n";
 					out += "https://surrogate.tv/game/oktoberfest\n";
-					out += "https://surrogate.tv/game/forceclaw\n";
+					out += "https://surrogate.tv/game/dice\n";
+					out += "https://surrogate.tv/game/surrobros\n";
+					// out += "https://surrogate.tv/game/forceclaw\n";
 					message.reply(out);
 					message.delete();
 				} else {
@@ -625,7 +640,11 @@ bot.on('message', message => {
 					url += "mariokartlive";
 					command = "MarioKartLive";
 					image = "https://assets.surrogate.tv/game/7488f823-4fb2-468f-9100-a092a46d4de4/0849495794-Asset22x.png";
-				} else if (triggerRaceResponse || message.content.toLowerCase().includes("racerealcars143")) {
+				} else if (triggerKombatResponse || message.content.toLowerCase().includes("robotkombat")) {
+					url += "robotkombat";
+					command = "RobotKombat";
+					image = "https://assets.surrogate.tv/game/2c93f1fd-9e12-4d5f-bb53-02ad5a72f839/4303884093-logorobotkombat1.png";
+				}  else if (triggerRaceResponse || message.content.toLowerCase().includes("racerealcars143")) {
 					url += "racerealcars143";
 					command = "RaceRealCars143";
 					image = "https://i.imgur.com/XETrUAa.png";
@@ -641,6 +660,14 @@ bot.on('message', message => {
 					url += "oktoberfest";
 					command = "Oktoberfest Pinball";
 					image = "https://www.american-pinball.com/s/i/h/pinslide/oktoberfest/oktoberfest-logo-tap_shadow.png";
+				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase("dice"))) {
+					url += "dice";
+					command = "Dice Role";
+					image = "https://assets.surrogate.tv/game/a9b699de-9046-467e-a54c-c30e86262798/1782551745-gamelogo2.png"
+				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase("surrobros"))) {
+					url += "surrobros";
+					command = "SurroBros";
+					image = "https://assets.surrogate.tv/game/0115a55d-3de8-4d32-8964-baf1f073f83f/4466557124-9ab6ccb0-ae34-4380-a3d6-066d31529ec6.png"
 				} else {
 					if (message.channel.id !== botSpamID) {
 						if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
@@ -977,7 +1004,25 @@ bot.on('message', message => {
 						title = " Current Scores of the Month";
 					}
 					image = "https://assets.surrogate.tv/game/7488f823-4fb2-468f-9100-a092a46d4de4/0849495794-Asset22x.png";
-				} else if (triggerRaceResponse || message.content.toLowerCase().includes("racerealcars143")) {
+				} else if (triggerKombatResponse || message.content.toLowerCase().includes("robotkombat")) {
+					url += "2c93f1fd-9e12-4d5f-bb53-02ad5a72f839&order=";
+					command = "RobotKombat";
+					if (args[2] != null && args[2] === "month") {
+						if (message.channel.id !== botSpamID) {
+							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
+								bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
+								message.delete();
+							} else {
+								bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
+								message.delete();
+							}
+						} else {
+							message.channel.send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
+						}
+						return;
+					}
+					image = "https://assets.surrogate.tv/game/2c93f1fd-9e12-4d5f-bb53-02ad5a72f839/4303884093-logorobotkombat1.png";
+				}  else if (triggerRaceResponse || message.content.toLowerCase().includes("racerealcars143")) {
 					url += "953f2154-9a6e-4602-99c6-265408da6310&order=";
 					command = "RaceRealCars143";
 					if (args[2] != null && args[2] === "month") {
@@ -1532,10 +1577,10 @@ bot.on('message', message => {
 		}
 		return;
 	}
-	detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse);
+	detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerKartResponse, triggerKombatResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse);
 });
 
-function detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse) {
+function detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerKartResponse, triggerKombatResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse) {
 	//"Refill the machine" for Claw
 	if (triggerClawResponse && ((message.content.toLowerCase().includes("filled") || message.content.toLowerCase().includes("refill") || message.content.toLowerCase().includes("restock")) && !message.content.includes("www.")) && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers"))))) {
 		const date = getDateObject(TIMEZONE_OFFSET_FINLAND);
