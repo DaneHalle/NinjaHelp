@@ -3,6 +3,7 @@ const Discord = require('discord.js');
 const fetch = require('node-fetch');
 const ms = require("ms");
 const fs = require('fs');
+const WebSocket = require('ws');
 const bot = new Discord.Client();
 const TOKEN = process.env.TOKEN;
 bot.login(TOKEN);
@@ -22,9 +23,14 @@ const sneakTrigger = ["631134966163701761", "662642212789551124", "7076005247274
 const communityTrigger = ["751846589039116360", "751846612937998356", "707600524727418900"];
 const botSpamID = "710104643996352633";
 const modBotSpamID = "593000239841935362";
-
 const testChannelID = "707600524727418900";
 const surrogateChannelID = "710104643996352633";
+
+var uid=[];
+var sid=[];
+var public=[];
+var threshold=[];
+var times=0;
 
 //Game Announcements
 async function announcement(game, image, numImage, channel) {
@@ -104,6 +110,13 @@ function logBotActions(message, action) {
 		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", out + "\n", function (err) {
 			if (err) throw err;
 		});
+	} else if (message === "WEBSITE HELP") {
+		let out = date.timeString + " EST | WEBSITE HELP | " + action;
+		console.log(out);
+		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", out + "\n", function (err) {
+			if (err) throw err;
+		});
+
 	} else {
 		let out = date.timeString + " EST | " + message.member.user.tag + " | " + action;
 		console.log(date.timeString + " EST | " + message.member.user.tag + " | " + action);
@@ -141,6 +154,36 @@ async function newDayCheck() {
 			}
 			fs.open("./bot_logs/logs_" + startingDate.dateString_MDY_noLead + ".txt", 'a', function (err, file) {
 				if (err) throw err;
+			});
+
+			uid=[];
+			sid=[];
+			public=[];
+			threshold=[];
+
+			fs.readFile("./database/gameIdShort.dat", 'ascii', function (err, file) {
+				if (err) throw err;
+				let totalData = file.toString().split("\n");
+				for (let i = 0; i < totalData.length; i++) {
+					if (totalData[i].length != 0) {
+						let dat = totalData[i].split("\r")[0].split("|");
+						if (!uid.includes(dat[0])) {
+							url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/"+dat[0];
+							let {list} = fetch(url, {
+								method: 'GET', headers: {
+									'Content-Type': 'application/json',
+								},
+							}).then(response => response.json())
+								.then((x) => {
+									uid.push(dat[0]);
+									sid.push(x.result.shortId);
+									public.push(x.result.isVisible);
+									threshold.push(0);
+								});
+						}
+					}
+				}
+
 			});
 		}
 		await Sleep(ms("1m"));
@@ -275,6 +318,33 @@ bot.once('ready', () => {
 	});
 	checkToUnmute();
 	newDayCheck();
+
+	fs.readFile("./database/gameIdShort.dat", 'ascii', function (err, file) {
+		if (err) throw err;
+		let totalData = file.toString().split("\n");
+		for (let i = 0; i < totalData.length; i++) {
+			if (totalData[i].length != 0) {
+				let dat = totalData[i].split("\r")[0].split("|");
+				if (!uid.includes(dat[0])) {
+					url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/"+dat[0];
+					let {list} = fetch(url, {
+						method: 'GET', headers: {
+							'Content-Type': 'application/json',
+						},
+					}).then(response => response.json())
+						.then((x) => {
+							uid.push(dat[0]);
+							sid.push(x.result.shortId);
+							public.push(x.result.isVisible);
+							threshold.push(0);
+						});
+				}
+			}
+		}
+
+	});
+	connect();
+
 	bot.user.setActivity("Surrogate.tv", {type: "WATCHING", url: "https://www.surrogate.tv"});
 	const date = getDateObject(0);
 	let info = "We are up and running as " + bot.user.tag + " at " + date.timeStringAMPM + " EST\n";
@@ -1678,6 +1748,101 @@ function checkLevel(message) {
 		}
 	});
 }
+
+function wait(ms){
+    var start = new Date().getTime();
+    var end = start;
+    while(end < start + ms) {
+      end = new Date().getTime();
+   }
+ }
+
+function connect(){
+	var socket = new WebSocket('wss://broker.surrogate.tv/socket.io/?EIO=3&transport=websocket');
+	// ws.reconnectInterval = 60000
+
+	socket.on('connecting', function() {
+		console.log('WebSocket Client Connecting');
+	});
+
+	socket.on('open', function (event) {
+		// console.log("WebSocket sending opening messages")
+		for (let i = 0; i < uid.length; i++) {
+			var sub = '424["subscribe","/chat/'+uid[i]+'"]';
+			socket.send(sub);
+		}
+	});
+
+	socket.on('message', function (data) {
+		str = data.replace(/\r?\n|\r/g, "");
+		if(!str.includes('[{"status":"ok"}]') && str!='40' && str.substring(0,1)!='0' && str!="3"){
+			var today = new Date();
+			var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+			var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+			var dateTime = date+' '+time;
+			var obj = JSON.parse(str.substring(48, str.length-1));
+			if(obj.type=="chatMessage"){
+
+				//Some sort of command system within the chat
+				//	!help <what you need help with>
+				//	!mod - pings mod
+				//	!admin - pings admin (only during "work" hours)
+				// 	Some other commands?
+				//Would be better if we can get the bot to respond in chat as well
+
+
+				let gindex = uid.indexOf(str.substring(10,46));
+				if (obj.message.toLowerCase().includes("help")) {
+					threshold[gindex]++;
+				}
+				if (threshold[gindex] >= 1 && !public[gindex]) {
+					bot.channels.get(modBotSpamID).send("<@152200419043442688> | User "+obj.username+" has requested help on the private game https://surrogate.tv/game/"+sid[gindex]+"\n > "+obj.message);
+					logBotActions("WEBSITE HELP", "Help Requested on private game");
+					threshold[gindex]=0;
+				} else if (threshold[gindex] >= 1 && public[gindex]) {
+					bot.channels.get(modBotSpamID).send("<@152200419043442688> | User "+obj.username+" has requested help on the public game https://surrogate.tv/game/"+sid[gindex]+"\n > "+obj.message);
+					logBotActions("WEBSITE HELP", "Help Requested on public game");
+					threshold[gindex]=0;
+				}
+			}
+		}
+	});
+
+	socket.on('close', function(e) {
+		console.log("Connection closed because "+e)
+		setTimeout(function() {
+			connect();
+		}, 500);
+	});
+
+	socket.on('error', function() {
+		console.log('WebSocket error');
+	});
+	  
+		function tick() {
+			//get the mins of the current time
+			var mins = new Date().getMinutes();
+
+			if (mins == "00") {
+				socket.close()
+			}
+
+			times++;
+
+			if(times%6==0){
+				for (let i = 0; i < threshold.length; i++) {
+					if (threshold[i] > 0) {
+						threshold[i]--;
+					}
+				}
+				times=0;
+			}
+			socket.send("2")
+		}
+	    
+	    setInterval(tick, 10000);
+}
+
 
 function getDateObject(timezoneOffset) {
 	const date = new Date();
