@@ -1,11 +1,18 @@
+global.crypto = require('crypto')
 require('dotenv').config();
 const Discord = require('discord.js');
 const fetch = require('node-fetch');
 const ms = require("ms");
 const fs = require('fs');
 const WebSocket = require('ws');
+const Amplify = require('@aws-amplify/core');
+const Auth = require('@aws-amplify/auth');
+const API = require('@aws-amplify/api');
 const bot = new Discord.Client();
 const TOKEN = process.env.TOKEN;
+const hiddenURL = ""+process.env.URL;
+const email = ""+process.env.EMAIL;
+const pass = ""+process.env.PASSWORD;
 bot.login(TOKEN);
 
 const TIMEZONE_OFFSET_GMT = 5;
@@ -31,6 +38,10 @@ var sid=[];
 var public=[];
 var threshold=[];
 var times=0;
+
+var gameObject=[];
+
+// var storedMessages=[];
 
 //Game Announcements
 async function announcement(game, image, numImage, channel) {
@@ -160,6 +171,7 @@ async function newDayCheck() {
 			sid=[];
 			public=[];
 			threshold=[];
+			gameObject=[];
 
 			fs.readFile("./database/gameIdShort.dat", 'ascii', function (err, file) {
 				if (err) throw err;
@@ -175,10 +187,16 @@ async function newDayCheck() {
 								},
 							}).then(response => response.json())
 								.then((x) => {
-									uid.push(dat[0]);
-									sid.push(x.result.shortId);
-									public.push(x.result.isVisible);
-									threshold.push(0);
+									gameObject.push({
+										"uuid":dat[0], 
+										"shortId": x.result.shortId,
+										"public": x.result.isVisible,
+										"threshold": 0,
+									});
+									// uid.push(dat[0]);
+									// sid.push(x.result.shortId);
+									// public.push(x.result.isVisible);
+									// threshold.push(0);
 								});
 						}
 					}
@@ -296,7 +314,7 @@ bot.on('messageReactionRemove', (reaction, user) => {
 	}
 });
 
-bot.once('ready', () => {
+bot.once('ready', async () => {
 	announcement("SumoBots", "sumo", 15, "627919045420646401");
 	announcement("RaceRealCars143", "race", 4, "589484542214012963");
 	announcement("MarioKartLive", "mario", 5, "768112471860576297");
@@ -333,6 +351,12 @@ bot.once('ready', () => {
 						},
 					}).then(response => response.json())
 						.then((x) => {
+							gameObject.push({
+								"uuid":dat[0], 
+								"shortId": x.result.shortId,
+								"public": x.result.isVisible,
+								"threshold": 0,
+							});
 							uid.push(dat[0]);
 							sid.push(x.result.shortId);
 							public.push(x.result.isVisible);
@@ -343,6 +367,35 @@ bot.once('ready', () => {
 		}
 
 	});
+
+
+	//Sign in for NinjaHelp Surrogate Account. 
+
+	await Amplify.default.configure(
+	  {
+	    Auth: {
+	      mandatorySignIn: true,
+	      region: 'eu-west-1',
+	      userPoolId: 'eu-west-1_QXXmJLzeq',
+	      identityPoolId: 'eu-west-1:ee88318e-0a8e-402d-906d-763c933f0482',
+	      userPoolWebClientId: 'u6gie8rc4jvvgusmpo3k7thtv',
+	    },
+	    API: {
+	      endpoints: [
+	        {
+	          name: 'surrogateApi',
+	          endpoint:
+	            'https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master',
+	          region: 'eu-west-1',
+	        },
+	      ],
+	    },
+	  });
+
+	await Auth.default.signIn(email, pass)
+	  .then(success => console.log('successful sign in'))
+	  .catch(err => console.log(err));
+
 	connect();
 
 	bot.user.setActivity("Surrogate.tv", {type: "WATCHING", url: "https://www.surrogate.tv"});
@@ -730,11 +783,11 @@ bot.on('message', message => {
 					url += "oktoberfest";
 					command = "Oktoberfest Pinball";
 					image = "https://www.american-pinball.com/s/i/h/pinslide/oktoberfest/oktoberfest-logo-tap_shadow.png";
-				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase("dice"))) {
+				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase().includes("dice"))) {
 					url += "dice";
-					command = "Dice Role";
+					command = "Dice Roll";
 					image = "https://assets.surrogate.tv/game/a9b699de-9046-467e-a54c-c30e86262798/1782551745-gamelogo2.png"
-				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase("surrobros"))) {
+				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase().includes("surrobros"))) {
 					url += "surrobros";
 					command = "SurroBros";
 					image = "https://assets.surrogate.tv/game/0115a55d-3de8-4d32-8964-baf1f073f83f/4466557124-9ab6ccb0-ae34-4380-a3d6-066d31529ec6.png"
@@ -1767,8 +1820,8 @@ function connect(){
 
 	socket.on('open', function (event) {
 		// console.log("WebSocket sending opening messages")
-		for (let i = 0; i < uid.length; i++) {
-			var sub = '424["subscribe","/chat/'+uid[i]+'"]';
+		for (let i = 0; i < gameObject.length; i++) {
+			var sub = '424["subscribe","/chat/'+gameObject[i].uuid+'"]';
 			socket.send(sub);
 		}
 	});
@@ -1776,10 +1829,8 @@ function connect(){
 	socket.on('message', function (data) {
 		str = data.replace(/\r?\n|\r/g, "");
 		if(!str.includes('[{"status":"ok"}]') && str!='40' && str.substring(0,1)!='0' && str!="3"){
-			var today = new Date();
-			var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-			var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-			var dateTime = date+' '+time;
+			var today = getDateObject(TIMEZONE_OFFSET_GMT);
+			var dateTime = today.dateString_YMD_dash+' '+today.timeString
 			var obj = JSON.parse(str.substring(48, str.length-1));
 			if(obj.type=="chatMessage"){
 
@@ -1788,21 +1839,86 @@ function connect(){
 				//	!mod - pings mod
 				//	!admin - pings admin (only during "work" hours)
 				// 	Some other commands?
+				//	Some detection for profanity 
 				//Would be better if we can get the bot to respond in chat as well
 
+				let gindex = gameObject.findIndex(x => x.uuid === str.substring(10,46));
 
-				let gindex = uid.indexOf(str.substring(10,46));
-				if (obj.message.toLowerCase().includes("help")) {
-					threshold[gindex]++;
+				var toStoreObject = {
+					"time": dateTime,
+					"game": gameObject[gindex].shortId,
+					"username": obj.username,
+					"message": obj.message,
+					"userId": obj.userId,
+				};
+
+				// const n = 100; //Storage of 100 latest messages
+				// storedMessages.push(toStoreObject);
+
+				// if (storedMessages.length > n) {
+				// 	storedMessages = storedMessages.slice(1,storedMessages.length);
+				// } 
+
+				if (obj.message.toLowerCase().startsWith("!help") && toStoreObject.username!="NinjaHelp") {
+					// Some sort of detection 
+					sendMessageToWebsite(gameObject[gindex].uuid, "I am a work in progress currently so can't help you. Sorry!");
+
 				}
-				if (threshold[gindex] >= 1 && !public[gindex]) {
-					bot.channels.get(modBotSpamID).send("<@152200419043442688> | User "+obj.username+" has requested help on the private game https://surrogate.tv/game/"+sid[gindex]+"\n > "+obj.message);
+
+				fetch(hiddenURL, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(toStoreObject)
+				}).then(response => response.text());
+
+				if (obj.message.toLowerCase().startsWith("!mod")) {
+					bot.channels.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
+					sendMessageToWebsite(gameObject[gindex].uuid, "I have pingged the Morderators on the discord. One should respond if available.");
+					logBotActions("WEBSITE HELP", "Mod requested on a game");
+				} else if (obj.message.toLowerCase().startsWith("!mordecai")) {
+					bot.channels.get("776894942274125826").send("<@152200419043442688>  | User `"+obj.username+"` has requested you on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
+					sendMessageToWebsite(gameObject[gindex].uuid, "I have pingged Mordecai on the discord. He should respond soon.");
+					logBotActions("WEBSITE HELP", "Mordecai requested on a game");
+				}
+
+				if (obj.message.toLowerCase().includes("help") && !obj.message.toLowerCase().includes("!test") && obj.role == null) {
+					gameObject[gindex].threshold++;
+					console.log(gameObject[gindex].threshold)
+				}
+				if (gameObject[gindex].threshold >= 1 && !gameObject[gindex].public && toStoreObject.username!="NinjaHelp") {
+					fetch(hiddenURL+"?user="+obj.username+"&limit=5&game="+toStoreObject.game, {
+						method: 'GET',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+					}).then(response => response.json())
+						.then((x) => {
+							var out="<@&774839010844999731> | User `"+obj.username+"` has requested help on the private game:\nhttps://surrogate.tv/game/"+gameObject[gindex].shortId+"\nHere are the past 5 (if they exist) messages from them in the chat:\n>>> ";
+							for (let i = 0; i < x.length; i++) {
+								out+=x[i].time+" |\t"+x[i].message+"\n";
+							}
+							bot.channels.get(modBotSpamID).send(out);
+						});
 					logBotActions("WEBSITE HELP", "Help Requested on private game");
-					threshold[gindex]=0;
-				} else if (threshold[gindex] >= 1 && public[gindex]) {
-					bot.channels.get(modBotSpamID).send("<@152200419043442688> | User "+obj.username+" has requested help on the public game https://surrogate.tv/game/"+sid[gindex]+"\n > "+obj.message);
+					gameObject[gindex].threshold=-4;
+				} else if (gameObject[gindex].threshold >= 1 && gameObject[gindex].public && toStoreObject.username!="NinjaHelp") {
+					fetch(hiddenURL+"?user="+obj.username+"&limit=5&game="+toStoreObject.game, {
+						method: 'GET',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+					}).then(response => response.json())
+						.then((x) => {
+							var out="<@&774839010844999731> | User `"+obj.username+"` has requested help on the public game:\nhttps://surrogate.tv/game/"+gameObject[gindex].shortId+"\nHere are the past 5 (if they exist) messages from them in the chat:\n>>> ";
+							for (let i = 0; i < x.length; i++) {
+								out+=x[i].time+" |\t"+x[i].message+"\n";
+							}
+							bot.channels.get(modBotSpamID).send(out);
+						});
 					logBotActions("WEBSITE HELP", "Help Requested on public game");
-					threshold[gindex]=0;
+					gameObject[gindex].threshold=-4;
 				}
 			}
 		}
@@ -1829,10 +1945,12 @@ function connect(){
 
 			times++;
 
-			if(times%6==0){
-				for (let i = 0; i < threshold.length; i++) {
-					if (threshold[i] > 0) {
-						threshold[i]--;
+			if(times%10==0){
+				for (let i = 0; i < gameObject.length; i++) {
+					if (gameObject[i].threshold > 0) {
+						gameObject[i].threshold--;
+					} else if (gameObject[i].threshold < 0) {
+						gameObject[i].threshold++;
 					}
 				}
 				times=0;
@@ -1840,9 +1958,14 @@ function connect(){
 			socket.send("2")
 		}
 	    
-	    setInterval(tick, 10000);
+	    setInterval(tick, 6000);
 }
 
+async function sendMessageToWebsite(gameId, message) {
+  await API.default.post('surrogateApi', '/chatMessage', {
+      body: { gameId: gameId, message: message },
+  });
+}
 
 function getDateObject(timezoneOffset) {
 	const date = new Date();
