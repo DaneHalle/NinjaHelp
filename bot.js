@@ -28,10 +28,14 @@ const kombatTrigger = ["770352589149569024", "707600524727418900"];
 const generalTrigger = ["586955337870082082", "571390705117954049", "571600581936939049", "631391110966804510", "589485632984973332", "571388780058247185", "710104643996352633", "707600524727418900"];
 const sneakTrigger = ["631134966163701761", "662642212789551124", "707600524727418900"];
 const communityTrigger = ["751846589039116360", "751846612937998356", "707600524727418900"];
+const feedbackTrigger = ["782941911127293974", "782942076433727601"];
+const discussionTrigger = ["782942398119542804"];
+const bugTrigger = ["782942236123201590", "782942301248028673"];
 const botSpamID = "710104643996352633";
 const modBotSpamID = "593000239841935362";
 const testChannelID = "707600524727418900";
 const surrogateChannelID = "710104643996352633";
+const feedbackChannelID = [];
 
 var uid=[];
 var sid=[];
@@ -78,7 +82,7 @@ async function announcement(game, image, numImage, channel) {
 									attachment: './gifs/' + image + '/' + image + '_' + rand + '.gif', name: image + '.gif',
 								}],
 							})
-								.then(bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
+								.then(bot.channels.get(channel).send("**NOTE** Notifications for games have been changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
 							logBotActions(null, game + " Pre-Announcement");
 						} else if (startTime - adjustedMinute === 0 ) {
 							let out = at + " **" + game + "** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/" + game.toLowerCase() + "\n";
@@ -87,7 +91,7 @@ async function announcement(game, image, numImage, channel) {
 									attachment: './gifs/' + image + '/' + image + '_' + rand + '.gif', name: image + '.gif',
 								}],
 							})
-								.then(bot.channels.get(channel).send("**NOTE** Notifications for games are being changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
+								.then(bot.channels.get(channel).send("**NOTE** Notifications for games have been changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
 							logBotActions(null, game + " Announcement");
 						}
 					}
@@ -161,7 +165,7 @@ async function newDayCheck() {
 			console.log("Starting a new day\n\n\n\n\n");
 			startingDate=checkDate;
 			if (startingDate.weekday == "Wednesday") {
-				bot.channels.get("668884637694558228").send("<@!120618883219587072> , <@152200419043442688> , and <@161617853819125760> \n Are you good to host SumoBots this weekend for your normal sessions?");
+				bot.channels.get("668884637694558228").send("<@!120618883219587072> and <@152200419043442688> \n Are you good to host SumoBots this weekend for your normal sessions?");
 			}
 			fs.open("./bot_logs/logs_" + startingDate.dateString_MDY_noLead + ".txt", 'a', function (err, file) {
 				if (err) throw err;
@@ -283,10 +287,24 @@ bot.on('raw', async event => {
 bot.on('messageReactionAdd', (reaction, user) => {
 	const emoji = ["Battling", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
 	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
+	const femoji = ['✅'];
+	const frole = ["feedback"];
 	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "745995420617932830") { //CHANGE AFTER GEN
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
 				let i = reaction.message.guild.roles.find(e => e.name === role[o]);
+				reaction.message.guild.member(user).addRole(i).catch(console.error);
+				console.log("Given " + user.tag + " role of \"" + i.name + "\"");
+				logReactActions(user, "Given role of \"" + i.name + "\"");
+			}
+		}
+		console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" gained a reaction from ${user.tag}`);
+		console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
+	}
+	if (user && !user.bot && reaction.message.channel.guild && reaction.message.id === "783756498395725835") { //CHANGE AFTER GEN
+		for (let o in femoji) {
+			if (reaction.emoji.name === femoji[o]) {
+				let i = reaction.message.guild.roles.find(e => e.name === frole[o]);
 				reaction.message.guild.member(user).addRole(i).catch(console.error);
 				console.log("Given " + user.tag + " role of \"" + i.name + "\"");
 				logReactActions(user, "Given role of \"" + i.name + "\"");
@@ -300,10 +318,24 @@ bot.on('messageReactionAdd', (reaction, user) => {
 bot.on('messageReactionRemove', (reaction, user) => {
 	const emoji = ["Battling", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
 	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
+	const femoji = ['✅'];
+	const frole = ["feedback"];
 	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "745995420617932830") { //CHANGE AFTER GEN
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
 				let i = reaction.message.guild.roles.find(e => e.name === role[o]);
+				reaction.message.guild.member(user).removeRole(i).catch(console.error);
+				console.log("Taken " + user.tag + "'s' role of \"" + i.name + "\"");
+				logReactActions(user, "Taken role of \"" + i.name + "\"");
+			}
+		}
+		console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" lost a reaction from ${user.tag}`);
+		console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
+	}
+	if (user && !user.bot && reaction.message.channel.guild && reaction.message.id === "783756498395725835") { //CHANGE AFTER GEN
+		for (let o in femoji) {
+			if (reaction.emoji.name === femoji[o]) {
+				let i = reaction.message.guild.roles.find(e => e.name === frole[o]);
 				reaction.message.guild.member(user).removeRole(i).catch(console.error);
 				console.log("Taken " + user.tag + "'s' role of \"" + i.name + "\"");
 				logReactActions(user, "Taken role of \"" + i.name + "\"");
@@ -427,7 +459,10 @@ bot.on('message', message => {
 	let triggerPinballResponse = false;
 	let triggerCommunityResponse = false;
 	let triggerKombatResponse = false;
-	let maxCheck = Math.max(clawTrigger.length, arcadeTrigger.length, raceTrigger.length, sumoTrigger.length, kartTrigger.length, kombatTrigger.length, generalTrigger.length, sneakTrigger.length, pinballTrigger.length, communityTrigger.length);
+	let triggerFeedbackResponse = false;
+	let triggerDiscussionResponse = false;
+	let triggerBugResposne = false;
+	let maxCheck = Math.max(clawTrigger.length, arcadeTrigger.length, raceTrigger.length, sumoTrigger.length, kartTrigger.length, kombatTrigger.length, generalTrigger.length, sneakTrigger.length, pinballTrigger.length, communityTrigger.length, feedbackTrigger.length, bugTrigger.length, discussionTrigger.length);
 	for (let i = 0; i < maxCheck; i++) {
 		if (clawTrigger[i] != null && clawTrigger[i] === message.channel.id) {
 			triggerClawResponse = true;
@@ -458,6 +493,15 @@ bot.on('message', message => {
 		}
 		if (communityTrigger[i] != null && communityTrigger[i] === message.channel.id) {
 			triggerCommunityResponse = true;
+		}
+		if (feedbackTrigger[i] != null && feedbackTrigger[i] === message.channel.id) {
+			triggerFeedbackResponse = true;
+		}
+		if (bugTrigger[i] != null && bugTrigger[i] === message.channel.id) {
+			triggerBugResposne = true;
+		}
+		if (discussionTrigger[i] != null && discussionTrigger[i] === message.channel.id) {
+			triggerDiscussionResponse = true;
 		}
 	}
 	
@@ -518,6 +562,14 @@ bot.on('message', message => {
 		return;
 	}
 	
+	if (message.member.user.tag === "Mordecai#3257" && message.content.includes("!react")) {
+        message.channel.fetchMessage("783756498395725835")
+          .then(msg => {
+            msg.react('✅');
+          })
+          .catch(console.error);
+	}
+
 	//scraper for getting channel info
 	if (message.member.user.tag === "Mordecai#3257" && message.content.startsWith("!scrape")) {
 		console.log("ID: " + message.channel.id);
@@ -672,7 +724,7 @@ bot.on('message', message => {
 						.addField("`!game`", "Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games")
 						.addField("`!schedule` | `!schedule <GAME>`", "Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified")
 						.addField("`!top` | `!top <GAME> ?month?`", "Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name")
-						.addField("`!mute <USER> <TIME>`", "If <USER> is muted, will unmute them and remove them from the database")
+						.addField("`!mute <USER> <TIME>`", "Will mute the <USER> for <TIME> (See ms library for time options)")
 						.addField("`!unmute <USER>`", "If <USER> is muted, will unmute them and remove them from the database")
 						.addField("`(ab:cd)`", "When you have a time formated as such, it will paste a Timezone conversion link to that time in Finland")
 						.addField("`!name`", "Gives the SumoBots that have names other than their esports team")
@@ -755,39 +807,39 @@ bot.on('message', message => {
 				let url = "https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=";
 				let command = "";
 				let image = "";
-				if (triggerSumoResponse || message.content.toLowerCase().includes("sumobots")) {
+				if (triggerSumoResponse || message.content.toLowerCase() === ("!schedule sumobots")) {
 					url += "sumobots";
 					command = "SumoBots";
 					image = "https://www.surrogate.tv/img/sumo/logo_sumo.png";
-				} else if (triggerKartResponse || message.content.toLowerCase().includes("mariokartlive")) {
+				} else if (triggerKartResponse || message.content.toLowerCase() === ("!schedule mariokartlive")) {
 					url += "mariokartlive";
 					command = "MarioKartLive";
 					image = "https://assets.surrogate.tv/game/7488f823-4fb2-468f-9100-a092a46d4de4/0849495794-Asset22x.png";
-				} else if (triggerKombatResponse || message.content.toLowerCase().includes("robotkombat")) {
+				} else if (triggerKombatResponse || message.content.toLowerCase() === ("!schedule robotkombat")) {
 					url += "robotkombat";
 					command = "RobotKombat";
 					image = "https://assets.surrogate.tv/game/2c93f1fd-9e12-4d5f-bb53-02ad5a72f839/4303884093-logorobotkombat1.png";
-				}  else if (triggerRaceResponse || message.content.toLowerCase().includes("racerealcars143")) {
+				}  else if (triggerRaceResponse || message.content.toLowerCase() === ("!schedule racerealcars143")) {
 					url += "racerealcars143";
 					command = "RaceRealCars143";
 					image = "https://i.imgur.com/XETrUAa.png";
-				} else if ((triggerClawResponse && message.channel.id === "706819836071903275") || message.content.toLowerCase().includes("forceclaw")) {
+				} else if ((triggerClawResponse && message.channel.id === "706819836071903275") || message.content.toLowerCase() === ("!schedule forceclaw")) {
 					url += "forceclaw";
 					command = "ForceClaw";
 					image = "https://assets.surrogate.tv/game/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0/3458917638-48hreventforceclaw-01.png";
-				} else if ((triggerPinballResponse && message.channel.id === "613630308931207198") || message.content.toLowerCase().includes("batman66")) {
+				} else if ((triggerPinballResponse && message.channel.id === "613630308931207198") || message.content.toLowerCase() === ("!schedule batman66")) {
 					url += "batman66";
 					command = "Batman66 Pinball";
 					image = "https://www.surrogate.tv/img/pinball/pinball_logo.png";
-				} else if ((triggerPinballResponse && message.channel.id === "702578486199713872") || message.content.toLowerCase().includes("oktoberfest")) {
+				} else if ((triggerPinballResponse && message.channel.id === "702578486199713872") || message.content.toLowerCase() === ("!schedule oktoberfest")) {
 					url += "oktoberfest";
 					command = "Oktoberfest Pinball";
 					image = "https://www.american-pinball.com/s/i/h/pinslide/oktoberfest/oktoberfest-logo-tap_shadow.png";
-				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase().includes("dice"))) {
+				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase() === ("!schedule dice"))) {
 					url += "dice";
 					command = "Dice Roll";
 					image = "https://assets.surrogate.tv/game/a9b699de-9046-467e-a54c-c30e86262798/1782551745-gamelogo2.png"
-				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase().includes("surrobros"))) {
+				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase() === ("!schedule surrobros"))) {
 					url += "surrobros";
 					command = "SurroBros";
 					image = "https://assets.surrogate.tv/game/0115a55d-3de8-4d32-8964-baf1f073f83f/4466557124-9ab6ccb0-ae34-4380-a3d6-066d31529ec6.png"
@@ -1100,7 +1152,7 @@ bot.on('message', message => {
 				let title = " Current Scores";
 				let command = "";
 				let image = "";
-				if (triggerSumoResponse || message.content.toLowerCase().includes("sumobots")) {
+				if (triggerSumoResponse || message.content.toLowerCase() === ("!top sumobots") || message.content.toLowerCase() === ("!top sumobots month")) {
 					url += "99ca6347-0e10-4465-8fe1-9fee8bc5fb35&order=";
 					command = "SumoBots";
 					if (args[2] != null && args[2] === "month") {
@@ -1118,7 +1170,7 @@ bot.on('message', message => {
 						return;
 					}
 					image = "https://www.surrogate.tv/img/sumo/logo_sumo.png";
-				} else if (triggerKartResponse || message.content.toLowerCase().includes("mariokartlive")) {
+				} else if (triggerKartResponse || message.content.toLowerCase() === ("!top mariokartlive") || message.content.toLowerCase() === ("!top mariokartlive month")) {
 					url += "7488f823-4fb2-468f-9100-a092a46d4de4&order=";
 					command = "MarioKartLive";
 					if (args[2] != null && args[2] === "month") {
@@ -1127,7 +1179,7 @@ bot.on('message', message => {
 						title = " Current Scores of the Month";
 					}
 					image = "https://assets.surrogate.tv/game/7488f823-4fb2-468f-9100-a092a46d4de4/0849495794-Asset22x.png";
-				} else if (triggerKombatResponse || message.content.toLowerCase().includes("robotkombat")) {
+				} else if (triggerKombatResponse || message.content.toLowerCase() === ("!top robotkombat") || message.content.toLowerCase() === ("!top robotkombat month")) {
 					url += "2c93f1fd-9e12-4d5f-bb53-02ad5a72f839&order=";
 					command = "RobotKombat";
 					if (args[2] != null && args[2] === "month") {
@@ -1145,7 +1197,7 @@ bot.on('message', message => {
 						return;
 					}
 					image = "https://assets.surrogate.tv/game/2c93f1fd-9e12-4d5f-bb53-02ad5a72f839/4303884093-logorobotkombat1.png";
-				}  else if (triggerRaceResponse || message.content.toLowerCase().includes("racerealcars143")) {
+				}  else if (triggerRaceResponse || message.content.toLowerCase() === ("!top racerealcars143") || message.content.toLowerCase() === ("!top racerealcars143 month")) {
 					url += "953f2154-9a6e-4602-99c6-265408da6310&order=";
 					command = "RaceRealCars143";
 					if (args[2] != null && args[2] === "month") {
@@ -1154,7 +1206,7 @@ bot.on('message', message => {
 						title = " Current Scores of the Month";
 					}
 					image = "https://i.imgur.com/XETrUAa.png";
-				} else if ((triggerClawResponse && message.channel.id === "706819836071903275") || message.content.toLowerCase().includes("forceclaw")) {
+				} else if ((triggerClawResponse && message.channel.id === "706819836071903275") || message.content.toLowerCase() === ("!top forceclaw") || message.content.toLowerCase() === ("!top forceclaw month")) {
 					url += "ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0&order=";
 					command = "ForceClaw";
 					if (args[2] != null && args[2] === "month") {
@@ -1172,7 +1224,7 @@ bot.on('message', message => {
 						return;
 					}
 					image = "https://assets.surrogate.tv/game/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0/3458917638-48hreventforceclaw-01.png";
-				} else if ((triggerPinballResponse && message.channel.id === "702578486199713872") || message.content.toLowerCase().includes("oktoberfest")) {
+				} else if ((triggerPinballResponse && message.channel.id === "702578486199713872") || message.content.toLowerCase() === ("!top oktoberfest") || message.content.toLowerCase() === ("!top oktoberfest month")) {
 					//IMPLEMENT TAKING FROM GOOGLE FORM
 					message.delete();
 					let today = getDateObject(0);
@@ -1207,7 +1259,7 @@ bot.on('message', message => {
 					}
 					logBotActions(message, "!top oktoberfest");
 					return;
-				} else if ((triggerPinballResponse && message.channel.id === "613630308931207198") || message.content.toLowerCase().includes("batman66")) {
+				} else if ((triggerPinballResponse && message.channel.id === "613630308931207198") || message.content.toLowerCase() === ("!top batman66") || message.content.toLowerCase() === ("!top batman66 month")) {
 					url += "592ac917-14d2-481a-9d37-3b840ad46b19&order=";
 					command = "Batman66 Pinball";
 					if (args[2] != null && args[2] === "month") {
@@ -1700,10 +1752,10 @@ bot.on('message', message => {
 		}
 		return;
 	}
-	detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerKartResponse, triggerKombatResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse);
+	detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerKartResponse, triggerKombatResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse, triggerFeedbackResponse, triggerBugResposne, triggerDiscussionResponse);
 });
 
-function detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerKartResponse, triggerKombatResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse) {
+function detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerKartResponse, triggerKombatResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse, triggerFeedbackResponse, triggerBugResposne, triggerDiscussionResponse) {
 	//"Refill the machine" for Claw
 	if (triggerClawResponse && ((message.content.toLowerCase().includes("filled") || message.content.toLowerCase().includes("refill") || message.content.toLowerCase().includes("restock")) && !message.content.includes("www.")) && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers"))))) {
 		const date = getDateObject(TIMEZONE_OFFSET_FINLAND);
@@ -1724,6 +1776,18 @@ function detection(message, triggerPinballResponse, triggerClawResponse, trigger
 			.then(() => message.react('🅾'))
 			.catch(() => console.error('One of the emojis failed to react.'));
 		logBotActions(message, "Reacted");
+	}
+
+	if (triggerFeedbackResponse) {
+		message.react('👍')
+			.then(() => message.react('👎'))
+			.catch(() => console.error('One of the emojis failed to react.'));
+	}
+
+	if (triggerBugResposne) {
+		message.react('🟥')
+			.then(() => message.react('🟧'))
+			.catch(() => console.error('One of the emojis failed to react.'));
 	}
 }
 
@@ -1875,35 +1939,42 @@ function connect(){
 
 				if (obj.message.toLowerCase().startsWith("!mod")) {
 					bot.channels.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
-					sendMessageToWebsite(gameObject[gindex].uuid, "I have pingged the Morderators on the discord. One should respond if available.");
+					sendMessageToWebsite(gameObject[gindex].uuid, "I have pinged the Morderators on the discord. One should respond if available.");
 					logBotActions("WEBSITE HELP", "Mod requested on a game");
 				} else if (obj.message.toLowerCase().startsWith("!mordecai")) {
-					bot.channels.get("776894942274125826").send("<@152200419043442688>  | User `"+obj.username+"` has requested you on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
-					sendMessageToWebsite(gameObject[gindex].uuid, "I have pingged Mordecai on the discord. He should respond soon.");
-					logBotActions("WEBSITE HELP", "Mordecai requested on a game");
+					var date = new Date();
+					var hrs = date.getHours();
+					if (hrs >= 23 || hrs <= 8) {
+						sendMessageToWebsite(gameObject[gindex].uuid, "Mordecai is currently sleeping. Please refrain from requesting him between 23:00-08:00 EST.");
+						logBotActions("WEBSITE HELP", "Mordecai requested on a game during off hours");
+					} else {
+						bot.channels.get("776894942274125826").send("<@152200419043442688>  | User `"+obj.username+"` has requested you on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
+						sendMessageToWebsite(gameObject[gindex].uuid, "I have pinged Mordecai on the discord. He should respond soon.");
+						logBotActions("WEBSITE HELP", "Mordecai requested on a game");
+					}
 				}
 
-				if (obj.message.toLowerCase().includes("help") && !obj.message.toLowerCase().includes("!test") && obj.role == null) {
+				if (obj.message.toLowerCase().includes("help") && !obj.message.toLowerCase().includes("helping") && !obj.message.toLowerCase().includes("!test") && !obj.message.toLowerCase().includes("!help") && obj.role == null) {
 					gameObject[gindex].threshold++;
 					console.log(gameObject[gindex].threshold)
 				}
 				if (gameObject[gindex].threshold >= 1 && !gameObject[gindex].public && toStoreObject.username!="NinjaHelp") {
-					fetch(hiddenURL+"?user="+obj.username+"&limit=5&game="+toStoreObject.game, {
-						method: 'GET',
-						headers: {
-							'Content-Type': 'application/json'
-						},
-					}).then(response => response.json())
-						.then((x) => {
-							var out="<@&774839010844999731> | User `"+obj.username+"` has requested help on the private game:\nhttps://surrogate.tv/game/"+gameObject[gindex].shortId+"\nHere are the past 5 (if they exist) messages from them in the chat:\n>>> ";
-							for (let i = 0; i < x.length; i++) {
-								out+=x[i].time+" |\t"+x[i].message+"\n";
-							}
-							bot.channels.get(modBotSpamID).send(out);
-						});
-					logBotActions("WEBSITE HELP", "Help Requested on private game");
+					// fetch(hiddenURL+"?user="+obj.username+"&limit=5&game="+toStoreObject.game, {
+					// 	method: 'GET',
+					// 	headers: {
+					// 		'Content-Type': 'application/json'
+					// 	},
+					// }).then(response => response.json())
+					// 	.then((x) => {
+					// 		var out="<@&774839010844999731> | User `"+obj.username+"` has requested help on the private game:\nhttps://surrogate.tv/game/"+gameObject[gindex].shortId+"\nHere are the past 5 (if they exist) messages from them in the chat:\n>>> ";
+					// 		for (let i = 0; i < x.length; i++) {
+					// 			out+=x[i].time+" |\t"+x[i].message+"\n";
+					// 		}
+					// 		bot.channels.get(modBotSpamID).send(out);
+					// 	});
+					// logBotActions("WEBSITE HELP", "Help Requested on private game");
 					gameObject[gindex].threshold=-4;
-				} else if (gameObject[gindex].threshold >= 1 && gameObject[gindex].public && toStoreObject.username!="NinjaHelp") {
+				} else if (gameObject[gindex].threshold >= 2 && gameObject[gindex].public && toStoreObject.username!="NinjaHelp") {
 					fetch(hiddenURL+"?user="+obj.username+"&limit=5&game="+toStoreObject.game, {
 						method: 'GET',
 						headers: {
