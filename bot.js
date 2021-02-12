@@ -164,8 +164,11 @@ async function newDayCheck() {
 			});
 			console.log("Starting a new day\n\n\n\n\n");
 			startingDate=checkDate;
-			if (startingDate.weekday == "Wednesday") {
-				bot.channels.get("668884637694558228").send("<@!120618883219587072> and <@152200419043442688> \n Are you good to host SumoBots this weekend for your normal sessions?");
+			if (startingDate.weekday == "Monday") {
+				bot.channels.get("800698068084457493").send("<@&800698382355660801> \n Are you good to host Mario Kart Live this week for your normal sessions?");
+			}
+			if (startingDate.weekday == "Friday") {
+				bot.channels.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
 			}
 			fs.open("./bot_logs/logs_" + startingDate.dateString_MDY_noLead + ".txt", 'a', function (err, file) {
 				if (err) throw err;
@@ -439,6 +442,11 @@ bot.once('ready', async () => {
 
 bot.on('message', message => {
 	if (message.author.bot || message.author.id === "381655612335063040" || message.guild.id == null || !((message.guild.id === ("707047722208854098") || message.guild.id === ("664556796576268298") || message.guild.id === ("571388780058247179")))) {
+		if (message.guild.id === ("800697435986198579")) {
+			if (message.content.substring(0, 1) === '!') {
+				message.reply("No");
+			}
+		}
 		return;
 	}
 	
@@ -988,7 +996,7 @@ bot.on('message', message => {
 							let title = "Schedule for **" + command + "**";
 							command = command.split(' ');
 							command = command.splice(0);
-							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
+							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.find(r => r.name.toLowerCase() === "game host"))) {
 								message.delete();
 								const embed = new Discord.RichEmbed()
 									.setTitle("__" + title + "__")
@@ -1157,7 +1165,7 @@ bot.on('message', message => {
 					command = "SumoBots";
 					if (args[2] != null && args[2] === "month") {
 						if (message.channel.id !== botSpamID) {
-							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
+							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.find(r => r.name.toLowerCase() === "game host"))) {
 								bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
 								message.delete();
 							} else {
@@ -1184,7 +1192,7 @@ bot.on('message', message => {
 					command = "RobotKombat";
 					if (args[2] != null && args[2] === "month") {
 						if (message.channel.id !== botSpamID) {
-							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
+							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.find(r => r.name.toLowerCase() === "game host"))) {
 								bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
 								message.delete();
 							} else {
@@ -1211,7 +1219,7 @@ bot.on('message', message => {
 					command = "ForceClaw";
 					if (args[2] != null && args[2] === "month") {
 						if (message.channel.id !== botSpamID) {
-							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
+							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.find(r => r.name.toLowerCase() === "game host"))) {
 								bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
 								message.delete();
 							} else {
@@ -1336,7 +1344,7 @@ bot.on('message', message => {
 									scores += "\n";
 								}
 							}
-							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
+							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.find(r => r.name.toLowerCase() === "game host"))) {
 								message.delete();
 								
 								const embed = new Discord.RichEmbed()
@@ -1695,7 +1703,11 @@ bot.on('message', message => {
 							}).then(response => response.json())
 								.then((x) => {
 									if (x.result[0] == null) {
-										bot.channels.get(botSpamID).send("I cannot find that username on the website. ");
+										if (message.channel.id === botSpamID){
+											bot.channels.get(botSpamID).send("I cannot find that username on the website. ");
+										} else if (message.channel.id === modBotSpamID){
+											bot.channels.get(modBotSpamID).send("I cannot find that username on the website. ");
+										}
 									} else {
 										let embed = new Discord.RichEmbed()
 											.setTitle("User Information")
@@ -1732,7 +1744,11 @@ bot.on('message', message => {
 											embed.addField("The STV account is connected to the discord to the following user", "<@!" + inHere[0] + ">");
 										}
 										
-										bot.channels.get(botSpamID).send({embed});
+										if (message.channel.id === botSpamID){
+											bot.channels.get(botSpamID).send({embed});
+										} else if (message.channel.id === modBotSpamID){
+											bot.channels.get(modBotSpamID).send({embed});
+										}
 									}
 								});
 							
