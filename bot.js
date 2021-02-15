@@ -18,29 +18,24 @@ bot.login(TOKEN);
 const TIMEZONE_OFFSET_GMT = 5;
 const TIMEZONE_OFFSET_FINLAND = 7;
 
-const clawTrigger = ["706819836071903275", "662301446036783108", "707600524727418900"];
-const pinballTrigger = ["613630308931207198", "702578486199713872", "707600524727418900"];
-const arcadeTrigger = clawTrigger.concat(pinballTrigger);
+const battlingTrigger = ["627919045420646401", "707600524727418900"];
+const pinballTrigger = ["613630308931207198", "707600524727418900"];
 const raceTrigger = ["589484542214012963", "707600524727418900"];
-const sumoTrigger = ["627919045420646401", "707600524727418900"];
-const kartTrigger = ["768112471860576297", "707600524727418900"];
-const kombatTrigger = ["770352589149569024", "707600524727418900"];
-const generalTrigger = ["586955337870082082", "571390705117954049", "571600581936939049", "631391110966804510", "589485632984973332", "571388780058247185", "710104643996352633", "707600524727418900"];
-const sneakTrigger = ["631134966163701761", "662642212789551124", "707600524727418900"];
-const communityTrigger = ["751846589039116360", "751846612937998356", "707600524727418900"];
+const clawTrigger = ["7797123960092885052", "707600524727418900"];
+const exploreTrigger = ["745957132049973291", "707600524727418900"];
+const gameTrigger = ["768112471860576297", "707600524727418900"];
+const wePlayTrigger = ["790994604316164096", "707600524727418900"];
+const otherTrigger = ["751846589039116360", "707600524727418900"];
+
+const generalTrigger = ["586955337870082082", "795319689202368542", "571390705117954049", "733026266881589358", "571600581936939049", "589485632984973332", "571388780058247185", "707600524727418900"];
+
 const feedbackTrigger = ["782941911127293974", "782942076433727601"];
 const discussionTrigger = ["782942398119542804"];
-const bugTrigger = ["782942236123201590", "782942301248028673"];
+const issuesTrigger = ["782942236123201590", "782942301248028673"];
 const botSpamID = "710104643996352633";
 const modBotSpamID = "593000239841935362";
 const testChannelID = "707600524727418900";
-const surrogateChannelID = "710104643996352633";
-const feedbackChannelID = [];
 
-var uid=[];
-var sid=[];
-var public=[];
-var threshold=[];
 var times=0;
 
 var gameObject=[];
@@ -77,21 +72,21 @@ async function announcement(game, image, numImage, channel) {
 						// console.log(startTime-adjustedMinute)
 						if (startTime - adjustedMinute === 15 ) {
 							let out = at + " **" + game + "** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/" + game.toLowerCase() + "\n";
-							bot.channels.get(channel).send(out, {
+							bot.channels.cache.get(channel).send(out, {
 								files: [{
 									attachment: './gifs/' + image + '/' + image + '_' + rand + '.gif', name: image + '.gif',
 								}],
 							})
-								.then(bot.channels.get(channel).send("**NOTE** Notifications for games have been changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
+								.then(bot.channels.cache.get(channel).send("**NOTE** Notifications for games have been changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
 							logBotActions(null, game + " Pre-Announcement");
 						} else if (startTime - adjustedMinute === 0 ) {
 							let out = at + " **" + game + "** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/" + game.toLowerCase() + "\n";
-							bot.channels.get(channel).send(out, {
+							bot.channels.cache.get(channel).send(out, {
 								files: [{
 									attachment: './gifs/' + image + '/' + image + '_' + rand + '.gif', name: image + '.gif',
 								}],
 							})
-								.then(bot.channels.get(channel).send("**NOTE** Notifications for games have been changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
+								.then(bot.channels.cache.get(channel).send("**NOTE** Notifications for games have been changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
 							logBotActions(null, game + " Announcement");
 						}
 					}
@@ -132,6 +127,13 @@ function logBotActions(message, action) {
 			if (err) throw err;
 		});
 
+	} else if (message === "RIGGED MACHINE") {
+		let out = date.timeString + " EST | RIGGED MACHINE | " + action;
+		console.log(out);
+		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", out + "\n", function (err) {
+			if (err) throw err;
+		});
+
 	} else {
 		let out = date.timeString + " EST | " + message.member.user.tag + " | " + action;
 		console.log(date.timeString + " EST | " + message.member.user.tag + " | " + action);
@@ -165,19 +167,15 @@ async function newDayCheck() {
 			console.log("Starting a new day\n\n\n\n\n");
 			startingDate=checkDate;
 			if (startingDate.weekday == "Monday") {
-				bot.channels.get("800698068084457493").send("<@&800698382355660801> \n Are you good to host Mario Kart Live this week for your normal sessions?");
+				bot.channels.cache.get("800698068084457493").send("<@&800698382355660801> \n Are you good to host Mario Kart Live this week for your normal sessions?");
 			}
-			if (startingDate.weekday == "Friday") {
-				bot.channels.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
+			if (startingDate.weekday == "Thursday") {
+				bot.channels.cache.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
 			}
 			fs.open("./bot_logs/logs_" + startingDate.dateString_MDY_noLead + ".txt", 'a', function (err, file) {
 				if (err) throw err;
 			});
 
-			uid=[];
-			sid=[];
-			public=[];
-			threshold=[];
 			gameObject=[];
 
 			fs.readFile("./database/gameIdShort.dat", 'ascii', function (err, file) {
@@ -199,11 +197,9 @@ async function newDayCheck() {
 										"shortId": x.result.shortId,
 										"public": x.result.isVisible,
 										"threshold": 0,
+										"category": x.result.categoryId,
 									});
-									// uid.push(dat[0]);
-									// sid.push(x.result.shortId);
-									// public.push(x.result.isVisible);
-									// threshold.push(0);
+
 								});
 						}
 					}
@@ -216,10 +212,10 @@ async function newDayCheck() {
 }
 
 async function checkToUnmute() {
-	let testServer = bot.guilds.get("707047722208854098");
-	let bromBotServer = bot.guilds.get("664556796576268298");
-	let surrogateServer = bot.guilds.get("571388780058247179");
-	let role = surrogateServer.roles.find(r => r.name === "muted");
+	let testServer = bot.guilds.cache.get("707047722208854098");
+	let bromBotServer = bot.guilds.cache.get("664556796576268298");
+	let surrogateServer = bot.guilds.cache.get("571388780058247179");
+	let role = surrogateServer.roles.cache.find(r => r.name === "muted");
 	while (true) {
 		let date = getDateObject(0);
 		let tempMin = date.minute + ((date.hour + (date.day * 24)) * 60);
@@ -240,8 +236,8 @@ async function checkToUnmute() {
 								surrogateServer.members.forEach(u => {
 									if (!u.user.bot) {
 										if (remove[0] === u.user.id) {
-											u.removeRole(role.id);
-											bot.channels.get(modBotSpamID).send(`<@${u.user.id}> has been unmuted!`);
+											u.roles.remove(role.id);
+											bot.channels.cache.get(modBotSpamID).send(`<@${u.user.id}> has been unmuted!`);
 											logBotActions("AUTO UNMUTE", u.user.tag + " unmuted automatically");
 											success = true;
 										}
@@ -275,77 +271,82 @@ const events = {
 	MESSAGE_REACTION_ADD: 'messageReactionAdd', MESSAGE_REACTION_REMOVE: 'messageReactionRemove',
 };
 
-bot.on('raw', async event => {
-	if (!events.hasOwnProperty(event.t)) return;
-	const {d: data} = event;
-	const user = bot.users.get(data.user_id);
-	const channel = bot.channels.get(data.channel_id) || await user.createDM();
-	if (channel.messages.has(data.message_id)) return;
-	const message = await channel.fetchMessage(data.message_id);
-	const emojiKey = (data.emoji.id) ? `${data.emoji.name}:${data.emoji.id}` : data.emoji.name;
-	const reaction = message.reactions.get(emojiKey);
-	bot.emit(events[event.t], reaction, user);
+bot.on('raw', packet => {
+    if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
+    const channel = bot.channels.cache.get(packet.d.channel_id);
+    if (channel.messages.cache.has(packet.d.message_id)) return;
+    channel.messages.fetch(packet.d.message_id).then(message => {
+        const emoji = packet.d.emoji.id ? `${packet.d.emoji.name}:${packet.d.emoji.id}` : packet.d.emoji.name;
+        const reaction = message.reactions.cache.get(emoji);
+        if (reaction) reaction.users.set(packet.d.user_id, bot.users.cache.get(packet.d.user_id));
+        if (packet.t === 'MESSAGE_REACTION_ADD') {
+            bot.emit('messageReactionAdd', reaction, bot.users.cache.get(packet.d.user_id));
+        }
+        if (packet.t === 'MESSAGE_REACTION_REMOVE') {
+            bot.emit('messageReactionRemove', reaction, bot.users.cache.get(packet.d.user_id));
+        }
+    });
 });
 
-bot.on('messageReactionAdd', (reaction, user) => {
-	const emoji = ["Battling", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
-	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
+bot.on('messageReactionAdd', async (reaction, user) => {
+	const emoji = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents"];
+	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents"];
 	const femoji = ['✅'];
 	const frole = ["feedback"];
-	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "745995420617932830") { //CHANGE AFTER GEN
+	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "810991453944807445") { //CHANGE AFTER GEN
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
-				let i = reaction.message.guild.roles.find(e => e.name === role[o]);
-				reaction.message.guild.member(user).addRole(i).catch(console.error);
+				let i = reaction.message.guild.roles.cache.find(e => e.name === role[o]);
+				await reaction.message.guild.member(user).roles.add(i).catch(console.error);
 				console.log("Given " + user.tag + " role of \"" + i.name + "\"");
 				logReactActions(user, "Given role of \"" + i.name + "\"");
 			}
 		}
-		console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" gained a reaction from ${user.tag}`);
-		console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
+		// console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" gained a reaction from ${user.tag}`);
+		// console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
 	}
 	if (user && !user.bot && reaction.message.channel.guild && reaction.message.id === "783756498395725835") { //CHANGE AFTER GEN
 		for (let o in femoji) {
 			if (reaction.emoji.name === femoji[o]) {
-				let i = reaction.message.guild.roles.find(e => e.name === frole[o]);
-				reaction.message.guild.member(user).addRole(i).catch(console.error);
+				let i = reaction.message.guild.roles.cache.find(e => e.name === frole[o]);
+				await reaction.message.guild.member(user).roles.add(i).catch(console.error);
 				console.log("Given " + user.tag + " role of \"" + i.name + "\"");
 				logReactActions(user, "Given role of \"" + i.name + "\"");
 			}
 		}
-		console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" gained a reaction from ${user.tag}`);
-		console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
+		// console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" gained a reaction from ${user.tag}`);
+		// console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
 	}
 });
 
-bot.on('messageReactionRemove', (reaction, user) => {
-	const emoji = ["Battling", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
-	const role = ["SumoBots", "RRC", "Pinball", "ClawGames", "Experiences", "GameConsoles", "Other"];
+bot.on('messageReactionRemove', async (reaction, user) => {
+	const emoji = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents"];
+	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents"];
 	const femoji = ['✅'];
 	const frole = ["feedback"];
-	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "745995420617932830") { //CHANGE AFTER GEN
+	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "810991453944807445") { //CHANGE AFTER GEN
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
-				let i = reaction.message.guild.roles.find(e => e.name === role[o]);
-				reaction.message.guild.member(user).removeRole(i).catch(console.error);
+				let i = reaction.message.guild.roles.cache.find(e => e.name === role[o]);
+				await reaction.message.guild.member(user).roles.remove(i).catch(console.error);
 				console.log("Taken " + user.tag + "'s' role of \"" + i.name + "\"");
 				logReactActions(user, "Taken role of \"" + i.name + "\"");
 			}
 		}
-		console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" lost a reaction from ${user.tag}`);
-		console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
+		// console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" lost a reaction from ${user.tag}`);
+		// console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
 	}
 	if (user && !user.bot && reaction.message.channel.guild && reaction.message.id === "783756498395725835") { //CHANGE AFTER GEN
 		for (let o in femoji) {
 			if (reaction.emoji.name === femoji[o]) {
-				let i = reaction.message.guild.roles.find(e => e.name === frole[o]);
-				reaction.message.guild.member(user).removeRole(i).catch(console.error);
+				let i = reaction.message.guild.roles.cache.find(e => e.name === frole[o]);
+				await reaction.message.guild.member(user).roles.remove(i).catch(console.error);
 				console.log("Taken " + user.tag + "'s' role of \"" + i.name + "\"");
 				logReactActions(user, "Taken role of \"" + i.name + "\"");
 			}
 		}
-		console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" lost a reaction from ${user.tag}`);
-		console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
+		// console.log(`${reaction.message.author.tag}'s message "${reaction.message.content}" lost a reaction from ${user.tag}`);
+		// console.log(`${reaction.count} user(s) have given the same reaction to this message!`);
 	}
 });
 
@@ -378,7 +379,8 @@ bot.once('ready', async () => {
 		for (let i = 0; i < totalData.length; i++) {
 			if (totalData[i].length != 0) {
 				let dat = totalData[i].split("\r")[0].split("|");
-				if (!uid.includes(dat[0])) {
+				let gid = gameObject.findIndex(z => z.uuid === dat[0]);
+				if (gid == -1) {
 					url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/"+dat[0];
 					let {list} = fetch(url, {
 						method: 'GET', headers: {
@@ -391,11 +393,8 @@ bot.once('ready', async () => {
 								"shortId": x.result.shortId,
 								"public": x.result.isVisible,
 								"threshold": 0,
+								"category": x.result.categoryId,
 							});
-							uid.push(dat[0]);
-							sid.push(x.result.shortId);
-							public.push(x.result.isVisible);
-							threshold.push(0);
 						});
 				}
 			}
@@ -450,63 +449,59 @@ bot.on('message', message => {
 		return;
 	}
 	
-	let testServer = bot.guilds.get("707047722208854098");
-	let broomBotServer = bot.guilds.get("664556796576268298");
-	let surrogateServer = bot.guilds.get("571388780058247179");
+	let testServer = bot.guilds.cache.get("707047722208854098");
+	let broomBotServer = bot.guilds.cache.get("664556796576268298");
+	let surrogateServer = bot.guilds.cache.get("571388780058247179");
 	
 	checkLevel(message);
-	
+
 	//Setup triggers for channels
-	let triggerClawResponse = false;
-	let triggerArcadeResponse = false;
-	let triggerRaceResponse = false;
-	let triggerSumoResponse = false;
-	let triggerKartResponse = false;
-	let triggerGeneralResponse = false;
-	let triggerSneakResponse = false;
+	let triggerBattlingResponse = false;
 	let triggerPinballResponse = false;
-	let triggerCommunityResponse = false;
-	let triggerKombatResponse = false;
+	let triggerRaceResponse = false;
+	let triggerClawResponse = false;
+	let triggerExploreResponse = false;
+	let triggerGameResponse = false;
+	let triggerWePlayResponse = false;
+	let triggerOtherResponse  = false;
+	let triggerGeneralResponse = false;
 	let triggerFeedbackResponse = false;
 	let triggerDiscussionResponse = false;
-	let triggerBugResposne = false;
-	let maxCheck = Math.max(clawTrigger.length, arcadeTrigger.length, raceTrigger.length, sumoTrigger.length, kartTrigger.length, kombatTrigger.length, generalTrigger.length, sneakTrigger.length, pinballTrigger.length, communityTrigger.length, feedbackTrigger.length, bugTrigger.length, discussionTrigger.length);
+	let triggerIssuesResposne = false;
+	let maxCheck = Math.max(battlingTrigger.length, pinballTrigger.length, raceTrigger.length, clawTrigger.length, exploreTrigger.length, gameTrigger.length, wePlayTrigger.length, otherTrigger.length, generalTrigger.length, feedbackTrigger.length, discussionTrigger.length, issuesTrigger.length);
 	for (let i = 0; i < maxCheck; i++) {
-		if (clawTrigger[i] != null && clawTrigger[i] === message.channel.id) {
-			triggerClawResponse = true;
+		if (battlingTrigger[i] != null && battlingTrigger[i] === message.channel.id) {
+			triggerBattlingResponse = true;
 		}
 		if (pinballTrigger[i] != null && pinballTrigger[i] === message.channel.id) {
 			triggerPinballResponse = true;
 		}
-		if (arcadeTrigger[i] != null && arcadeTrigger[i] === message.channel.id) {
-			triggerArcadeResponse = true;
-		}
 		if (raceTrigger[i] && raceTrigger[i] === message.channel.id) {
 			triggerRaceResponse = true;
 		}
-		if (sumoTrigger[i] != null && sumoTrigger[i] === message.channel.id) {
-			triggerSumoResponse = true;
+		if (clawTrigger[i] != null && clawTrigger[i] === message.channel.id) {
+			triggerClawResponse = true;
 		}
-		if (kartTrigger[i] != null && kartTrigger[i] === message.channel.id) {
-			triggerKartResponse = true;
+		if (exploreTrigger[i] != null && exploreTrigger[i] === message.channel.id) {
+			triggerExploreResponse = true;
 		}
-		if (kombatTrigger[i] != null && kombatTrigger[i] === message.channel.id) {
-			triggerKombatResponse = true;
+		if (gameTrigger[i] != null && gameTrigger[i] === message.channel.id) {
+			triggerGameResponse = true;
+		}
+		if (wePlayTrigger[i] != null && wePlayTrigger[i] === message.channel.id) {
+			triggerWePlayResponse = true;
+		}
+		if (otherTrigger[i] != null && otherTrigger[i] === message.channel.id) {
+			triggerOtherResponse = true;
 		}
 		if (generalTrigger[i] != null && generalTrigger[i] === message.channel.id) {
 			triggerGeneralResponse = true;
 		}
-		if (sneakTrigger[i] != null && sneakTrigger[i] === message.channel.id) {
-			triggerSneakResponse = true;
-		}
-		if (communityTrigger[i] != null && communityTrigger[i] === message.channel.id) {
-			triggerCommunityResponse = true;
-		}
 		if (feedbackTrigger[i] != null && feedbackTrigger[i] === message.channel.id) {
 			triggerFeedbackResponse = true;
 		}
-		if (bugTrigger[i] != null && bugTrigger[i] === message.channel.id) {
-			triggerBugResposne = true;
+		if (issuesTrigger[i] != null && issuesTrigger[i] === message.channel.id) {
+			triggerIssuesResposne = true;
 		}
 		if (discussionTrigger[i] != null && discussionTrigger[i] === message.channel.id) {
 			triggerDiscussionResponse = true;
@@ -519,6 +514,9 @@ bot.on('message', message => {
 		
 		let args = message.content.substring(1).split(' ');
 		let cmd = args[0].toLowerCase();
+
+
+		// bot.channels.cache.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
 		
 		return;
 	}
@@ -526,41 +524,50 @@ bot.on('message', message => {
 	if (message.member.user.tag === "Mordecai#3257" && message.content.includes("!gen")) {
 		message.delete();
 		
-		const sumo = bot.emojis.get("744962246848807002").toString();
-		const rrc = bot.emojis.get("744960028427157565").toString();
-		const pin = bot.emojis.get("744965333151907970").toString();
-		const claw = bot.emojis.get("744963655443021846").toString();
-		const experience = bot.emojis.get("745993436620128326").toString();
-		const consoles = bot.emojis.get("770308599045029889").toString();
-		const other = bot.emojis.get("770308616800043048").toString();
+		const battling = bot.emojis.cache.get("744962246848807002").toString();
+		const pinball = bot.emojis.cache.get("810972920867717190").toString();
+		const racing = bot.emojis.cache.get("744960028427157565").toString();
+		const claw = bot.emojis.cache.get("744963655443021846").toString();
+		const explore = bot.emojis.cache.get("810965118753570817").toString();
+		const consoles = bot.emojis.cache.get("810968692652507167").toString();
+		const wePlay = bot.emojis.cache.get("810959560968896564").toString();
+		const other = bot.emojis.cache.get("810972965247516722").toString();
+		const specialEvent = bot.emojis.cache.get("810967907193847860").toString();
 		
-		const embed = new Discord.RichEmbed()
+		const embed = new Discord.MessageEmbed()
 			.setTitle("Notification Subsciption")
 			.setColor(0x220e41)
 			.setDescription("React on this post to receive a role which will enable you to receive notifications about a specific game!")
-			.addField(sumo + " SumoBots " + sumo, "Get notified of any SumoBots news and when the game is about to go live.")
-			.addField(rrc + " RaceRealCars " + rrc, "Get notified of any RRC news and when the game is about to go live.")
-			.addField(pin + " Pinball Games " + pin, "Get notified of any Pinball news and when a game goes offline or online for maitenance. Recieve information about tournaments. ")
+			.addField(battling + " Battling Games " + battling, "Get notified of any Battling game news and when SumoBots is about to go live.")
+			.addField(pinball + " Pinball Games " + pinball, "Get notified of any Pinball game news and when a game goes offline or online for maitenance. Recieve information about tournaments. ")
+			.addField(racing + " Racing Games " + racing, "Get notified of any Racing game news and when RRC143 is about to go live.")
 			.addField(claw + " Claw Games " + claw, "Get notified of any Claw Game news or related events.")
-			.addField(experience + " Experiences " + experience, "Get notified of any special experiences happening.")
-			.addField(consoles + " Game Consoles " + consoles, "Get notified of any Game Console news and when games are about to go live.")
-			.addField(other + " Other " + other, "Get notified of anything of games and experiences in the Other category")
+			.addField(explore + " Explore Games " + explore, "Get notified of any Explore game news or related events.")
+			.addField(consoles + " Game Console Games " + consoles, "Get notified of any Game Console game news and when MarioKartLive about to go live.")
+			.addField(wePlay + " We Play Games " + wePlay, "Get notified of any We Play game news or related events.")
+			.addField(other + " Other Games " + other, "Get notified of any Other game news.")
+			.addField(specialEvent + " Special Events " + specialEvent, "Get notified of any Special Events happening within the community.")
 			.addField("All of these fields will also be notified of any behind the scenes related content through this way for a given game.", "⠀")
 			.setFooter("To disable notification, un-react. If it appears that you haven't reacted, just react and un-react to disable them.");
 		
-		// bot.channels.get("593000239841935362").send({embed}).then(sentEmbed => {
+		// bot.channels.cache.get("745097595692515380").send({embed}).then(sentEmbed => {
 		//     sentEmbed.react("744962246848807002")
+		//         .then(() => sentEmbed.react("810972920867717190"))
 		//         .then(() => sentEmbed.react("744960028427157565"))
-		//         .then(() => sentEmbed.react("744965333151907970"))
 		//         .then(() => sentEmbed.react("744963655443021846"))
-		//         .then(() => sentEmbed.react("745993436620128326"));
+		//         .then(() => sentEmbed.react("810965118753570817"))
+		//         .then(() => sentEmbed.react("810968692652507167"))
+		//         .then(() => sentEmbed.react("810959560968896564"))
+		//         .then(() => sentEmbed.react("810972965247516722")
+		//         .then(() => sentEmbed.react("810967907193847860")));
 		// });
 
-        message.channel.fetchMessage("745995420617932830")
+        bot.channels.cache.get("745097595692515380").messages.fetch("810991453944807445")
           .then(msg => {
             msg.edit(embed).then(sentEmbed => {
-            	sentEmbed.react("770308599045029889")
-            		.then(() => sentEmbed.react("770308616800043048"));
+            	// console.log(sentEmbed)
+            	sentEmbed.react("810967907193847860");
+            	// 	.then(() => sentEmbed.react("770308616800043048"));
             });
           })
           .catch(console.error);
@@ -571,7 +578,7 @@ bot.on('message', message => {
 	}
 	
 	if (message.member.user.tag === "Mordecai#3257" && message.content.includes("!react")) {
-        message.channel.fetchMessage("783756498395725835")
+        message.channel.messages.fetch("783756498395725835")
           .then(msg => {
             msg.react('✅');
           })
@@ -603,7 +610,7 @@ bot.on('message', message => {
 	}
 	
 	//(12:34) command
-	if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
+	if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team"))) {
 		let detectColon = (message.content.includes(":"));
 		let detectLeft = "";
 		let detectRight = "";
@@ -672,9 +679,9 @@ bot.on('message', message => {
 					if (isNaN(args[1].substring(0, args[1].indexOf("d"))) || isNaN(args[1].substring(args[1].indexOf("d") + 1)) || args[1].substring(0, args[1].indexOf("d")).toLowerCase().includes("e") || args[1].substring(args[1].indexOf("d") + 1).toLowerCase().includes("e") || args[1].substring(0, args[1].indexOf("d")) > 2000000000 || args[1].substring(args[1].indexOf("d") + 1) > 2000000000) {
 						if (message.channel.id !== botSpamID) {
 							message.delete();
-							bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n\tError: Invalid format");
+							bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n\tError: Invalid format");
 						} else {
-							bot.channels.get(botSpamID).send("\tError: Invalid format");
+							bot.channels.cache.get(botSpamID).send("\tError: Invalid format");
 						}
 						logBotActions(message, "!roll error");
 					} else {
@@ -684,9 +691,9 @@ bot.on('message', message => {
 							if (output > 2000000000) {
 								if (message.channel.id !== botSpamID) {
 									message.delete();
-									bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThat was too many roles, try a smaller number!");
+									bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThat was too many roles, try a smaller number!");
 								} else {
-									bot.channels.get(botSpamID).send("That was too many roles, try a smaller number!");
+									bot.channels.cache.get(botSpamID).send("That was too many roles, try a smaller number!");
 								}
 								logBotActions(message, "!roll xdy error");
 								return;
@@ -694,42 +701,43 @@ bot.on('message', message => {
 						}
 						if (message.channel.id !== botSpamID) {
 							message.delete();
-							bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nRolling " + args[1] + ":\n\tTotal: " + output);
+							bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nRolling " + args[1] + ":\n\tTotal: " + output);
 						} else {
-							bot.channels.get(botSpamID).send("Rolling " + args[1] + ":\n\tTotal: " + output);
+							bot.channels.cache.get(botSpamID).send("Rolling " + args[1] + ":\n\tTotal: " + output);
 						}
 						logBotActions(message, "!roll xdy");
 					}
 				} else if (args[1] != null) {
 					if (message.channel.id !== botSpamID) {
 						message.delete();
-						bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n\tError: Invalid format or too big of a number");
+						bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n\tError: Invalid format or too big of a number");
 					} else {
-						bot.channels.get(botSpamID).send("\tError: Invalid format or too big of a number");
+						bot.channels.cache.get(botSpamID).send("\tError: Invalid format or too big of a number");
 					}
 					logBotActions(message, "!roll error");
 				} else {
 					let roll = Math.floor(Math.random() * 20) + 1;
 					if (message.channel.id !== botSpamID) {
 						message.delete();
-						bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nRolling 1d20:\n\tTotal: " + roll);
+						bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nRolling 1d20:\n\tTotal: " + roll);
 					} else {
-						bot.channels.get(botSpamID).send("Rolling 1d20:\n\tTotal: " + roll);
+						bot.channels.cache.get(botSpamID).send("Rolling 1d20:\n\tTotal: " + roll);
 					}
 					logBotActions(message, "!roll");
 				}
 				break;
 			}
 			// !getHelp
+			case 'help':
 			case 'gethelp': {
-				if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
-					const embed = new Discord.RichEmbed()
+				if (message.channel.id === modBotSpamID && (message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team"))) {
+					const embed = new Discord.MessageEmbed()
 						.setTitle("Hello, I am the NinjaHelp bot")
 						.setColor(0x220e41)
 						.setDescription("You have access to the following commands")
 						.addField("`!time`", "Will tell the current time and day in Finland")
 						.addField("`!roll` | `!roll xdy`", "Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command")
-						.addField("`!game`", "Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games")
+						.addField("`!game` | `!game <CATEGORY>`", "Will give the links to the public games of the current category or given category.")
 						.addField("`!schedule` | `!schedule <GAME>`", "Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified")
 						.addField("`!top` | `!top <GAME> ?month?`", "Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name")
 						.addField("`!mute <USER> <TIME>`", "Will mute the <USER> for <TIME> (See ms library for time options)")
@@ -741,72 +749,70 @@ bot.on('message', message => {
 						.addField("`!modremove <DISCORD_USER_@>`", "Remove the connection associated with `<DISCORD_USER_@>`")
 						.addField("`!search <USERNAME>`", "Get information on the STV account associated with `<USERNAME>.")
 						.setFooter("These commands are for Mod Squad and Surrogate Team");
-					bot.channels.get(modBotSpamID).send({embed});
+					bot.channels.cache.get(modBotSpamID).send({embed});
 				} else {
-					const embed = new Discord.RichEmbed()
+					const embed = new Discord.MessageEmbed()
 						.setTitle("Hello, I am the NinjaHelp bot")
 						.setColor(0x220e41)
 						.setDescription("You have access to the following commands")
 						.addField("`!time`", "Will tell the current time and day in Finland")
 						.addField("`!roll` | `!roll xdy`", "Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command")
-						.addField("`!game`", "Will give the current channel category/topic's game link. If used outside of those channels, will give all current links to games")
+						.addField("`!game` | `!game <CATEGORY>`", "Will give the links to the public games of the current category or given category.")
 						.addField("`!schedule` | `!schedule <GAME>`", "Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified")
 						.addField("`!top` | `!top <GAME> ?month?`", "Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name")
 						.addField("`!name`", "Gives the SumoBots that have names other than their esports team")
 						.addField("`!connect <USERNAME>`", "Connect your Discord account to your Surrogate.TV (STV) account. `<USERNAME>` should be your STV username. Should you change your STV username at any point, just type the command with the new username.")
 						.addField("`!search <USERNAME>`", "Get information on the STV account associated with `<USERNAME>`.")
 						.setFooter("These commands are for everyone");
-					bot.channels.get(botSpamID).send({embed});
+					bot.channels.cache.get(botSpamID).send({embed});
 				}
 				message.delete();
-				logBotActions(message, "!getHelp");
+				logBotActions(message, "!help");
 				break;
 			}
 			// !game <GAME>
+			case 'games':
 			case 'game': {
-				if (triggerSumoResponse) {
-					message.reply("Here you go!\nhttps://surrogate.tv/game/sumobots");
-					message.delete();
-				} else if (triggerKartResponse) {
-					message.reply("Here you go!\nhttps://surrogate.tv/game/mariokartlive");
-					message.delete();
-				} else if (triggerRaceResponse) {
-					message.reply("Here you go!\nhttps://surrogate.tv/game/racerealcars143");
-					message.delete();
-				} else if (triggerKombatResponse) {
-					message.reply("Here you go!\nhttps://surrogate.tv/game/robotkombat");
-					message.delete();
-				}  else if (triggerPinballResponse) {
-					let out = "There are multiple games here. Here are the links!\n";
-					out += "https://surrogate.tv/game/batman66\n";
-					out += "https://surrogate.tv/game/oktoberfest\n";
-					message.reply(out);
-					message.delete();
-				} 
 
-				// else if (triggerClawResponse) {
-				// 	let out = "There are multiple games here. Here are the links!\n";
-				// 	out += "https://surrogate.tv/game/forceclaw\n";
-				// 	message.reply(out);
-				// 	message.delete();
-				// } 
+				let url = "https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/ids?category=";
+				let out = "Here you go!\n";
 
-				else if (triggerGeneralResponse) {
-					let out = "Here are all the links to the current games:\n";
-					out += "https://surrogate.tv/game/sumobots\n";
-					out += "https://surrogate.tv/game/mariokartlive\n"
-					out += "https://surrogate.tv/game/robotkombat\n"
-					out += "https://surrogate.tv/game/racerealcars143\n";
-					out += "https://surrogate.tv/game/batman66\n";
-					out += "https://surrogate.tv/game/oktoberfest\n";
-					out += "https://surrogate.tv/game/dice\n";
-					out += "https://surrogate.tv/game/surrobros\n";
-					// out += "https://surrogate.tv/game/forceclaw\n";
-					message.reply(out);
-					message.delete();
+				if (triggerBattlingResponse || message.content.toLowerCase() === "!game battling" || message.content.toLowerCase() === "!games battling") {
+					url += "aca57801-006d-4f1b-bcbb-66822424d1ae";
+				} else if (triggerPinballResponse || message.content.toLowerCase() === "!game pinball" || message.content.toLowerCase() === "!games pinball") {
+					url += "41addbbf-bcbf-42f0-acdb-3d190965fee3";
+				} else if (triggerRaceResponse || message.content.toLowerCase() === "!game racing" || message.content.toLowerCase() === "!games racing") {
+					url += "9d04068c-8e3c-455c-98fd-bba5ea905daa";
+				} else if (triggerClawResponse || message.content.toLowerCase() === "!game claw" || message.content.toLowerCase() === "!games claw") {
+					url += "5d7f6eab-cbc7-4db6-9803-25e8a9c99ebe";
+				} else if (triggerExploreResponse || message.content.toLowerCase() === "!game explore" || message.content.toLowerCase() === "!games explore") {
+					url += "325d1761-5fa5-497c-b345-e4e674ccb0b4";
+				} else if (triggerGameResponse || message.content.toLowerCase() === "!game console" || message.content.toLowerCase() === "!games console") {
+					url += "c5d4fb68-94bf-41a5-bd82-8120bee957b5";
+				} else if (triggerWePlayResponse || message.content.toLowerCase() === "!game weplay" || message.content.toLowerCase() === "!games weplay") {
+					url += "b5b6b966-cc16-4db1-b18d-6545bda1407c";
+				} else if (triggerOtherResponse || message.content.toLowerCase() === "!game other" || message.content.toLowerCase() === "!games other") {
+					url += "7f048d16-acc0-4c32-a6a4-552a17761d70";
 				} else {
 					return;
 				}
+
+				let {list} = fetch(url, {
+					method: 'GET', headers: {
+						'Content-Type': 'application/json',
+					},
+				}).then(response => response.json())
+					.then((x) => {
+						let i = 0;
+						for (i = 0; i < x.result.length; i++) {
+							let gindex = gameObject.findIndex(z => z.uuid === x.result[i]);
+							if (gindex != -1 && gameObject[gindex].public) {
+								out += "https://surrogate.tv/game/"+gameObject[gindex].shortId+"\n";
+							}
+						}
+						message.reply(out);
+					});
+
 				logBotActions(message, "!game");
 				break;
 			}
@@ -815,19 +821,15 @@ bot.on('message', message => {
 				let url = "https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=";
 				let command = "";
 				let image = "";
-				if (triggerSumoResponse || message.content.toLowerCase() === ("!schedule sumobots")) {
+				if (triggerBattlingResponse || message.content.toLowerCase() === ("!schedule sumobots")) {
 					url += "sumobots";
 					command = "SumoBots";
 					image = "https://www.surrogate.tv/img/sumo/logo_sumo.png";
-				} else if (triggerKartResponse || message.content.toLowerCase() === ("!schedule mariokartlive")) {
+				} else if (triggerGameResponse || message.content.toLowerCase() === ("!schedule mariokartlive")) {
 					url += "mariokartlive";
 					command = "MarioKartLive";
 					image = "https://assets.surrogate.tv/game/7488f823-4fb2-468f-9100-a092a46d4de4/0849495794-Asset22x.png";
-				} else if (triggerKombatResponse || message.content.toLowerCase() === ("!schedule robotkombat")) {
-					url += "robotkombat";
-					command = "RobotKombat";
-					image = "https://assets.surrogate.tv/game/2c93f1fd-9e12-4d5f-bb53-02ad5a72f839/4303884093-logorobotkombat1.png";
-				}  else if (triggerRaceResponse || message.content.toLowerCase() === ("!schedule racerealcars143")) {
+				} else if (triggerRaceResponse || message.content.toLowerCase() === ("!schedule racerealcars143")) {
 					url += "racerealcars143";
 					command = "RaceRealCars143";
 					image = "https://i.imgur.com/XETrUAa.png";
@@ -839,29 +841,17 @@ bot.on('message', message => {
 					url += "batman66";
 					command = "Batman66 Pinball";
 					image = "https://www.surrogate.tv/img/pinball/pinball_logo.png";
-				} else if ((triggerPinballResponse && message.channel.id === "702578486199713872") || message.content.toLowerCase() === ("!schedule oktoberfest")) {
-					url += "oktoberfest";
-					command = "Oktoberfest Pinball";
-					image = "https://www.american-pinball.com/s/i/h/pinslide/oktoberfest/oktoberfest-logo-tap_shadow.png";
-				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase() === ("!schedule dice"))) {
-					url += "dice";
-					command = "Dice Roll";
-					image = "https://assets.surrogate.tv/game/a9b699de-9046-467e-a54c-c30e86262798/1782551745-gamelogo2.png"
-				} else if (((triggerCommunityResponse && (message.channel.id === "751846589039116360" || message.channel.id === "751846612937998356")) || message.content.toLowerCase() === ("!schedule surrobros"))) {
-					url += "surrobros";
-					command = "SurroBros";
-					image = "https://assets.surrogate.tv/game/0115a55d-3de8-4d32-8964-baf1f073f83f/4466557124-9ab6ccb0-ae34-4380-a3d6-066d31529ec6.png"
 				} else {
 					if (message.channel.id !== botSpamID) {
-						if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
-							bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> Can't find that game");
+						if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team"))) {
+							bot.channels.cache.get(modBotSpamID).send("<@" + message.member.user.id + "> Can't find that game");
 							message.delete();
 						} else {
-							bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nCan't find that game. Try a different one.");
+							bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nCan't find that game. Try a different one.");
 							message.delete();
 						}
 					} else {
-						bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Can't find that game. Try a different one.");
+						bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Can't find that game. Try a different one.");
 					}
 					return;
 				}
@@ -996,9 +986,9 @@ bot.on('message', message => {
 							let title = "Schedule for **" + command + "**";
 							command = command.split(' ');
 							command = command.splice(0);
-							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.find(r => r.name.toLowerCase() === "game host"))) {
+							if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host"))) {
 								message.delete();
-								const embed = new Discord.RichEmbed()
+								const embed = new Discord.MessageEmbed()
 									.setTitle("__" + title + "__")
 									.setColor(0x220e41)
 									.setURL("https://surrogate.tv/game/" + command)
@@ -1010,24 +1000,24 @@ bot.on('message', message => {
 								if (message.channel.id !== botSpamID) {
 									message.delete();
 									
-									const embed = new Discord.RichEmbed()
+									const embed = new Discord.MessageEmbed()
 										.setTitle("__" + title + "__")
 										.setColor(0x220e41)
 										.setURL("https://surrogate.tv/game/" + command)
 										.setDescription(output)
 										.setThumbnail(image)
 										.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
-									bot.channels.get(botSpamID).send({embed});
+									bot.channels.cache.get(botSpamID).send({embed});
 									
 								} else {
-									const embed = new Discord.RichEmbed()
+									const embed = new Discord.MessageEmbed()
 										.setTitle("__" + title + "__")
 										.setColor(0x220e41)
 										.setURL("https://surrogate.tv/game/" + command)
 										.setDescription(output)
 										.setThumbnail(image)
 										.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
-									bot.channels.get(botSpamID).send({embed});
+									bot.channels.cache.get(botSpamID).send({embed});
 								}
 							}
 						}
@@ -1037,24 +1027,24 @@ bot.on('message', message => {
 			}
 			// !mute <USER> <TIME>
 			case 'mute': {
-				if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null && args[2] != null)) {
+				if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null && args[2] != null)) {
 					let toMute = message.guild.member(message.mentions.users.first());
-					let role = message.guild.roles.find(r => r.name === "muted");
+					let role = message.guild.roles.cache.find(r => r.name === "muted");
 					if (!toMute) {
-						bot.channels.get(modBotSpamID).send(`Couldn't find user.`);
+						bot.channels.cache.get(modBotSpamID).send(`Couldn't find user.`);
 						return;
 					}
 					if (toMute.hasPermission("MANAGE_MESSAGES")) {
-						bot.channels.get(modBotSpamID).send(`Can't mute that user`);
+						bot.channels.cache.get(modBotSpamID).send(`Can't mute that user`);
 						return;
 					}
 					let mutetime = args[2];
 					if (!mutetime) {
-						bot.channels.get(modBotSpamID).send(`You need to specify a time (3s/3d/3h/3y)`);
+						bot.channels.cache.get(modBotSpamID).send(`You need to specify a time (3s/3d/3h/3y)`);
 						return;
 					}
-					toMute.addRole(role.id);
-					bot.channels.get(modBotSpamID).send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
+					toMute.roles.add(role.id);
+					bot.channels.cache.get(modBotSpamID).send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
 					let date = getDateObject();
 					let day = date.day;
 					let month = date.month;
@@ -1111,19 +1101,19 @@ bot.on('message', message => {
 			}
 			// !unmute <USER>
 			case "unmute": {
-				if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null)) {
-					let toUnmute = message.guild.member(message.mentions.users.first() || message.guild.members.get(args[0]));
-					let role = message.guild.roles.find(r => r.name === "muted");
+				if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null)) {
+					let toUnmute = message.guild.member(message.mentions.users.first() || message.guild.members.cache.get(args[0]));
+					let role = message.guild.roles.cache.find(r => r.name === "muted");
 					if (!toUnmute) {
-						bot.channels.get(modBotSpamID).send("Couldn't find user.");
+						bot.channels.cache.get(modBotSpamID).send("Couldn't find user.");
 						return;
-					} else if (!toUnmute.roles.find(r => r.name.toLowerCase() === "muted")) {
-						bot.channels.get(modBotSpamID).send(`<@${toUnmute} is not muted.`);
+					} else if (!toUnmute.roles.cache.find(r => r.name.toLowerCase() === "muted")) {
+						bot.channels.cache.get(modBotSpamID).send(`<@${toUnmute} is not muted.`);
 						return;
 					}
-					await(toUnmute.addRole(role.id));
-					toUnmute.removeRole(role.id);
-					bot.channels.get(modBotSpamID).send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
+					await(toUnmute.roles.remove(role.id));
+					toUnmute.roles.remove(role.id);
+					bot.channels.cache.get(modBotSpamID).send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
 					logBotActions(message, "!unmute " + toUnmute.user.tag);
 					
 					fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
@@ -1160,16 +1150,16 @@ bot.on('message', message => {
 				let title = " Current Scores";
 				let command = "";
 				let image = "";
-				if (triggerSumoResponse || message.content.toLowerCase() === ("!top sumobots") || message.content.toLowerCase() === ("!top sumobots month")) {
+				if (triggerBattlingResponse || message.content.toLowerCase() === ("!top sumobots") || message.content.toLowerCase() === ("!top sumobots month")) {
 					url += "99ca6347-0e10-4465-8fe1-9fee8bc5fb35&order=";
 					command = "SumoBots";
 					if (args[2] != null && args[2] === "month") {
 						if (message.channel.id !== botSpamID) {
-							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.find(r => r.name.toLowerCase() === "game host"))) {
-								bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
+							if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host"))) {
+								bot.channels.cache.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
 								message.delete();
 							} else {
-								bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
+								bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
 								message.delete();
 							}
 						} else {
@@ -1178,7 +1168,7 @@ bot.on('message', message => {
 						return;
 					}
 					image = "https://www.surrogate.tv/img/sumo/logo_sumo.png";
-				} else if (triggerKartResponse || message.content.toLowerCase() === ("!top mariokartlive") || message.content.toLowerCase() === ("!top mariokartlive month")) {
+				} else if (triggerGameResponse || message.content.toLowerCase() === ("!top mariokartlive") || message.content.toLowerCase() === ("!top mariokartlive month")) {
 					url += "7488f823-4fb2-468f-9100-a092a46d4de4&order=";
 					command = "MarioKartLive";
 					if (args[2] != null && args[2] === "month") {
@@ -1187,25 +1177,7 @@ bot.on('message', message => {
 						title = " Current Scores of the Month";
 					}
 					image = "https://assets.surrogate.tv/game/7488f823-4fb2-468f-9100-a092a46d4de4/0849495794-Asset22x.png";
-				} else if (triggerKombatResponse || message.content.toLowerCase() === ("!top robotkombat") || message.content.toLowerCase() === ("!top robotkombat month")) {
-					url += "2c93f1fd-9e12-4d5f-bb53-02ad5a72f839&order=";
-					command = "RobotKombat";
-					if (args[2] != null && args[2] === "month") {
-						if (message.channel.id !== botSpamID) {
-							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.find(r => r.name.toLowerCase() === "game host"))) {
-								bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
-								message.delete();
-							} else {
-								bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
-								message.delete();
-							}
-						} else {
-							message.channel.send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
-						}
-						return;
-					}
-					image = "https://assets.surrogate.tv/game/2c93f1fd-9e12-4d5f-bb53-02ad5a72f839/4303884093-logorobotkombat1.png";
-				}  else if (triggerRaceResponse || message.content.toLowerCase() === ("!top racerealcars143") || message.content.toLowerCase() === ("!top racerealcars143 month")) {
+				} else if (triggerRaceResponse || message.content.toLowerCase() === ("!top racerealcars143") || message.content.toLowerCase() === ("!top racerealcars143 month")) {
 					url += "953f2154-9a6e-4602-99c6-265408da6310&order=";
 					command = "RaceRealCars143";
 					if (args[2] != null && args[2] === "month") {
@@ -1219,11 +1191,11 @@ bot.on('message', message => {
 					command = "ForceClaw";
 					if (args[2] != null && args[2] === "month") {
 						if (message.channel.id !== botSpamID) {
-							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.find(r => r.name.toLowerCase() === "game host"))) {
-								bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
+							if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host"))) {
+								bot.channels.cache.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
 								message.delete();
 							} else {
-								bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
+								bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
 								message.delete();
 							}
 						} else {
@@ -1253,14 +1225,14 @@ bot.on('message', message => {
 								let description = "Here are the Top 10 **Oktoberfest Launch Tournament** players as of " + getDateObject(TIMEZONE_OFFSET_FINLAND).dateString_MD_slash;
 								let footer = "Note: Some new top 10 scores may not be verified yet and will not appear here.";
 								let image = "https://www.american-pinball.com/s/i/h/pinslide/oktoberfest/oktoberfest-logo-tap_shadow.png";
-								const embed = new Discord.RichEmbed()
+								const embed = new Discord.MessageEmbed()
 									.setTitle("__" + title + "__")
 									.setColor(0x220e41)
 									.setURL("http://proco.me/oktoberfest/")
 									.addField(description, scores)
 									.setThumbnail(image)
 									.setFooter(footer);
-								bot.channels.get("702578486199713872").send({embed});
+								bot.channels.cache.get("702578486199713872").send({embed});
 							});
 					} else {
 						message.channel.send("The **Oktoberfest Launch Tournament** has ended.");
@@ -1278,11 +1250,11 @@ bot.on('message', message => {
 					image = "https://www.surrogate.tv/img/pinball/pinball_logo.png";
 				} else {
 					if (message.channel.id !== botSpamID) {
-						if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team"))) {
-							bot.channels.get(modBotSpamID).send("<@" + message.member.user.id + "> Can't find that game.");
+						if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team"))) {
+							bot.channels.cache.get(modBotSpamID).send("<@" + message.member.user.id + "> Can't find that game.");
 							message.delete();
 						} else {
-							bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nCan't find that game.");
+							bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nCan't find that game.");
 							message.delete();
 						}
 					} else {
@@ -1313,23 +1285,23 @@ bot.on('message', message => {
 									let icon = x.result.Items[i].userObject.userIcon.toLowerCase();
 									switch (icon) {
 										case "broomsquad": {
-											icon = bot.emojis.get("700736528803954769").toString();
+											icon = bot.emojis.cache.get("700736528803954769").toString();
 											break;
 										}
 										case "moderator": {
-											icon = bot.emojis.get("700736529043161139").toString();
+											icon = bot.emojis.cache.get("700736529043161139").toString();
 											break;
 										}
 										case "patreonsupporter": {
-											icon = bot.emojis.get("700736949631188993").toString();
+											icon = bot.emojis.cache.get("700736949631188993").toString();
 											break;
 										}
 										case "surrogateteam": {
-											icon = bot.emojis.get("700737595734491237").toString();
+											icon = bot.emojis.cache.get("700737595734491237").toString();
 											break;
 										}
 										case "alphatester": {
-											icon = bot.emojis.get("700736528967532564").toString();
+											icon = bot.emojis.cache.get("700736528967532564").toString();
 											break;
 										}
 										default: {
@@ -1344,10 +1316,10 @@ bot.on('message', message => {
 									scores += "\n";
 								}
 							}
-							if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.find(r => r.name.toLowerCase() === "game host"))) {
+							if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host"))) {
 								message.delete();
 								
-								const embed = new Discord.RichEmbed()
+								const embed = new Discord.MessageEmbed()
 									.setTitle("__" + title + "__")
 									.setColor(0x220e41)
 									.setThumbnail(image)
@@ -1357,16 +1329,16 @@ bot.on('message', message => {
 							} else {
 								if (message.channel.id !== botSpamID) {
 									message.delete();
-									const embed = new Discord.RichEmbed()
+									const embed = new Discord.MessageEmbed()
 										.setTitle("__" + title + "__")
 										.setColor(0x220e41)
 										.setThumbnail(image)
 										.addField(description, scores)
 										.setFooter("Please use this channel for bot commands!");
-									bot.channels.get(botSpamID).send({embed})
-										.then(bot.channels.get(botSpamID).send("<@" + message.author.id + ">"));
+									bot.channels.cache.get(botSpamID).send({embed})
+										.then(bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">"));
 								} else {
-									const embed = new Discord.RichEmbed()
+									const embed = new Discord.MessageEmbed()
 										.setTitle("__" + title + "__")
 										.setColor(0x220e41)
 										.setThumbnail(image)
@@ -1390,42 +1362,42 @@ bot.on('message', message => {
 				out += "Until someone does these steps, I will not go about implementing a `!meme` command.";
 				if (message.channel.id !== botSpamID) {
 					message.delete();
-					bot.channels.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n" + out);
+					bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\n" + out);
 				} else {
-					bot.channels.get(botSpamID).send(out);
+					bot.channels.cache.get(botSpamID).send(out);
 				}
 				logBotActions(message, "!meme info");
 				break;
 			}
 			// !name
 			case "name": {
-				const alliance = bot.emojis.get("713862601687433236").toString(); //Chad
-				const heretics = bot.emojis.get("713862601846554795").toString(); //Hercules
-				const mouse = bot.emojis.get("713862041064177735").toString();    //Jerry
-				const excel = bot.emojis.get("713862601175728218").toString();    //Kyle
-				const ence = bot.emojis.get("713862224271114361").toString();     //Dug
-				const empire = bot.emojis.get("713862601779707924").toString();   //Mike
+				const alliance = bot.emojis.cache.get("713862601687433236").toString(); //Chad
+				const heretics = bot.emojis.cache.get("713862601846554795").toString(); //Hercules
+				const mouse = bot.emojis.cache.get("713862041064177735").toString();    //Jerry
+				const excel = bot.emojis.cache.get("713862601175728218").toString();    //Kyle
+				const ence = bot.emojis.cache.get("713862224271114361").toString();     //Dug
+				const empire = bot.emojis.cache.get("713862601779707924").toString();   //Mike
 				let title = "__The names of the bots given by the Broom Gods__";
 				let description = alliance + "\tChad\n" + empire + "\tMike\n" + mouse + "\tJerry\n" + ence + "\tDug\n" + heretics + "\tHercules\n" + excel + "\tKyle";
-				if (triggerSumoResponse) {
+				if (triggerBattlingResponse) {
 					message.delete();
-					const embed = new Discord.RichEmbed()
+					const embed = new Discord.MessageEmbed()
 						.setTitle("__" + title + "__")
 						.setColor(0x220e41)
 						.setDescription(description);
 					
 					message.channel.send({embed});
 				} else if (message.channel.id !== botSpamID) {
-					const embed = new Discord.RichEmbed()
+					const embed = new Discord.MessageEmbed()
 						.setTitle("__" + title + "__")
 						.setColor(0x220e41)
 						.setDescription(description)
 						.setFooter("Please use this channel for that command!");
 					
-					bot.channels.get(botSpamID).send({embed})
-						.then(bot.channels.get(botSpamID).send("<@" + message.author.id + ">"));
+					bot.channels.cache.get(botSpamID).send({embed})
+						.then(bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">"));
 				} else {
-					const embed = new Discord.RichEmbed()
+					const embed = new Discord.MessageEmbed()
 						.setTitle("__" + title + "__")
 						.setColor(0x220e41)
 						.setDescription(description);
@@ -1438,7 +1410,7 @@ bot.on('message', message => {
 			//!connect <USERNAME>
 			case "connect": {
 				if (args[1] == null) {
-					bot.channels.get(botSpamID).send("<@" + message.author.id + ">, You need to supply your Surrogate.TV Username which can be found on your user profile at https://surrogate.tv/user");
+					bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">, You need to supply your Surrogate.TV Username which can be found on your user profile at https://surrogate.tv/user");
 				} else {
 					args[1]=encodeURI(args[1]);
 					const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/users?search=" + args[1], {
@@ -1448,7 +1420,7 @@ bot.on('message', message => {
 					}).then(response => response.json())
 						.then((x) => {
 							if (x.status === "failure" || x.result[0] == null) {
-								bot.channels.get(botSpamID).send("<@" + message.author.id + ">, I cannot find a user by that name. Names are case sensitive so make sure it is correct.");
+								bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">, I cannot find a user by that name. Names are case sensitive so make sure it is correct.");
 							} else {
 								let uid = x.result[0].userId;
 								fs.exists("./database/connect.dat", (exists) => {
@@ -1480,10 +1452,10 @@ bot.on('message', message => {
 												}
 											}
 											if (dIDFound && userFound && (hold === holdD)) {
-												bot.channels.get(botSpamID).send("<@" + message.author.id + ">, You have already connected that Surrogate profile with your discord account.");
+												bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">, You have already connected that Surrogate profile with your discord account.");
 											} else if ((userFound || uIDFound)) {
 												let inHere = testData[hold].split("|");
-												bot.channels.get(botSpamID).send("<@" + message.author.id + ">, The Surrogate profile " + args[1] + " has already been connected to discord user <@" + inHere[0] + ">. Please DM Mordecai if you feel this is a mistake");
+												bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">, The Surrogate profile " + args[1] + " has already been connected to discord user <@" + inHere[0] + ">. Please DM Mordecai if you feel this is a mistake");
 											} else if (dIDFound) {
 												let id = message.author.id;
 												fs.exists("./database/connect.dat", (exists) => {
@@ -1511,12 +1483,12 @@ bot.on('message', message => {
 															}).then(response => response.json())
 																.then((x) => {
 																	if (x.result[0] == null) {
-																		bot.channels.get(botSpamID).send("<@" + message.author.id + ">, I cannot find a user by that name. Names are case sensitive so make sure it is correct.");
+																		bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">, I cannot find a user by that name. Names are case sensitive so make sure it is correct.");
 																	} else {
 																		if (!dIDFound) {
-																			bot.channels.get(botSpamID).send("<@" + message.author.id + ">, There is no Surrogate profile associated with you rdiscord account, please DM Mordecai if you feel this is a mistake.");
+																			bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">, There is no Surrogate profile associated with you rdiscord account, please DM Mordecai if you feel this is a mistake.");
 																		} else if (x.result[0].userId !== uid) {
-																			bot.channels.get(botSpamID).send("<@" + message.author.id + ">, That Surrogate profile is not the same one you previously connected with the username of " + inHere[2] + ". Please DM Mordecai if you feel this is a mistake.");
+																			bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">, That Surrogate profile is not the same one you previously connected with the username of " + inHere[2] + ". Please DM Mordecai if you feel this is a mistake.");
 																		} else {
 																			testData[i] = id + "|" + uid + "|" + args[1];
 																			let insert = "";
@@ -1530,7 +1502,7 @@ bot.on('message', message => {
 																			fs.writeFile("./database/connect.dat", insert, (err) => {
 																				if (err) throw err;
 																			});
-																			bot.channels.get(botSpamID).send("<@" + message.author.id + ">, Your Surrogate profile has been successfully updated!");
+																			bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">, Your Surrogate profile has been successfully updated!");
 																		}
 																	}
 																});
@@ -1541,7 +1513,7 @@ bot.on('message', message => {
 												fs.appendFile("./database/connect.dat", message.author.id + "|" + uid + "|" + args[1] + "\n", (err) => {
 													if (err) throw err;
 												});
-												bot.channels.get(botSpamID).send("<@" + message.author.id + ">, Your Surrogate profile has been successfully connected to your discord account!");
+												bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">, Your Surrogate profile has been successfully connected to your discord account!");
 											}
 											
 										});
@@ -1556,7 +1528,7 @@ bot.on('message', message => {
 			}
 			//!modupdate <USER> <USERNAME>
 			case "modupdate": {
-				if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null) && args[2] != null) {
+				if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null) && args[2] != null) {
 					let infoID = args[1].substring(3, args[1].length - 1);
 					args[1]=encodeURI(args[1]);
 					fs.exists("./database/connect.dat", (exists) => {
@@ -1583,7 +1555,7 @@ bot.on('message', message => {
 									}).then(response => response.json())
 										.then((x) => {
 											if (x.result[0] == null) {
-												bot.channels.get(modBotSpamID).send("Unable to find the username " + args[2] + ". The names are case sensitive.");
+												bot.channels.cache.get(modBotSpamID).send("Unable to find the username " + args[2] + ". The names are case sensitive.");
 											} else {
 												let uID = false;
 												let user = false;
@@ -1599,7 +1571,7 @@ bot.on('message', message => {
 													}
 												}
 												if (uID || user) {
-													bot.channels.get(modBotSpamID).send("That username is already claimed by another user. Cannot overwrite.");
+													bot.channels.cache.get(modBotSpamID).send("That username is already claimed by another user. Cannot overwrite.");
 												} else {
 													let insert = "";
 													for (let z = 0; z < testData.length; z++) {
@@ -1615,12 +1587,12 @@ bot.on('message', message => {
 													fs.writeFile("./database/connect.dat", insert, (err) => {
 														if (err) throw err;
 													});
-													bot.channels.get(modBotSpamID).send("Successfully updated " + args[1] + "'s connection. ");
+													bot.channels.cache.get(modBotSpamID).send("Successfully updated " + args[1] + "'s connection. ");
 												}
 											}
 										});
 								} else {
-									bot.channels.get(modBotSpamID).send("Cannot find that user's information in my database. They can connect themselves.");
+									bot.channels.cache.get(modBotSpamID).send("Cannot find that user's information in my database. They can connect themselves.");
 								}
 							});
 						}
@@ -1632,7 +1604,7 @@ bot.on('message', message => {
 			}
 			//!modremove <USER>
 			case "modremove": {
-				if ((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null)) {
+				if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null)) {
 					let infoID = args[1].substring(3, args[1].length - 1);
 					args[1]=encodeURI(args[1]);
 					fs.exists("./database/connect.dat", (exists) => {
@@ -1666,9 +1638,9 @@ bot.on('message', message => {
 									fs.writeFile("./database/connect.dat", insert, (err) => {
 										if (err) throw err;
 									});
-									bot.channels.get(modBotSpamID).send("Successfully removed " + args[1] + "'s connection. ");
+									bot.channels.cache.get(modBotSpamID).send("Successfully removed " + args[1] + "'s connection. ");
 								} else {
-									bot.channels.get(modBotSpamID).send("Cannot find that user's information in my database. They don't need to be removed.");
+									bot.channels.cache.get(modBotSpamID).send("Cannot find that user's information in my database. They don't need to be removed.");
 								}
 							});
 						}
@@ -1704,12 +1676,12 @@ bot.on('message', message => {
 								.then((x) => {
 									if (x.result[0] == null) {
 										if (message.channel.id === botSpamID){
-											bot.channels.get(botSpamID).send("I cannot find that username on the website. ");
+											bot.channels.cache.get(botSpamID).send("I cannot find that username on the website. ");
 										} else if (message.channel.id === modBotSpamID){
-											bot.channels.get(modBotSpamID).send("I cannot find that username on the website. ");
+											bot.channels.cache.get(modBotSpamID).send("I cannot find that username on the website. ");
 										}
 									} else {
-										let embed = new Discord.RichEmbed()
+										let embed = new Discord.MessageEmbed()
 											.setTitle("User Information")
 											.setColor(0x220e41)
 											.setDescription("Here is the user description for " + args[1])
@@ -1720,11 +1692,11 @@ bot.on('message', message => {
 											embed.addField("The user has this much experience", x.result[0].experience);
 										}
 										if (x.result[0].userIcon != null) {
-											const surrogateTeam = bot.emojis.get("700737595734491237").toString();
-											const patreonSupproter = bot.emojis.get("700736949631188993").toString();
-											const broomSquad = bot.emojis.get("700736528803954769").toString();
-											const alphaTester = bot.emojis.get("700736528967532564").toString();
-											const modSquad = bot.emojis.get("700736529043161139").toString();
+											const surrogateTeam = bot.emojis.cache.get("700737595734491237").toString();
+											const patreonSupproter = bot.emojis.cache.get("700736949631188993").toString();
+											const broomSquad = bot.emojis.cache.get("700736528803954769").toString();
+											const alphaTester = bot.emojis.cache.get("700736528967532564").toString();
+											const modSquad = bot.emojis.cache.get("700736529043161139").toString();
 											if (x.result[0].userIcon === "surrogateTeam") {
 												embed.addField("The user has this icon", surrogateTeam);
 											} else if (x.result[0].userIcon === "broomSquad") {
@@ -1745,9 +1717,9 @@ bot.on('message', message => {
 										}
 										
 										if (message.channel.id === botSpamID){
-											bot.channels.get(botSpamID).send({embed});
+											bot.channels.cache.get(botSpamID).send({embed});
 										} else if (message.channel.id === modBotSpamID){
-											bot.channels.get(modBotSpamID).send({embed});
+											bot.channels.cache.get(modBotSpamID).send({embed});
 										}
 									}
 								});
@@ -1768,12 +1740,15 @@ bot.on('message', message => {
 		}
 		return;
 	}
-	detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerKartResponse, triggerKombatResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse, triggerFeedbackResponse, triggerBugResposne, triggerDiscussionResponse);
+
+
+
+	detection(message, triggerBattlingResponse, triggerPinballResponse, triggerRaceResponse, triggerClawResponse, triggerExploreResponse, triggerGameResponse, triggerWePlayResponse, triggerOtherResponse, triggerGeneralResponse, triggerFeedbackResponse, triggerDiscussionResponse, triggerIssuesResposne);
 });
 
-function detection(message, triggerPinballResponse, triggerClawResponse, triggerRaceResponse, triggerSumoResponse, triggerKartResponse, triggerKombatResponse, triggerGeneralResponse, triggerSneakResponse, triggerArcadeResponse, triggerCommunityResponse, triggerFeedbackResponse, triggerBugResposne, triggerDiscussionResponse) {
+function detection(message, triggerBattlingResponse, triggerPinballResponse, triggerRaceResponse, triggerClawResponse, triggerExploreResponse, triggerGameResponse, triggerWePlayResponse, triggerOtherResponse, triggerGeneralResponse, triggerFeedbackResponse, triggerDiscussionResponse, triggerIssuesResposne) {
 	//"Refill the machine" for Claw
-	if (triggerClawResponse && ((message.content.toLowerCase().includes("filled") || message.content.toLowerCase().includes("refill") || message.content.toLowerCase().includes("restock")) && !message.content.includes("www.")) && !((message.member.roles.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.find(r => r.name.toLowerCase() === "alpha testers"))))) {
+	if (triggerClawResponse && ((message.content.toLowerCase().includes("filled") || message.content.toLowerCase().includes("refill") || message.content.toLowerCase().includes("restock")) && !message.content.includes("www.")) && !((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.cache.find(r => r.name.toLowerCase() === "alpha testers"))))) {
 		const date = getDateObject(TIMEZONE_OFFSET_FINLAND);
 		if (date.hour >= 20 || date.hour < 8) {
 			let sendOut = "*Beep boop*\nIt is currently **" + date.timeStringAMPM + "** in Finland (Where the games are located).\n";
@@ -1800,7 +1775,7 @@ function detection(message, triggerPinballResponse, triggerClawResponse, trigger
 			.catch(() => console.error('One of the emojis failed to react.'));
 	}
 
-	if (triggerBugResposne) {
+	if (triggerIssuesResposne) {
 		message.react('🟥')
 			.then(() => message.react('🟧'))
 			.catch(() => console.error('One of the emojis failed to react.'));
@@ -1831,48 +1806,48 @@ function checkLevel(message) {
 					},
 				}).then(response => response.json())
 					.then((x) => {
-						const starter = message.guild.roles.find(e => e.name === "Starter Robot Ninja");
-						const advanced = message.guild.roles.find(e => e.name === "Advanced Robot Ninja");
-						const veteran = message.guild.roles.find(e => e.name === "Veteran Robot Ninja");
-						const ultimate = message.guild.roles.find(e => e.name === "Ultimate Robot Ninja");
+						const starter = message.guild.roles.cache.find(e => e.name === "Starter Robot Ninja");
+						const advanced = message.guild.roles.cache.find(e => e.name === "Advanced Robot Ninja");
+						const veteran = message.guild.roles.cache.find(e => e.name === "Veteran Robot Ninja");
+						const ultimate = message.guild.roles.cache.find(e => e.name === "Ultimate Robot Ninja");
 						if (x.result[0] == null) {
-							if (message.member.roles.find(r => r.name === "Starter Robot Ninja") || message.member.roles.find(r => r.name === "Advanced Robot Ninja") || message.member.roles.find(r => r.name === "Veteran Robot Ninja") || message.member.roles.find(r => r.name === "Ultimate Robot Ninja")) {
-								message.guild.member(message.member).removeRole(starter).catch(console.error);
-								message.guild.member(message.member).removeRole(advanced).catch(console.error);
-								message.guild.member(message.member).removeRole(veteran).catch(console.error);
-								message.guild.member(message.member).removeRole(ultimate).catch(console.error);
+							if (message.member.roles.cache.find(r => r.name === "Starter Robot Ninja") || message.member.roles.cache.find(r => r.name === "Advanced Robot Ninja") || message.member.roles.cache.find(r => r.name === "Veteran Robot Ninja") || message.member.roles.cache.find(r => r.name === "Ultimate Robot Ninja")) {
+								message.guild.member(message.member).roles.remove(starter).catch(console.error);
+								message.guild.member(message.member).roles.remove(advanced).catch(console.error);
+								message.guild.member(message.member).roles.remove(veteran).catch(console.error);
+								message.guild.member(message.member).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Taken Tier roles");
 							}
 						} else {
-							if ((x.result[0].experience == null || x.result[0].experience < 25600) && !message.member.roles.find(r => r.name === "Starter Robot Ninja")) {
-								message.guild.member(message.member).addRole(starter).catch(console.error);
-								message.guild.member(message.member).removeRole(advanced).catch(console.error);
-								message.guild.member(message.member).removeRole(veteran).catch(console.error);
-								message.guild.member(message.member).removeRole(ultimate).catch(console.error);
+							if ((x.result[0].experience == null || x.result[0].experience < 25600) && !message.member.roles.cache.find(r => r.name === "Starter Robot Ninja")) {
+								message.guild.member(message.member).roles.add(starter).catch(console.error);
+								message.guild.member(message.member).roles.remove(advanced).catch(console.error);
+								message.guild.member(message.member).roles.remove(veteran).catch(console.error);
+								message.guild.member(message.member).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Starter Robot Ninja\"");
-							} else if (x.result[0].experience >= 25600 && x.result[0].experience < 175000 && !message.member.roles.find(r => r.name === "Advanced Robot Ninja")) {
-								message.guild.member(message.member).removeRole(starter).catch(console.error);
-								message.guild.member(message.member).addRole(advanced).catch(console.error);
-								message.guild.member(message.member).removeRole(veteran).catch(console.error);
-								message.guild.member(message.member).removeRole(ultimate).catch(console.error);
+							} else if (x.result[0].experience >= 25600 && x.result[0].experience < 175000 && !message.member.roles.cache.find(r => r.name === "Advanced Robot Ninja")) {
+								message.guild.member(message.member).roles.remove(starter).catch(console.error);
+								message.guild.member(message.member).roles.add(advanced).catch(console.error);
+								message.guild.member(message.member).roles.remove(veteran).catch(console.error);
+								message.guild.member(message.member).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Advanced Robot Ninja\"");
-							} else if (x.result[0].experience >= 175000 && x.result[0].experience < 1668000 && !message.member.roles.find(r => r.name === "Veteran Robot Ninja")) {
-								message.guild.member(message.member).removeRole(starter).catch(console.error);
-								message.guild.member(message.member).removeRole(advanced).catch(console.error);
-								message.guild.member(message.member).addRole(veteran).catch(console.error);
-								message.guild.member(message.member).removeRole(ultimate).catch(console.error);
+							} else if (x.result[0].experience >= 175000 && x.result[0].experience < 1668000 && !message.member.roles.cache.find(r => r.name === "Veteran Robot Ninja")) {
+								message.guild.member(message.member).roles.remove(starter).catch(console.error);
+								message.guild.member(message.member).roles.remove(advanced).catch(console.error);
+								message.guild.member(message.member).roles.add(veteran).catch(console.error);
+								message.guild.member(message.member).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Veteran Robot Ninja\"");
-							} else if (x.result[0].experience >= 1668000 && !message.member.roles.find(r => r.name === "Ultimate Robot Ninja")) {
-								message.guild.member(message.member).removeRole(starter).catch(console.error);
-								message.guild.member(message.member).removeRole(advanced).catch(console.error);
-								message.guild.member(message.member).removeRole(veteran).catch(console.error);
-								message.guild.member(message.member).addRole(ultimate).catch(console.error);
+							} else if (x.result[0].experience >= 1668000 && !message.member.roles.cache.find(r => r.name === "Ultimate Robot Ninja")) {
+								message.guild.member(message.member).roles.remove(starter).catch(console.error);
+								message.guild.member(message.member).roles.remove(advanced).catch(console.error);
+								message.guild.member(message.member).roles.remove(veteran).catch(console.error);
+								message.guild.member(message.member).roles.add(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Ultimate Robot Ninja\"");
-							} else if (!message.member.roles.find(r => r.name === "Starter Robot Ninja") && !message.member.roles.find(r => r.name === "Advanced Robot Ninja") && !message.member.roles.find(r => r.name === "Veteran Robot Ninja") && !message.member.roles.find(r => r.name === "Ultimate Robot Ninja")) {
-								message.guild.member(message.member).addRole(starter).catch(console.error);
-								message.guild.member(message.member).removeRole(advanced).catch(console.error);
-								message.guild.member(message.member).removeRole(veteran).catch(console.error);
-								message.guild.member(message.member).removeRole(ultimate).catch(console.error);
+							} else if (!message.member.roles.cache.find(r => r.name === "Starter Robot Ninja") && !message.member.roles.cache.find(r => r.name === "Advanced Robot Ninja") && !message.member.roles.cache.find(r => r.name === "Veteran Robot Ninja") && !message.member.roles.cache.find(r => r.name === "Ultimate Robot Ninja")) {
+								message.guild.member(message.member).roles.add(starter).catch(console.error);
+								message.guild.member(message.member).roles.remove(advanced).catch(console.error);
+								message.guild.member(message.member).roles.remove(veteran).catch(console.error);
+								message.guild.member(message.member).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Starter Robot Ninja\"");
 							}
 						}
@@ -1945,16 +1920,16 @@ function connect(){
 
 				}
 
-				fetch(hiddenURL, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify(toStoreObject)
-				}).then(response => response.text());
+				// fetch(hiddenURL, {
+				// 	method: 'POST',
+				// 	headers: {
+				// 		'Content-Type': 'application/json'
+				// 	},
+				// 	body: JSON.stringify(toStoreObject)
+				// }).then(response => response.text());
 
 				if (obj.message.toLowerCase().startsWith("!mod")) {
-					bot.channels.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
+					bot.channels.cache.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
 					sendMessageToWebsite(gameObject[gindex].uuid, "I have pinged the Morderators on the discord. One should respond if available.");
 					logBotActions("WEBSITE HELP", "Mod requested on a game");
 				} else if (obj.message.toLowerCase().startsWith("!mordecai")) {
@@ -1964,10 +1939,13 @@ function connect(){
 						sendMessageToWebsite(gameObject[gindex].uuid, "Mordecai is currently sleeping. Please refrain from requesting him between 23:00-08:00 EST.");
 						logBotActions("WEBSITE HELP", "Mordecai requested on a game during off hours");
 					} else {
-						bot.channels.get("776894942274125826").send("<@152200419043442688>  | User `"+obj.username+"` has requested you on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
+						bot.channels.cache.get("776894942274125826").send("<@152200419043442688>  | User `"+obj.username+"` has requested you on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
 						sendMessageToWebsite(gameObject[gindex].uuid, "I have pinged Mordecai on the discord. He should respond soon.");
 						logBotActions("WEBSITE HELP", "Mordecai requested on a game");
 					}
+				} else if ((obj.message.toLowerCase().includes(" rigged ") || obj.message.toLowerCase().startsWith("rigged") || obj.message.toLowerCase().endsWith(" rigged") || obj.message.toLowerCase().startsWith("rig ") || obj.message.toLowerCase().endsWith(" rig") || obj.message.toLowerCase().includes(" rig ")) && gameObject[gindex].shortId.toLowerCase().includes("claw")) {
+					sendMessageToWebsite(gameObject[gindex].uuid, "(Robot Ninja Auto Help) Operators can set the claw strength on Claw Machines to limit the amount of prizes won. Some modern claw machines (but not this one) have even more settings to control how many prizes are won. This claw machine is set up so that not all but a fair amount of grabs will win a prize. The difficulty mostly comes from the unusual shapes of the prizes.");
+					logBotActions("RIGGED MACHINE", "Rigged on Claw Machine");
 				}
 
 				if (obj.message.toLowerCase().includes("help") && !obj.message.toLowerCase().includes("helping") && !obj.message.toLowerCase().includes("!test") && !obj.message.toLowerCase().includes("!help") && obj.role == null) {
@@ -1986,7 +1964,7 @@ function connect(){
 					// 		for (let i = 0; i < x.length; i++) {
 					// 			out+=x[i].time+" |\t"+x[i].message+"\n";
 					// 		}
-					// 		bot.channels.get(modBotSpamID).send(out);
+					// 		bot.channels.cache.get(modBotSpamID).send(out);
 					// 	});
 					// logBotActions("WEBSITE HELP", "Help Requested on private game");
 					gameObject[gindex].threshold=-4;
@@ -2002,7 +1980,7 @@ function connect(){
 							for (let i = 0; i < x.length; i++) {
 								out+=x[i].time+" |\t"+x[i].message+"\n";
 							}
-							bot.channels.get(modBotSpamID).send(out);
+							bot.channels.cache.get(modBotSpamID).send(out);
 						});
 					logBotActions("WEBSITE HELP", "Help Requested on public game");
 					gameObject[gindex].threshold=-4;
