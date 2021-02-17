@@ -5,6 +5,7 @@ const fetch = require('node-fetch');
 const ms = require("ms");
 const fs = require('fs');
 const WebSocket = require('ws');
+let request = require(`request`);
 const Amplify = require('@aws-amplify/core');
 const Auth = require('@aws-amplify/auth');
 const API = require('@aws-amplify/api');
@@ -36,64 +37,117 @@ const botSpamID = "710104643996352633";
 const modBotSpamID = "593000239841935362";
 const testChannelID = "707600524727418900";
 
+const categories = [
+    {
+        "id": "5d7f6eab-cbc7-4db6-9803-25e8a9c99ebe",
+        "name": "Claw",
+        "ping": "<@&744956886339682354>",
+        "channel": "797123960092885052",
+    },
+    {
+        "id": "9d04068c-8e3c-455c-98fd-bba5ea905daa",
+        "name": "Racing",
+        "ping": "<@&744956844233064449>",
+        "channel": "589484542214012963",
+    },
+    {
+        "id": "b5b6b966-cc16-4db1-b18d-6545bda1407c",
+        "name": "WePlay",
+        "ping": "<@&810898512748609546>",
+        "channel": "790994604316164096",
+    },
+    {
+        "id": "c5d4fb68-94bf-41a5-bd82-8120bee957b5",
+        "name": "GameConsoles",
+        "ping": "<@&768263821739032578>",
+        "channel": "768112471860576297",
+    },
+    {
+        "id": "41addbbf-bcbf-42f0-acdb-3d190965fee3",
+        "name": "Pinball",
+        "ping": "<@&744956868870537276>",
+        "channel": "613630308931207198",
+    },
+    {
+        "id": "7f048d16-acc0-4c32-a6a4-552a17761d70",
+        "name": "Other",
+        "ping": "<@&770311273585573889>",
+        "channel": "751846589039116360",
+    },
+    {
+        "id": "aca57801-006d-4f1b-bcbb-66822424d1ae",
+        "name": "Battling",
+        "ping": "<@&744956818073190471>",
+        "channel": "627919045420646401",
+    },
+    {
+        "id": "325d1761-5fa5-497c-b345-e4e674ccb0b4",
+        "name": "Explore",
+        "ping": "<@&745984587422760980>",
+        "channel": "745957132049973291",
+    },
+];
+
 var times=0;
 
 var gameObject=[];
+var curAnnounce=[];
 
 // var storedMessages=[];
 
 //Game Announcements
-async function announcement(game, image, numImage, channel) {
-	while (true) {
-		let at = "";
-		if (game.toLowerCase().includes("sumobots")) {
-			at = "<@&744956818073190471>";
-		} else if (game.toLowerCase().includes("racerealcars143")) {
-			at = "<@&744956844233064449>";
-		} else if (game.toLowerCase().includes("mariokartlive")) {
-			at = "<@&768263821739032578>";
-		}
-		const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=" + game.toLowerCase(), {
-			method: 'GET', headers: {
-				'Content-Type': 'application/json',
-			},
-		}).then(response => response.json())
-			.then((x) => {
-				if (x == null || x.result == null || x.result.schedule == null) {
-					let scheduleHour = null;
-				} else {
-					const date = getDateObject(TIMEZONE_OFFSET_GMT);
-					let output = "";
-					let adjustedMinute = date.minute + date.hour * 60 +(date.weekdayNr-1) * 1440;
-					let nearestStartTime = x.result.schedule.findIndex(z => Math.abs(adjustedMinute - z.startTime) < 20);
-					let rand = Math.floor(Math.random() * numImage) + 1;
-					if (!(nearestStartTime === -1)) {
-						let	startTime = x.result.schedule[nearestStartTime].startTime;
-						// console.log(startTime-adjustedMinute)
-						if (startTime - adjustedMinute === 15 ) {
-							let out = at + " **" + game + "** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/" + game.toLowerCase() + "\n";
-							bot.channels.cache.get(channel).send(out, {
-								files: [{
-									attachment: './gifs/' + image + '/' + image + '_' + rand + '.gif', name: image + '.gif',
-								}],
-							})
-								.then(bot.channels.cache.get(channel).send("**NOTE** Notifications for games have been changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
-							logBotActions(null, game + " Pre-Announcement");
-						} else if (startTime - adjustedMinute === 0 ) {
-							let out = at + " **" + game + "** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/" + game.toLowerCase() + "\n";
-							bot.channels.cache.get(channel).send(out, {
-								files: [{
-									attachment: './gifs/' + image + '/' + image + '_' + rand + '.gif', name: image + '.gif',
-								}],
-							})
-								.then(bot.channels.cache.get(channel).send("**NOTE** Notifications for games have been changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
-							logBotActions(null, game + " Announcement");
-						}
-					}
-				}
-			});
-		await Sleep(60000); //1 minute
-	}
+async function announcement(shortId, dir) {
+    console.log("Starting Announcements for "+shortId+" with image path "+dir);
+    while (true) {
+        if (curAnnounce.indexOf(shortId) == -1) {
+            console.log("Ending Announcments for "+shortId);
+            break;
+        }
+        const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=" + shortId.toLowerCase(), {
+            method: 'GET', headers: {
+                'Content-Type': 'application/json',
+            },
+        }).then(response => response.json())
+            .then((x) => {
+                if (x == null || x.result == null || x.result.schedule == null) {
+                    let scheduleHour = null;
+                } else {
+                    let cindex = categories.findIndex(c => c.id === x.result.categoryId);
+                    let at = categories[cindex].ping;
+                    var files = fs.readdirSync('./imgs/'+dir+'/');
+                    let rand = Math.floor(Math.random() * files.length);
+                    let chosenFile = files[rand];
+
+                    const date = getDateObject(TIMEZONE_OFFSET_GMT);
+                    let output = "";
+                    let adjustedMinute = date.minute + date.hour * 60 +(date.weekdayNr-1) * 1440;
+                    let nearestStartTime = x.result.schedule.findIndex(z => Math.abs(adjustedMinute - z.startTime) < 20);
+                    if (!(nearestStartTime === -1)) {
+                        let startTime = x.result.schedule[nearestStartTime].startTime;
+                        if (startTime - adjustedMinute === 15 ) {
+                            let out = at + " **" + x.result.title + "** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/" + shortId.toLowerCase() + "\n";
+                            bot.channels.cache.get(categories[cindex].channel).send(out, {
+                                files: [{
+                                    attachment: './imgs/'+dir+'/'+chosenFile,
+                                }],
+                            })
+                                .then(bot.channels.cache.get(categories[cindex].channel).send("**NOTE** Notifications for games have been changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
+                            logBotActions(null, shortId + " Pre-Announcement");
+                        } else if (startTime - adjustedMinute === 0 ) {
+                            let out = at + " **" + x.result.title + "** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/" + shortId.toLowerCase() + "\n";
+                            bot.channels.cache.get(categories[cindex].channel).send(out, {
+                                files: [{
+                                    attachment: './imgs/'+dir+'/'+chosenFile,
+                                }],
+                            })
+                                .then(bot.channels.cache.get(categories[cindex].channel).send("**NOTE** Notifications for games have been changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
+                            logBotActions(null, shortId + " Announcement");
+                        }
+                    }
+                }
+            });
+        await Sleep(60000); //1 minute
+    }
 }
 
 function Sleep(milliseconds) {
@@ -278,6 +332,7 @@ bot.on('raw', packet => {
     channel.messages.fetch(packet.d.message_id).then(message => {
         const emoji = packet.d.emoji.id ? `${packet.d.emoji.name}:${packet.d.emoji.id}` : packet.d.emoji.name;
         const reaction = message.reactions.cache.get(emoji);
+        if (!reaction) return;
         if (reaction) reaction.users.set(packet.d.user_id, bot.users.cache.get(packet.d.user_id));
         if (packet.t === 'MESSAGE_REACTION_ADD') {
             bot.emit('messageReactionAdd', reaction, bot.users.cache.get(packet.d.user_id));
@@ -293,7 +348,7 @@ bot.on('messageReactionAdd', async (reaction, user) => {
 	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents"];
 	const femoji = ['✅'];
 	const frole = ["feedback"];
-	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "810991453944807445") { //CHANGE AFTER GEN
+	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "811257817792905226") { //CHANGE AFTER GEN
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
 				let i = reaction.message.guild.roles.cache.find(e => e.name === role[o]);
@@ -324,7 +379,7 @@ bot.on('messageReactionRemove', async (reaction, user) => {
 	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents"];
 	const femoji = ['✅'];
 	const frole = ["feedback"];
-	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "810991453944807445") { //CHANGE AFTER GEN
+	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "811257817792905226") { //CHANGE AFTER GEN
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
 				let i = reaction.message.guild.roles.cache.find(e => e.name === role[o]);
@@ -351,11 +406,25 @@ bot.on('messageReactionRemove', async (reaction, user) => {
 });
 
 bot.once('ready', async () => {
-	announcement("SumoBots", "sumo", 15, "627919045420646401");
-	announcement("RaceRealCars143", "race", 4, "589484542214012963");
-	announcement("MarioKartLive", "mario", 5, "768112471860576297");
-	// announcement("MarioKartLive", "mario", 5, "707047722208854101"); //Testing
-	// announcement("SumoBots", "sumo", 10, "700390885984043188"); //Broom Bot
+    fs.exists("./database/announce.dat", (exists) => {
+        if (!exists) {
+            fs.open("./database/announce.dat", "w+", (err) => {
+                if (err) throw err;
+            });
+        } else {
+            fs.readFile("./database/announce.dat", "ascii", function (err, file) {
+                let totalData = file.toString().split("\n");
+                for (let i = 0; i < totalData.length; i++) {
+                    if (totalData[i].length != 0) {
+                        let dat = totalData[i].split("\r")[0].split("|");
+                        curAnnounce.push(dat[0]);
+                        announcement(dat[0], dat[1]);
+                    }
+                }
+            });
+        }
+    });
+
 	fs.exists("./database/mute.dat", (exists) => {
 		if (!exists) {
 			fs.open("./database/mute.dat", "w+", (err) => {
@@ -524,9 +593,9 @@ bot.on('message', message => {
 	if (message.member.user.tag === "Mordecai#3257" && message.content.includes("!gen")) {
 		message.delete();
 		
-		const battling = bot.emojis.cache.get("744962246848807002").toString();
+		const battling = bot.emojis.cache.get("811185294011006996").toString();
 		const pinball = bot.emojis.cache.get("810972920867717190").toString();
-		const racing = bot.emojis.cache.get("744960028427157565").toString();
+		const racing = bot.emojis.cache.get("811256590106755074").toString();
 		const claw = bot.emojis.cache.get("744963655443021846").toString();
 		const explore = bot.emojis.cache.get("810965118753570817").toString();
 		const consoles = bot.emojis.cache.get("810968692652507167").toString();
@@ -539,11 +608,11 @@ bot.on('message', message => {
 			.setColor(0x220e41)
 			.setDescription("React on this post to receive a role which will enable you to receive notifications about a specific game!")
 			.addField(battling + " Battling Games " + battling, "Get notified of any Battling game news and when SumoBots is about to go live.")
-			.addField(pinball + " Pinball Games " + pinball, "Get notified of any Pinball game news and when a game goes offline or online for maitenance. Recieve information about tournaments. ")
+			.addField(pinball + " Pinball Games " + pinball, "Get notified of any Pinball game news and when a game goes offline or online for maitenance. Receive information about tournaments. ")
 			.addField(racing + " Racing Games " + racing, "Get notified of any Racing game news and when RRC143 is about to go live.")
 			.addField(claw + " Claw Games " + claw, "Get notified of any Claw Game news or related events.")
 			.addField(explore + " Explore Games " + explore, "Get notified of any Explore game news or related events.")
-			.addField(consoles + " Game Console Games " + consoles, "Get notified of any Game Console game news and when MarioKartLive about to go live.")
+			.addField(consoles + " Game Console Games " + consoles, "Get notified of any Game Console game news and when MarioKartLive is about to go live.")
 			.addField(wePlay + " We Play Games " + wePlay, "Get notified of any We Play game news or related events.")
 			.addField(other + " Other Games " + other, "Get notified of any Other game news.")
 			.addField(specialEvent + " Special Events " + specialEvent, "Get notified of any Special Events happening within the community.")
@@ -551,9 +620,9 @@ bot.on('message', message => {
 			.setFooter("To disable notification, un-react. If it appears that you haven't reacted, just react and un-react to disable them.");
 		
 		// bot.channels.cache.get("745097595692515380").send({embed}).then(sentEmbed => {
-		//     sentEmbed.react("744962246848807002")
+		//     sentEmbed.react("811185294011006996")
 		//         .then(() => sentEmbed.react("810972920867717190"))
-		//         .then(() => sentEmbed.react("744960028427157565"))
+		//         .then(() => sentEmbed.react("811256590106755074"))
 		//         .then(() => sentEmbed.react("744963655443021846"))
 		//         .then(() => sentEmbed.react("810965118753570817"))
 		//         .then(() => sentEmbed.react("810968692652507167"))
@@ -562,15 +631,15 @@ bot.on('message', message => {
 		//         .then(() => sentEmbed.react("810967907193847860")));
 		// });
 
-        bot.channels.cache.get("745097595692515380").messages.fetch("810991453944807445")
-          .then(msg => {
-            msg.edit(embed).then(sentEmbed => {
-            	// console.log(sentEmbed)
-            	sentEmbed.react("810967907193847860");
-            	// 	.then(() => sentEmbed.react("770308616800043048"));
-            });
-          })
-          .catch(console.error);
+        // bot.channels.cache.get("745097595692515380").messages.fetch("811229678961557534")
+        //   .then(msg => {
+        //     msg.edit(embed).then(sentEmbed => {
+        //     	// console.log(sentEmbed)
+        //     	// sentEmbed.react("810967907193847860");
+        //     	// 	.then(() => sentEmbed.react("770308616800043048"));
+        //     });
+        //   })
+        //   .catch(console.error);
 		
 		logReactActions(message.member.user, "Edited embed");
 		
@@ -1734,6 +1803,174 @@ bot.on('message', message => {
 				message.reply("burrrrrrrrrrrr");
 				break
 			}
+            case "announcestart": {
+                if (message.channel.id === modBotSpamID) {
+                    if (args[1] == null || args[2] == null) {
+                        message.reply("Not enough arguments, use command as `!announcestart <shortID> <image_path>` with an image/gif attatched");
+                        return;
+                    }
+                    if (args[2].indexOf(".") != -1 || args[2].indexOf("/") != -1 || args[2].indexOf("\\") != -1) {
+                        message.reply("Invalid image path");
+                        return;
+                    }
+                    if (curAnnounce.indexOf(args[1]) != -1) {
+                        message.reply("Announcements already enabled for this game ID. To add images, use `!add <image_path>` with an image/gif attatched. To disable, use `!announcestop <shortID>`");
+                        return;
+                    }
+                    var dir = './imgs/'+args[2];
+
+                    if(message.attachments.first()){
+                        if (!fs.existsSync(dir)) {
+                            fs.mkdirSync(dir);
+                        } else {
+                            message.reply("An image path of that name already exists. Please choose a new one.");
+                            return;
+                        }
+                
+                        fs.readdir(dir, (err, files) => {
+                            message.attachments.forEach(a => {
+                                let name = dir+'/'+args[2]+"_"+files.length+""+a.name.substring(a.name.indexOf('.'));
+                                request.get(a.url)
+                                    .on('error', console.error)
+                                    .pipe(fs.createWriteStream(name));
+                            })
+                        });
+                        fs.appendFile('./database/announce.dat', args[1]+"|"+args[2]+"\n", function (err) {
+                          if (err) throw err;
+                        });
+
+                        curAnnounce.push(args[1]);
+                        announcement(args[1], args[2]);
+                        message.reply("Starting announcements for "+args[1]+" with image path "+args[2]);
+                    } else {
+                        message.reply("You need to supply some media to go along with the announcement");
+                        return;
+                    }
+                }
+                logBotActions(message, message.content);
+                break;
+            }
+            case "announcepause": {
+                if (message.channel.id === modBotSpamID) {
+                    if (args[1] == null) {
+                        message.reply("Not enough arguments, use commands as `!announcepause <shortID>`");
+                        return;
+                    }
+                    if (curAnnounce.indexOf(args[1]) == -1) {
+                        message.reply("Game ID already not being announced");
+                        return;
+                    }
+                    curAnnounce.splice(curAnnounce.indexOf(args[1]),curAnnounce.indexOf(args[1])+1);
+                    message.reply("Stopping announcements for "+args[1]);
+                }
+                logBotActions(message, message.content);
+                break;
+            }
+            case "announceunpause": {
+                if (message.channel.id === modBotSpamID) {
+                    if (args[1] == null || args[2] == null) {
+                        message.reply("Not enough arguments, use commands as `!announceunpause <shortID> <image_path>`");
+                        return;
+                    }
+                    if (curAnnounce.indexOf(args[1]) != -1) {
+                        message.reply("Game ID already being announced");
+                        return;
+                    }
+                    curAnnounce.push(args[1]);
+                    announcement(args[1], args[2]);
+                    message.reply("Restarting announcements for "+args[1]);
+                }
+                logBotActions(message, message.content);
+                break;
+            }
+            case "announcestop": {
+                if (message.channel.id === modBotSpamID) {
+                    if (args[1] == null) {
+                        message.reply("Not enough arguments, use command as `!announcestop <shortID>`");
+                        return;
+                    }
+                    if (curAnnounce.indexOf(args[1]) == -1) {
+                        message.reply("Announcments already turned off for that game ID!");
+                        return;
+                    }
+                    curAnnounce.splice(curAnnounce.indexOf(args[1]),curAnnounce.indexOf(args[1])+1);
+
+                    fs.readFile("./database/announce.dat", "ascii", function (err, file) {
+                        let totalData = file.toString().split("\n");
+                        let rm = -1;
+                        for (let i = 0; i < totalData.length; i++) {
+                            if (totalData[i].includes(args[1])) {
+                                rm = i; 
+                                break;
+                            }
+                        }
+                        let imPath = "./imgs/"+totalData[rm].split("\r")[0].split("|")[1];
+                        fs.rm(imPath, { recursive: true , force: true}, (err) => {
+                            if (err) {
+                                throw err;
+                            }
+                        });
+
+                        totalData.splice(rm, rm+1);
+                        if (totalData.length > 0) {
+                            fs.writeFileSync("./database/announce.dat", totalData.join("\n"));
+                        } else {
+                            fs.writeFileSync("./database/announce.dat", "");
+                        }
+                    });
+                    message.reply("Disabling announcement notifications for "+args[1]);
+                }
+                logBotActions(message, message.content);
+                break;
+            }
+            case "add": {
+                if (message.channel.id === modBotSpamID) {
+                    if (args[1] == null) {
+                        message.reply("You need to provide the image path you set when setting up the announcement");
+                        return;
+                    }
+
+                    var dir = './imgs/'+args[1];
+
+                    if(message.attachments.first()){
+                        if (!fs.existsSync(dir)) {
+                            message.reply("An image path of that name doesn't exist yet. Please choose a new one.");
+                            return;
+                        } 
+                
+                        fs.readdir(dir, (err, files) => {
+                            message.attachments.forEach(a => {
+                                let name = dir+'/'+args[1]+"_"+files.length+""+a.name.substring(a.name.indexOf('.'));
+                                request.get(a.url)
+                                    .on('error', console.error)
+                                    .pipe(fs.createWriteStream(name));
+                            })
+                        });
+                        message.reply("Added image to "+args[1]);
+                    } else {
+                        message.reply("You need to supply some media");
+                        return;
+                    }
+                }
+                logBotActions(message, message.content);
+                break;
+            }
+			case 'announcehelp': {
+				if (message.channel.id === modBotSpamID) {
+					const embed = new Discord.MessageEmbed()
+						.setTitle("Hello, I am the NinjaHelp bot")
+						.setColor(0x220e41)
+						.setDescription("Here are the commands related to announcements")
+						.addField("`!announcestart <shortID> <new_image_path>`", "NOTE: Requires an attatched image/gif to work. Will enable announcements for the given shortID. The attatched image will be saved in the new_image_path.")
+						.addField("`!announcepause <shortID>`", "Pause announcements being given for the shortID if they were enabled previously")
+						.addField("`!announceunpause <shortID> <image_path>`", "Unpause announcements for the given shortID and image_path.")
+						.addField("`!announcestop <shortID>`", "Will disable announcements from being done for the given shortID. Will delete any images previously uploaded.")
+						.addField("`!add <image_path>`", "NOTE: Requires an attatched image/gif to work. Will add the included attatchment to image_path to be randomly pulled from when announcements happen.")
+						.setFooter("These commands are for Mod Squad, Surrogate Team, and Game Creators");
+					bot.channels.cache.get(modBotSpamID).send({embed});
+				}
+				break;
+			}
 			default: {
 				break;
 			}
@@ -1906,13 +2143,6 @@ function connect(){
 					"message": obj.message,
 					"userId": obj.userId,
 				};
-
-				// const n = 100; //Storage of 100 latest messages
-				// storedMessages.push(toStoreObject);
-
-				// if (storedMessages.length > n) {
-				// 	storedMessages = storedMessages.slice(1,storedMessages.length);
-				// } 
 
 				if (obj.message.toLowerCase().startsWith("!help") && toStoreObject.username!="NinjaHelp") {
 					// Some sort of detection 
