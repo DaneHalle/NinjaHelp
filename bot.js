@@ -213,20 +213,20 @@ async function newDayCheck() {
 	});
 	
 	while (true) {
-		const checkDate = getDateObject(0);
+		var checkDate = getDateObject(0);
 		if (checkDate.day > startingDate.day || checkDate.month > startingDate.month || checkDate.year > startingDate.year) {
 			fs.appendFile("./bot_logs/logs_" + startingDate.dateString_MDY_noLead + ".txt", "Starting a new day and restarting the bot", function (err) {
 				if (err) throw err;
 			});
 			console.log("Starting a new day\n\n\n\n\n");
 			startingDate=checkDate;
-			if (startingDate.weekday === "Tuesday") {
+			if (checkDate.weekday === "Tuesday") {
 				bot.channels.cache.get("800698068084457493").send("<@&800698382355660801> \n Are you good to host Mario Kart Live this week for your normal sessions?");
 			}
-			if (startingDate.weekday === "Thursday") {
+			if (checkDate.weekday === "Thursday") {
 				bot.channels.cache.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
 			}
-			fs.open("./bot_logs/logs_" + startingDate.dateString_MDY_noLead + ".txt", 'a', function (err, file) {
+			fs.open("./bot_logs/logs_" + checkDate.dateString_MDY_noLead + ".txt", 'a', function (err, file) {
 				if (err) throw err;
 			});
 
@@ -584,8 +584,14 @@ bot.on('message', message => {
 		let args = message.content.substring(1).split(' ');
 		let cmd = args[0].toLowerCase();
 
-		// bot.channels.cache.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
-			
+		var checkDate = getDateObject(0);
+
+		if (checkDate.weekday === "Tuesday") {
+			bot.channels.cache.get("800698068084457493").send("<@&800698382355660801> \n Are you good to host Mario Kart Live this week for your normal sessions?");
+		}
+		if (checkDate.weekday === "Thursday") {
+			bot.channels.cache.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
+		}
 		return;
 	}
 	
@@ -2149,13 +2155,13 @@ function connect(){
 
 				}
 
-				fetch(hiddenURL, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify(toStoreObject)
-				}).then(response => response.text());
+				// fetch(hiddenURL, {
+				// 	method: 'POST',
+				// 	headers: {
+				// 		'Content-Type': 'application/json'
+				// 	},
+				// 	body: JSON.stringify(toStoreObject)
+				// }).then(response => response.text());
 
 				if (obj.message.toLowerCase().startsWith("!mod")) {
 					bot.channels.cache.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
