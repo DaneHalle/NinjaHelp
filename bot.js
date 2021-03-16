@@ -16,8 +16,8 @@ const email = ""+process.env.EMAIL;
 const pass = ""+process.env.PASSWORD;
 bot.login(TOKEN);
 
-const TIMEZONE_OFFSET_GMT = 5;
-const TIMEZONE_OFFSET_FINLAND = 7;
+const TIMEZONE_OFFSET_GMT = 4;
+const TIMEZONE_OFFSET_FINLAND = 6;
 
 const battlingTrigger = ["627919045420646401", "707600524727418900"];
 const pinballTrigger = ["613630308931207198", "707600524727418900"];
@@ -238,22 +238,25 @@ async function newDayCheck() {
 				for (let i = 0; i < totalData.length; i++) {
 					if (totalData[i].length != 0) {
 						let dat = totalData[i].split("\r")[0].split("|");
-						if (!uid.includes(dat[0])) {
-							url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/"+dat[0];
+						let gid = gameObject.findIndex(z => z.uuid === dat[0]);
+						if (gid == -1) {
+							url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId="+dat[1];
 							let {list} = fetch(url, {
 								method: 'GET', headers: {
 									'Content-Type': 'application/json',
 								},
 							}).then(response => response.json())
 								.then((x) => {
-									gameObject.push({
-										"uuid":dat[0], 
-										"shortId": x.result.shortId,
-										"public": x.result.isVisible,
-										"threshold": 0,
-										"category": x.result.categoryId,
-									});
-
+									try{
+										gameObject.push({
+											"uuid":dat[0], 
+											"shortId": x.result.shortId,
+											"public": x.result.privacySetting === "public",
+											"threshold": 0,
+											"category": x.result.categoryId,
+										});
+									} catch (e) {
+									}
 								});
 						}
 					}
@@ -450,20 +453,23 @@ bot.once('ready', async () => {
 				let dat = totalData[i].split("\r")[0].split("|");
 				let gid = gameObject.findIndex(z => z.uuid === dat[0]);
 				if (gid == -1) {
-					url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/"+dat[0];
+					url="https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId="+dat[1];
 					let {list} = fetch(url, {
 						method: 'GET', headers: {
 							'Content-Type': 'application/json',
 						},
 					}).then(response => response.json())
 						.then((x) => {
-							gameObject.push({
-								"uuid":dat[0], 
-								"shortId": x.result.shortId,
-								"public": x.result.isVisible,
-								"threshold": 0,
-								"category": x.result.categoryId,
-							});
+							try{
+								gameObject.push({
+									"uuid":dat[0], 
+									"shortId": x.result.shortId,
+									"public": x.result.privacySetting === "public",
+									"threshold": 0,
+									"category": x.result.categoryId,
+								});
+							} catch (e) {
+							}
 						});
 				}
 			}
@@ -651,13 +657,13 @@ bot.on('message', message => {
 		return;
 	}
 	
-	if (message.member.user.tag === "Mordecai#3257" && message.content.includes("!react")) {
-        message.channel.messages.fetch("783756498395725835")
-          .then(msg => {
-            msg.react('✅');
-          })
-          .catch(console.error);
-	}
+	// if (message.member.user.tag === "Mordecai#3257" && message.content.includes("!react")) {
+ //        message.channel.messages.fetch("783756498395725835")
+ //          .then(msg => {
+ //            msg.react('✅');
+ //          })
+ //          .catch(console.error);
+	// }
 
 	//scraper for getting channel info
 	if (message.member.user.tag === "Mordecai#3257" && message.content.startsWith("!scrape")) {
@@ -1898,25 +1904,23 @@ bot.on('message', message => {
                         message.reply("Announcments already turned off for that game ID!");
                         return;
                     }
-                    curAnnounce.splice(curAnnounce.indexOf(args[1]),curAnnounce.indexOf(args[1])+1);
-
+                    curAnnounce.splice(curAnnounce.indexOf(args[1]),1);
                     fs.readFile("./database/announce.dat", "ascii", function (err, file) {
                         let totalData = file.toString().split("\n");
                         let rm = -1;
                         for (let i = 0; i < totalData.length; i++) {
                             if (totalData[i].includes(args[1])) {
                                 rm = i; 
+		                        let imPath = "./imgs/"+totalData[i].split("\r")[0].split("|")[1];
+		                        fs.rm(imPath, { recursive: true , force: true}, (err) => {
+		                            if (err) {
+		                                throw err;
+		                            }
+		                        });
                                 break;
                             }
                         }
-                        let imPath = "./imgs/"+totalData[rm].split("\r")[0].split("|")[1];
-                        fs.rm(imPath, { recursive: true , force: true}, (err) => {
-                            if (err) {
-                                throw err;
-                            }
-                        });
-
-                        totalData.splice(rm, rm+1);
+                        totalData.splice(rm, 1);
                         if (totalData.length > 0) {
                             fs.writeFileSync("./database/announce.dat", totalData.join("\n"));
                         } else {
@@ -1960,6 +1964,51 @@ bot.on('message', message => {
                 logBotActions(message, message.content);
                 break;
             }
+			case "announcestatus": {
+                if (message.channel.id === modBotSpamID) {
+                    if (args[1] == null) {
+                        message.reply("Not enough arguments, use command as `!announcestatus <shortID>`");
+                        return;
+                    }
+                    fs.readFile("./database/announce.dat", "ascii", function (err, file) {
+                        let totalData = file.toString().split("\n");
+                        let loc = -1;
+                        for (let i = 0; i < totalData.length; i++) {
+                        	if (totalData[i].includes(args[1])) {
+                                loc = i; 
+                                break;
+                            }
+                        }
+                        if (loc == -1) {
+                        	message.reply("No announcements running or setup for that game. ")
+                        } else {
+		                    if (curAnnounce.indexOf(args[1]) == -1) {
+		                        let imPath = totalData[loc].split("\r")[0].split("|")[1];
+		                        message.reply("Announcements are currently paused for **"+args[1]+"** with image path **"+imPath+"**");
+		                    } else {
+		                        let imPath = totalData[loc].split("\r")[0].split("|")[1];
+		                    	message.reply("Announcements are running for **"+args[1]+"** with image path **"+imPath+"**");
+		                    }
+		                }
+                    });
+                }
+                logBotActions(message, message.content);
+                break;
+            }
+			case "announceaudit": {
+                if (message.channel.id === modBotSpamID) {
+                    if (args[1] != null) {
+                        message.reply("Too many arguments. None are needed for this command.`");
+                        return;
+                    }
+                    fs.readFile("./database/announce.dat", "ascii", function (err, file) {
+                        let totalData = file.toString();
+                        message.reply("Here is an audit of the games currently running announcements\n`shortID|imagePath`\n\n```"+totalData+"```")
+                    });
+                }
+                logBotActions(message, message.content);
+                break;
+            }
 			case 'announcehelp': {
 				if (message.channel.id === modBotSpamID) {
 					const embed = new Discord.MessageEmbed()
@@ -1970,6 +2019,8 @@ bot.on('message', message => {
 						.addField("`!announcepause <shortID>`", "Pause announcements being given for the shortID if they were enabled previously")
 						.addField("`!announceunpause <shortID> <image_path>`", "Unpause announcements for the given shortID and image_path.")
 						.addField("`!announcestop <shortID>`", "Will disable announcements from being done for the given shortID. Will delete any images previously uploaded.")
+						.addField("`!announcestatus <shortID>`", "Get the curent announcement status for a specified shortID. Will give the imagePath if possible.")
+						.addField("`!announceaudit`", "Provides an audit of all the shortIDs and imagePaths currently setup.")
 						.addField("`!add <image_path>`", "NOTE: Requires an attatched image/gif to work. Will add the included attatchment to image_path to be randomly pulled from when announcements happen.")
 						.setFooter("These commands are for Mod Squad, Surrogate Team, and Game Creators");
 					bot.channels.cache.get(modBotSpamID).send({embed});
@@ -2155,13 +2206,13 @@ function connect(){
 
 				}
 
-				// fetch(hiddenURL, {
-				// 	method: 'POST',
-				// 	headers: {
-				// 		'Content-Type': 'application/json'
-				// 	},
-				// 	body: JSON.stringify(toStoreObject)
-				// }).then(response => response.text());
+				fetch(hiddenURL, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(toStoreObject)
+				}).then(response => response.text());
 
 				if (obj.message.toLowerCase().startsWith("!mod")) {
 					bot.channels.cache.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
