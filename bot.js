@@ -901,208 +901,220 @@ bot.on('message', message => {
 				let url = "https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=";
 				let command = "";
 				let image = "";
-				if (triggerBattlingResponse || message.content.toLowerCase() === ("!schedule sumobots")) {
-					url += "sumobots";
-					command = "SumoBots";
-					image = "https://www.surrogate.tv/img/sumo/logo_sumo.png";
-				} else if (triggerGameResponse || message.content.toLowerCase() === ("!schedule mariokartlive")) {
-					url += "mariokartlive";
-					command = "MarioKartLive";
-					image = "https://assets.surrogate.tv/game/7488f823-4fb2-468f-9100-a092a46d4de4/0849495794-Asset22x.png";
-				} else if (triggerRaceResponse || message.content.toLowerCase() === ("!schedule racerealcars143")) {
-					url += "racerealcars143";
-					command = "RaceRealCars143";
-					image = "https://i.imgur.com/XETrUAa.png";
-				} else if ((triggerClawResponse && message.channel.id === "706819836071903275") || message.content.toLowerCase() === ("!schedule forceclaw")) {
-					url += "forceclaw";
-					command = "ForceClaw";
-					image = "https://assets.surrogate.tv/game/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0/3458917638-48hreventforceclaw-01.png";
-				} else if ((triggerPinballResponse && message.channel.id === "613630308931207198") || message.content.toLowerCase() === ("!schedule batman66")) {
-					url += "batman66";
-					command = "Batman66 Pinball";
-					image = "https://www.surrogate.tv/img/pinball/pinball_logo.png";
-				} else {
-					if (message.channel.id !== botSpamID) {
-						if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team"))) {
-							bot.channels.cache.get(modBotSpamID).send("<@" + message.member.user.id + "> Can't find that game");
-							message.delete();
-						} else {
-							bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nCan't find that game. Try a different one.");
-							message.delete();
-						}
-					} else {
-						bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Can't find that game. Try a different one.");
-					}
-					return;
-				}
+				let soloTitle = "";
 				const minDay = 1440;
-				let {list} = fetch(url, {
-					method: 'GET', headers: {
-						'Content-Type': 'application/json',
-					},
-				}).then(response => response.json())
-					.then((x) => {
-						if (x.result.schedule == null) {
-							message.channel.send("There is no schedule for " + command + ".");
-						} else {
-							let output = "";
-							x.result.schedule.sort((a, b) => a.startTime - b.startTime)
-							for (let i = 0; i < x.result.schedule.length; i++) {
-								let startTime = x.result.schedule[i].startTime + (2 * 60);
-								let duration = x.result.schedule[i].duration;
-								let endTime = startTime + duration;
-								let day = Math.floor(startTime / minDay);
-								let startHour = Math.floor((startTime - (day * minDay)) / 60);
-								let startMinute = startTime - (startHour * 60) - (day * minDay);
-								if (startMinute <= 0) {
-									startMinute = "0" + startMinute;
-								}
-								if (startHour > 23) {
-									let addToDay = Math.floor(startHour / 24);
-									startHour %= 24;
-									day += addToDay;
-								}
-								let endHour = Math.floor((endTime - day * minDay) / 60);
-								let endMinute = (startTime + duration) % 60;
-								let endDay = day;
-								if (endMinute <= 0) {
-									endMinute = "0" + endMinute;
-								}
-								if (endHour > 23 || endHour <= 0) {
-									let addToDay = Math.floor(endHour / 24);
-									if (endHour < 0) {
-										endHour = 0;
-										addToDay = 3;//Don't talk about it
-									}
-									endHour %= 24;
-									endDay += addToDay;
-								}
-								switch (day) {
-									case 0:
-										output += "Monday:         ";
-										break;
-									case 1:
-										output += "Tuesday:         ";
-										break;
-									case 2:
-										output += "Wednesday:  ";
-										break;
-									case 3:
-										output += "Thursday:       ";
-										break;
-									case 4:
-										output += "Friday:             ";
-										break;
-									case 5:
-										output += "Saturday:        ";
-										break;
-									case 6:
-										output += "Sunday:           ";
-										break;
-									default:
-										break;
-								}
-								if (startHour >= 12) {
-									if (startHour % 12 < 10 && startHour !== 12) {
-										output += "0" + (startHour % 12) + ":" + startMinute + " PM - ";
-									} else if (startHour === 12) {
-										output += (startHour) + ":" + startMinute + " PM - ";
-									} else {
-										output += (startHour % 12) + ":" + startMinute + " PM - ";
-									}
-								} else if (startHour === 0) {
-									output += "12:" + startMinute + " AM - ";
-								} else {
-									if (startHour < 10) {
-										output += "0" + startHour + ":" + startMinute + " AM - ";
-									} else {
-										output += startHour + ":" + startMinute + " AM - ";
-									}
-								}
-								switch (endDay) {
-									case 0:
-										output += "Monday:         ";
-										break;
-									case 1:
-										output += "Tuesday:         ";
-										break;
-									case 2:
-										output += "Wednesday:  ";
-										break;
-									case 3:
-										output += "Thursday:       ";
-										break;
-									case 4:
-										output += "Friday:             ";
-										break;
-									case 5:
-										output += "Saturday:        ";
-										break;
-									case 6:
-										output += "Sunday:           ";
-										break;
-									default:
-										output += "Monday:         ";
-										break;
-								}
-								if (endHour >= 12) {
-									if (endHour % 12 < 10 && endHour !== 12) {
-										output += "0" + (endHour % 12) + ":" + endMinute + " PM\n";
-									} else if (endHour === 12) {
-										output += (endHour) + ":" + endMinute + " PM\n";
-									} else {
-										output += (endHour % 12) + ":" + endMinute + " PM\n";
-									}
-								} else if (endHour === 0) {
-									output += "12:" + endMinute + " AM\n";
-								} else {
-									if (endHour < 10) {
-										output += "0" + endHour + ":" + endMinute + " AM\n";
-									} else {
-										output += endHour + ":" + endMinute + " AM\n";
-									}
-								}
-							}
-							let title = "Schedule for **" + command + "**";
-							command = command.split(' ');
-							command = command.splice(0);
-							if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host"))) {
+
+				const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=" + args[1], {
+		            method: 'GET', headers: {
+		                'Content-Type': 'application/json',
+		            },
+		        }).then(response => response.json())
+		            .then((x) => {
+		                if (x == null || x.result == null) {
+		                	// Check if in bot spam or not and send "game not found or game not public" message
+	                		if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host")) || message.member.roles.cache.find(r => r.name.toLowerCase() === "game creators")) {
 								message.delete();
-								const embed = new Discord.MessageEmbed()
-									.setTitle("__" + title + "__")
-									.setColor(0x220e41)
-									.setURL("https://surrogate.tv/game/" + command)
-									.setDescription(output)
-									.setThumbnail(image)
-									.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
-								message.channel.send({embed});
+								bot.channels.cache.get(modBotSpamID).send("<@" + message.author.id + "> , I was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
 							} else {
 								if (message.channel.id !== botSpamID) {
 									message.delete();
-									
-									const embed = new Discord.MessageEmbed()
-										.setTitle("__" + title + "__")
-										.setColor(0x220e41)
-										.setURL("https://surrogate.tv/game/" + command)
-										.setDescription(output)
-										.setThumbnail(image)
-										.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
-									bot.channels.cache.get(botSpamID).send({embed});
-									
+									bot.channels.cache.get(botSpamID).send("<@" + message.author.id + "> , Please use this channel for bot commands.\nI was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
 								} else {
-									const embed = new Discord.MessageEmbed()
-										.setTitle("__" + title + "__")
-										.setColor(0x220e41)
-										.setURL("https://surrogate.tv/game/" + command)
-										.setDescription(output)
-										.setThumbnail(image)
-										.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
-									bot.channels.cache.get(botSpamID).send({embed});
+									bot.channels.cache.get(botSpamID).send("<@" + message.author.id + "> , I was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
 								}
 							}
-						}
-					});
-				logBotActions(message, "!schedule");
+		                } else {
+		                	if (x.result.privacySetting != "public") {
+			                	// Check if in bot spam or not and send "game not found or game not public" message
+		                		if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host")) || message.member.roles.cache.find(r => r.name.toLowerCase() === "game creators")) {
+									message.delete();
+									bot.channels.cache.get(modBotSpamID).send("<@" + message.author.id + "> , I was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
+								} else {
+									if (message.channel.id !== botSpamID) {
+										message.delete();
+										bot.channels.cache.get(botSpamID).send("<@" + message.author.id + "> , Please use this channel for bot commands.\nI was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
+									} else {
+										bot.channels.cache.get(botSpamID).send("<@" + message.author.id + "> , I was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
+									}
+								}
+		                	} else {
+			                	if (x.result.gamePageLogo != null) {
+				                	if (x.result.gamePageLogo.includes("http")) {
+				                		image = x.result.gamePageLogo;
+				                	} else {
+				                		image = "https://www.surrogate.tv"+x.result.gamePageLogo;
+				                	}
+				                } else {
+				                	image = "https://www.surrogate.tv/img/profilepictures/sumo_profilepic.png";
+				                }
+	
+				                command = x.result.shortId;
+				                soloTitle = x.result.title;
+	
+				                if (x.result.schedule == null) {
+									message.channel.send("There is no schedule for " + soloTitle + ".");
+								} else {
+									let output = "";
+									x.result.schedule.sort((a, b) => a.startTime - b.startTime)
+									for (let i = 0; i < x.result.schedule.length; i++) {
+										let startTime = x.result.schedule[i].startTime + (2 * 60);
+										let duration = x.result.schedule[i].duration;
+										let endTime = startTime + duration;
+										let day = Math.floor(startTime / minDay);
+										let startHour = Math.floor((startTime - (day * minDay)) / 60);
+										let startMinute = startTime - (startHour * 60) - (day * minDay);
+										if (startMinute <= 0) {
+											startMinute = "0" + startMinute;
+										}
+										if (startHour > 23) {
+											let addToDay = Math.floor(startHour / 24);
+											startHour %= 24;
+											day += addToDay;
+										}
+										let endHour = Math.floor((endTime - day * minDay) / 60);
+										let endMinute = (startTime + duration) % 60;
+										let endDay = day;
+										if (endMinute <= 0) {
+											endMinute = "0" + endMinute;
+										}
+										if (endHour > 23 || endHour <= 0) {
+											let addToDay = Math.floor(endHour / 24);
+											if (endHour < 0) {
+												endHour = 0;
+												addToDay = 3;//Don't talk about it
+											}
+											endHour %= 24;
+											endDay += addToDay;
+										}
+										switch (day) {
+											case 0:
+												output += "Monday:         ";
+												break;
+											case 1:
+												output += "Tuesday:         ";
+												break;
+											case 2:
+												output += "Wednesday:  ";
+												break;
+											case 3:
+												output += "Thursday:       ";
+												break;
+											case 4:
+												output += "Friday:             ";
+												break;
+											case 5:
+												output += "Saturday:        ";
+												break;
+											case 6:
+												output += "Sunday:           ";
+												break;
+											default:
+												break;
+										}
+										if (startHour >= 12) {
+											if (startHour % 12 < 10 && startHour !== 12) {
+												output += "0" + (startHour % 12) + ":" + startMinute + " PM - ";
+											} else if (startHour === 12) {
+												output += (startHour) + ":" + startMinute + " PM - ";
+											} else {
+												output += (startHour % 12) + ":" + startMinute + " PM - ";
+											}
+										} else if (startHour === 0) {
+											output += "12:" + startMinute + " AM - ";
+										} else {
+											if (startHour < 10) {
+												output += "0" + startHour + ":" + startMinute + " AM - ";
+											} else {
+												output += startHour + ":" + startMinute + " AM - ";
+											}
+										}
+										switch (endDay) {
+											case 0:
+												output += "Monday:         ";
+												break;
+											case 1:
+												output += "Tuesday:         ";
+												break;
+											case 2:
+												output += "Wednesday:  ";
+												break;
+											case 3:
+												output += "Thursday:       ";
+												break;
+											case 4:
+												output += "Friday:             ";
+												break;
+											case 5:
+												output += "Saturday:        ";
+												break;
+											case 6:
+												output += "Sunday:           ";
+												break;
+											default:
+												output += "Monday:         ";
+												break;
+										}
+										if (endHour >= 12) {
+											if (endHour % 12 < 10 && endHour !== 12) {
+												output += "0" + (endHour % 12) + ":" + endMinute + " PM\n";
+											} else if (endHour === 12) {
+												output += (endHour) + ":" + endMinute + " PM\n";
+											} else {
+												output += (endHour % 12) + ":" + endMinute + " PM\n";
+											}
+										} else if (endHour === 0) {
+											output += "12:" + endMinute + " AM\n";
+										} else {
+											if (endHour < 10) {
+												output += "0" + endHour + ":" + endMinute + " AM\n";
+											} else {
+												output += endHour + ":" + endMinute + " AM\n";
+											}
+										}
+									}
+									let title = "Schedule for **" + soloTitle + "**";
+									command = command.split(' ');
+									command = command.splice(0);
+									if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game creators"))) {
+										message.delete();
+										const embed = new Discord.MessageEmbed()
+											.setTitle("__" + title + "__")
+											.setColor(0x220e41)
+											.setURL("https://surrogate.tv/game/" + command)
+											.setDescription(output)
+											.setThumbnail(image)
+											.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+										message.channel.send({embed});
+									} else {
+										if (message.channel.id !== botSpamID) {
+											message.delete();
+											
+											const embed = new Discord.MessageEmbed()
+												.setTitle("__" + title + "__")
+												.setColor(0x220e41)
+												.setURL("https://surrogate.tv/game/" + command)
+												.setDescription(output)
+												.setThumbnail(image)
+												.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+											bot.channels.cache.get(botSpamID).send({embed});
+											
+										} else {
+											const embed = new Discord.MessageEmbed()
+												.setTitle("__" + title + "__")
+												.setColor(0x220e41)
+												.setURL("https://surrogate.tv/game/" + command)
+												.setDescription(output)
+												.setThumbnail(image)
+												.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+											bot.channels.cache.get(botSpamID).send({embed});
+										}
+									}
+								}
+	
+							}
+		                }
+						logBotActions(message, "!schedule");
+		            });
 				break;
 			}
 			// !mute <USER> <TIME>
@@ -1228,207 +1240,176 @@ bot.on('message', message => {
 				let url = "https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/scores?gameId=";
 				let scoreType = "All Time";
 				let title = " Current Scores";
+				let soloTitle = ""
 				let command = "";
 				let image = "";
-				if (triggerBattlingResponse || message.content.toLowerCase() === ("!top sumobots") || message.content.toLowerCase() === ("!top sumobots month")) {
-					url += "99ca6347-0e10-4465-8fe1-9fee8bc5fb35&order=";
-					command = "SumoBots";
-					if (args[2] != null && args[2] === "month") {
-						if (message.channel.id !== botSpamID) {
-							if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host"))) {
-								bot.channels.cache.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
+
+				const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=" + args[1], {
+		            method: 'GET', headers: {
+		                'Content-Type': 'application/json',
+		            },
+		        }).then(response => response.json())
+		            .then((x) => {
+		                if (x == null || x.result == null) {
+		                	// Check if in bot spam or not and send "game not found or game not public" message
+	                		if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host")) || message.member.roles.cache.find(r => r.name.toLowerCase() === "game creators")) {
 								message.delete();
-							} else {
-								bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
-								message.delete();
-							}
-						} else {
-							message.channel.send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
-						}
-						return;
-					}
-					image = "https://www.surrogate.tv/img/sumo/logo_sumo.png";
-				} else if (triggerGameResponse || message.content.toLowerCase() === ("!top mariokartlive") || message.content.toLowerCase() === ("!top mariokartlive month")) {
-					url += "7488f823-4fb2-468f-9100-a092a46d4de4&order=";
-					command = "MarioKartLive";
-					if (args[2] != null && args[2] === "month") {
-						url += "month";
-						scoreType = "Monthly";
-						title = " Current Scores of the Month";
-					}
-					image = "https://assets.surrogate.tv/game/7488f823-4fb2-468f-9100-a092a46d4de4/0849495794-Asset22x.png";
-				} else if (triggerRaceResponse || message.content.toLowerCase() === ("!top racerealcars143") || message.content.toLowerCase() === ("!top racerealcars143 month")) {
-					url += "953f2154-9a6e-4602-99c6-265408da6310&order=";
-					command = "RaceRealCars143";
-					if (args[2] != null && args[2] === "month") {
-						url += "month";
-						scoreType = "Monthly";
-						title = " Current Scores of the Month";
-					}
-					image = "https://i.imgur.com/XETrUAa.png";
-				} else if ((triggerClawResponse && message.channel.id === "706819836071903275") || message.content.toLowerCase() === ("!top forceclaw") || message.content.toLowerCase() === ("!top forceclaw month")) {
-					url += "ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0&order=";
-					command = "ForceClaw";
-					if (args[2] != null && args[2] === "month") {
-						if (message.channel.id !== botSpamID) {
-							if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host"))) {
-								bot.channels.cache.get(modBotSpamID).send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
-								message.delete();
-							} else {
-								bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nThere are no monthly scores for " + command);
-								message.delete();
-							}
-						} else {
-							message.channel.send("<@" + message.member.user.id + "> There are no monthly scores for " + command);
-						}
-						return;
-					}
-					image = "https://assets.surrogate.tv/game/ca0b4cc3-d25d-463e-b3f6-ecf96427ffe0/3458917638-48hreventforceclaw-01.png";
-				} else if ((triggerPinballResponse && message.channel.id === "702578486199713872") || message.content.toLowerCase() === ("!top oktoberfest") || message.content.toLowerCase() === ("!top oktoberfest month")) {
-					//IMPLEMENT TAKING FROM GOOGLE FORM
-					message.delete();
-					let today = getDateObject(0);
-					if (today.month === 7 || today.month === 8 || (today.month === 9 && today.day <= 7)) {
-						fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRe979Ap0TpmdEDtPhZ7nwT9bkelIKUzFHf9ed6HiPBf5ZM09nNOAIjxAK1rztDqBffR8Gc6FTecoaA/pub?gid=1385749731&single=true&output=csv", {
-							method: 'GET',
-						}).then(x => x.text())
-							.then(x => {
-								// console.log(x);
-								let v = x.split(/\n/).map(a => a.split(","));
-								while (v.length > 10) {
-									v.pop();
-								}
-								let sym = ["1) ", "2) ", "3) ", "4) ", "5) ", "6) ", "7) ", "8) ", "9) ", "10) "];
-								let scores = "";
-								v.forEach((a, i) => {scores += "" + sym[i] + " **__" + a[0] + "__**\t" + a[1] + "\n"});
-								let title = "__**Oktoberfest** Current Scores__";
-								let description = "Here are the Top 10 **Oktoberfest Launch Tournament** players as of " + getDateObject(TIMEZONE_OFFSET_FINLAND).dateString_MD_slash;
-								let footer = "Note: Some new top 10 scores may not be verified yet and will not appear here.";
-								let image = "https://www.american-pinball.com/s/i/h/pinslide/oktoberfest/oktoberfest-logo-tap_shadow.png";
-								const embed = new Discord.MessageEmbed()
-									.setTitle("__" + title + "__")
-									.setColor(0x220e41)
-									.setURL("http://proco.me/oktoberfest/")
-									.addField(description, scores)
-									.setThumbnail(image)
-									.setFooter(footer);
-								bot.channels.cache.get("702578486199713872").send({embed});
-							});
-					} else {
-						message.channel.send("The **Oktoberfest Launch Tournament** has ended.");
-					}
-					logBotActions(message, "!top oktoberfest");
-					return;
-				} else if ((triggerPinballResponse && message.channel.id === "613630308931207198") || message.content.toLowerCase() === ("!top batman66") || message.content.toLowerCase() === ("!top batman66 month")) {
-					url += "592ac917-14d2-481a-9d37-3b840ad46b19&order=";
-					command = "Batman66 Pinball";
-					if (args[2] != null && args[2] === "month") {
-						url += "month";
-						scoreType = "Monthly";
-						title = " Current Scores of the Month";
-					}
-					image = "https://www.surrogate.tv/img/pinball/pinball_logo.png";
-				} else {
-					if (message.channel.id !== botSpamID) {
-						if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team"))) {
-							bot.channels.cache.get(modBotSpamID).send("<@" + message.member.user.id + "> Can't find that game.");
-							message.delete();
-						} else {
-							bot.channels.cache.get(botSpamID).send("<@" + message.member.user.id + "> Please use this channel for bot commands!\nCan't find that game.");
-							message.delete();
-						}
-					} else {
-						message.channel.send("<@" + message.member.user.id + "> Can't find that game.");
-					}
-					return;
-				}
-				title = "**" + command + "**" + title;
-				const minDay = 1440;
-				let {list} = fetch(url, {
-					method: 'GET', headers: {
-						'Content-Type': 'application/json',
-					},
-				}).then(response => response.json())
-					.then((x) => {
-						if (x == null || x.result == null || x.result.Items == null) {
-							message.channel.send("There were no scores for " + command + ".");
-						} else {
-							let description = "";
-							if (x.result.Items.length > 10) {
-								description = "These are the Top 10 scores for **" + command + "**";
-							} else {
-								description = "These are the Top " + x.result.Items.length + " scores for **" + command + "**";
-							}
-							let scores = "";
-							for (let i = 0; i < x.result.Items.length && i < 10; i++) {
-								if (x.result.Items[i].userObject.userIcon != null) {
-									let icon = x.result.Items[i].userObject.userIcon.toLowerCase();
-									switch (icon) {
-										case "broomsquad": {
-											icon = bot.emojis.cache.get("700736528803954769").toString();
-											break;
-										}
-										case "moderator": {
-											icon = bot.emojis.cache.get("700736529043161139").toString();
-											break;
-										}
-										case "patreonsupporter": {
-											icon = bot.emojis.cache.get("700736949631188993").toString();
-											break;
-										}
-										case "surrogateteam": {
-											icon = bot.emojis.cache.get("700737595734491237").toString();
-											break;
-										}
-										case "alphatester": {
-											icon = bot.emojis.cache.get("700736528967532564").toString();
-											break;
-										}
-										default: {
-											break;
-										}
-									}
-									scores += (i + 1) + ") " + icon + " **__" + x.result.Items[i].userObject.username + "__**:    " + x.result.Items[i].points;
-								} else {
-									scores += (i + 1) + ") **__" + x.result.Items[i].userObject.username + "__**:    " + x.result.Items[i].points;
-								}
-								if (i + 1 !== x.result.Items.length && i + 1 !== 10) {
-									scores += "\n";
-								}
-							}
-							if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host"))) {
-								message.delete();
-								
-								const embed = new Discord.MessageEmbed()
-									.setTitle("__" + title + "__")
-									.setColor(0x220e41)
-									.setThumbnail(image)
-									.addField(description, scores);
-								
-								message.channel.send({embed});
+								bot.channels.cache.get(modBotSpamID).send("<@" + message.author.id + "> , I was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
 							} else {
 								if (message.channel.id !== botSpamID) {
 									message.delete();
-									const embed = new Discord.MessageEmbed()
-										.setTitle("__" + title + "__")
-										.setColor(0x220e41)
-										.setThumbnail(image)
-										.addField(description, scores)
-										.setFooter("Please use this channel for bot commands!");
-									bot.channels.cache.get(botSpamID).send({embed})
-										.then(bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">"));
+									bot.channels.cache.get(botSpamID).send("<@" + message.author.id + "> , Please use this channel for bot commands.\nI was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
 								} else {
-									const embed = new Discord.MessageEmbed()
-										.setTitle("__" + title + "__")
-										.setColor(0x220e41)
-										.setThumbnail(image)
-										.addField(description, scores);
-									message.channel.send({embed});
+									bot.channels.cache.get(botSpamID).send("<@" + message.author.id + "> , I was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
 								}
 							}
-						}
-					});
-				logBotActions(message, "!top " + command);
+		                } else {
+		                	if (x.result.privacySetting != "public") {
+			                	// Check if in bot spam or not and send "game not found or game not public" message
+		                		if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host")) || message.member.roles.cache.find(r => r.name.toLowerCase() === "game creators")) {
+									message.delete();
+									bot.channels.cache.get(modBotSpamID).send("<@" + message.author.id + "> , I was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
+								} else {
+									if (message.channel.id !== botSpamID) {
+										message.delete();
+										bot.channels.cache.get(botSpamID).send("<@" + message.author.id + "> , Please use this channel for bot commands.\nI was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
+									} else {
+										bot.channels.cache.get(botSpamID).send("<@" + message.author.id + "> , I was unable to find information on that game. Either that shortID does not exist or the game isn't public. The shortID is case sensitive.")
+									}
+								}
+		                	} else {
+			                	if (x.result.gamePageLogo != null) {
+				                	if (x.result.gamePageLogo.includes("http")) {
+				                		image = x.result.gamePageLogo;
+				                	} else {
+				                		image = "https://www.surrogate.tv"+x.result.gamePageLogo;
+				                	}
+				                } else {
+				                	image = "https://www.surrogate.tv/img/profilepictures/sumo_profilepic.png";
+				                }
+	
+				                url += x.result.uuid+"&order=";
+				                command = x.result.shortId;
+				                soloTitle = x.result.title;
+	
+				                title = "**" + soloTitle + "**" + title;
+	
+				                const minDay = 1440;
+								let {listScore} = fetch(url, {
+									method: 'GET', headers: {
+										'Content-Type': 'application/json',
+									},
+								}).then(response => response.json())
+									.then((s) => {
+										if (s == null || s.result == null || s.result.Items == null) {
+											message.channel.send("There were no scores for " + command + ".");
+										} else {
+											let description = "";
+											if (s.result.Items.length > 10) {
+												description = "These are the Top 10 scores for **" + command + "**";
+											} else {
+												description = "These are the Top " + s.result.Items.length + " scores for **" + command + "**";
+											}
+											let scores = "";
+											for (let i = 0; i < s.result.Items.length && i < 10; i++) {
+												if (s.result.Items[i].userObject.userIcon != null) {
+													let icon = s.result.Items[i].userObject.userIcon.toLowerCase();
+													switch (icon) {
+														case "broomsquad": {
+															icon = bot.emojis.cache.get("700736528803954769").toString();
+															break;
+														}
+														case "moderator": {
+															icon = bot.emojis.cache.get("700736529043161139").toString();
+															break;
+														}
+														case "patreonsupporter": {
+															icon = bot.emojis.cache.get("700736949631188993").toString();
+															break;
+														}
+														case "surrogateteam": {
+															icon = bot.emojis.cache.get("700737595734491237").toString();
+															break;
+														}
+														case "alphatester": {
+															icon = bot.emojis.cache.get("700736528967532564").toString();
+															break;
+														}
+														default: {
+															break;
+														}
+													}
+													scores += (i + 1) + ") " + icon + " **__" + s.result.Items[i].userObject.username + "__**:    " + s.result.Items[i].points;
+												} else {
+													scores += (i + 1) + ") **__" + s.result.Items[i].userObject.username + "__**:    " + s.result.Items[i].points;
+												}
+												if (i + 1 !== s.result.Items.length && i + 1 !== 10) {
+													scores += "\n";
+												}
+											}
+											if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") || message.member.roles.cache.find(r => r.name.toLowerCase() === "game host")) || message.member.roles.cache.find(r => r.name.toLowerCase() === "game creators")) {
+												message.delete();
+	
+												let curCat = categories.findIndex(z => z.channel === message.channel.id);
+												if (curCat == -1 || categories[curCat].id != x.result.categoryId) {
+													if (message.channel.id == botSpamID) {
+														const embed = new Discord.MessageEmbed()
+															.setTitle("__" + title + "__")
+															.setColor(0x220e41)
+															.setThumbnail(image)
+															.addField(description, scores);
+														bot.channels.cache.get(botSpamID).send({embed})
+													} else if (message.channel.id == modBotSpamID) {
+														const embed = new Discord.MessageEmbed()
+															.setTitle("__" + title + "__")
+															.setColor(0x220e41)
+															.setThumbnail(image)
+															.addField(description, scores);
+														bot.channels.cache.get(modBotSpamID).send({embed})
+													} else {
+														const embed = new Discord.MessageEmbed()
+															.setTitle("__" + title + "__")
+															.setColor(0x220e41)
+															.setThumbnail(image)
+															.addField(description, scores);
+														bot.channels.cache.get(botSpamID).send({embed})
+															.then(bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">"));
+													}
+												} else {
+													const embed = new Discord.MessageEmbed()
+														.setTitle("__" + title + "__")
+														.setColor(0x220e41)
+														.setThumbnail(image)
+														.addField(description, scores);
+													
+													message.channel.send({embed});
+												}
+											} else {
+												if (message.channel.id !== botSpamID) {
+													message.delete();
+													const embed = new Discord.MessageEmbed()
+														.setTitle("__" + title + "__")
+														.setColor(0x220e41)
+														.setThumbnail(image)
+														.addField(description, scores)
+														.setFooter("Please use this channel for bot commands!");
+													bot.channels.cache.get(botSpamID).send({embed})
+														.then(bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">"));
+												} else {
+													const embed = new Discord.MessageEmbed()
+														.setTitle("__" + title + "__")
+														.setColor(0x220e41)
+														.setThumbnail(image)
+														.addField(description, scores);
+													message.channel.send({embed});
+												}
+											}
+										}
+									});
+							}
+		                }
+						logBotActions(message, "!top " + command);
+		            });
 				break;
 			}
 			// !meme
@@ -2206,13 +2187,13 @@ function connect(){
 
 				}
 
-				fetch(hiddenURL, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify(toStoreObject)
-				}).then(response => response.text());
+				// fetch(hiddenURL, {
+				// 	method: 'POST',
+				// 	headers: {
+				// 		'Content-Type': 'application/json'
+				// 	},
+				// 	body: JSON.stringify(toStoreObject)
+				// }).then(response => response.text());
 
 				if (obj.message.toLowerCase().startsWith("!mod")) {
 					bot.channels.cache.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
