@@ -818,12 +818,13 @@ bot.on('message', message => {
 						.addField("`!time`", "Will tell the current time and day in Finland")
 						.addField("`!roll` | `!roll xdy`", "Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command")
 						.addField("`!game` | `!game <CATEGORY>`", "Will give the links to the public games of the current category or given category.")
-						.addField("`!schedule` | `!schedule <GAME>`", "Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified")
-						.addField("`!top` | `!top <GAME> ?month?`", "Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name")
+						.addField("`!schedule <GAME>`", "Will give the schedule of the game specified")
+						.addField("`!top <GAME>`", "Will give the top players of the game specified")
 						.addField("`!mute <USER> <TIME>`", "Will mute the <USER> for <TIME> (See ms library for time options)")
 						.addField("`!unmute <USER>`", "If <USER> is muted, will unmute them and remove them from the database")
 						.addField("`(ab:cd)`", "When you have a time formated as such, it will paste a Timezone conversion link to that time in Finland")
 						.addField("`!name`", "Gives the SumoBots that have names other than their esports team")
+						.addField("`!online`", "Gives all games that are currently online and public")
 						.addField("`!connect <USERNAME>`", "Connect your Discord account to your Surrogate.TV (STV) account. `<USERNAME>` should be your STV username. Should you change your STV username at any point, just type the command with the new username.")
 						.addField("`!modupdate <DISCORD_USER_@> <USERNAME>`", "Force update `<DISCORD_USER_@>`'s connection to discord with STV account associated with `<USERNAME>`")
 						.addField("`!modremove <DISCORD_USER_@>`", "Remove the connection associated with `<DISCORD_USER_@>`")
@@ -838,9 +839,10 @@ bot.on('message', message => {
 						.addField("`!time`", "Will tell the current time and day in Finland")
 						.addField("`!roll` | `!roll xdy`", "Will roll a d20 on an unmodified command or will roll **x** number of **y** sided dice on a modified command")
 						.addField("`!game` | `!game <CATEGORY>`", "Will give the links to the public games of the current category or given category.")
-						.addField("`!schedule` | `!schedule <GAME>`", "Will give the current channel category/topic's schedule if it exists. When used outside of those channels, the game needs to be specified")
-						.addField("`!top` | `!top <GAME> ?month?`", "Will give the current channel category/topic's top players. If you want the current top players of the month, put month after the game name")
+						.addField("`!schedule <GAME>`", "Will give the schedule of the game specified")
+						.addField("`!top <GAME>`", "Will give the top players of the game specified")
 						.addField("`!name`", "Gives the SumoBots that have names other than their esports team")
+						.addField("`!online`", "Gives all games that are currently online and public")
 						.addField("`!connect <USERNAME>`", "Connect your Discord account to your Surrogate.TV (STV) account. `<USERNAME>` should be your STV username. Should you change your STV username at any point, just type the command with the new username.")
 						.addField("`!search <USERNAME>`", "Get information on the STV account associated with `<USERNAME>`.")
 						.setFooter("These commands are for everyone");
@@ -1339,9 +1341,19 @@ bot.on('message', message => {
 															break;
 														}
 													}
-													scores += (i + 1) + ") " + icon + " **__" + s.result.Items[i].userObject.username + "__**:    " + s.result.Items[i].points;
+													scores += (i + 1) + ") " + icon + " **__" + s.result.Items[i].userObject.username + "__**:    " 
+													if (x.result.scoreType == "timestamp") {
+														scores += Math.floor((s.result.Items[i].points/(1000*60))%60) + ":" + ((Math.floor((s.result.Items[i].points/1000)%60).toString().length<2) ? "0" + Math.floor((s.result.Items[i].points/1000)%60) : Math.floor((s.result.Items[i].points/1000)%60))  + ":" + ((Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000).toString().length<3) ? ((("0" + Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000)).length<3) ? ("00" + Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000)) : "0" + Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000)) : Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000));
+													} else {
+														score += s.result.Items[i].points;
+													}
 												} else {
-													scores += (i + 1) + ") **__" + s.result.Items[i].userObject.username + "__**:    " + s.result.Items[i].points;
+													scores += (i + 1) + ") **__" + s.result.Items[i].userObject.username + "__**:    " 
+													if (x.result.scoreType == "timestamp") {
+														scores += Math.floor((s.result.Items[i].points/(1000*60))%60) + ":" + ((Math.floor((s.result.Items[i].points/1000)%60).toString().length<2) ? "0" + Math.floor((s.result.Items[i].points/1000)%60) : Math.floor((s.result.Items[i].points/1000)%60))  + ":" + ((Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000).toString().length<3) ? ((("0" + Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000)).length<3) ? ("00" + Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000)) : "0" + Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000)) : Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000));
+													} else {
+														scores += s.result.Items[i].points;
+													}
 												}
 												if (i + 1 !== s.result.Items.length && i + 1 !== 10) {
 													scores += "\n";
@@ -2008,6 +2020,70 @@ bot.on('message', message => {
 				}
 				break;
 			}
+			case 'online': {
+				if (message.channel.id != botSpamID) {
+					message.delete();
+				} else {
+					let onlineGames = "";
+					var games = [];
+					var promises = [];
+
+					let i = 0;
+					let j = 0;
+						for (i=0; i < categories.length; i++) {
+							promises.push(new Promise((resolve, reject) => {
+								let {listGames} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/listGames", {
+									method: 'POST', headers: {
+										'Content-Type': 'application/json',
+									}, 
+									body: JSON.stringify("{\"categoryId\": \""+categories[i].id+"\",\"limit\":50}")
+								}).then(response => response.json())
+									.then((lg) => {
+										resolve(lg.result.gameIds)
+									});
+							}))
+						}
+						Promise.all(promises).then(res => {
+							var a = '{"games":['
+							for (i=0; i<res[0].length; i++){
+								a+='"'+res[0][i]+'"'
+								if (!(i+1==res[0].length)) {
+									a+=','
+								}
+							}
+							a+=']}'
+							let {getGames} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/getGames", {
+								method: 'POST', headers: {
+									'Content-Type': 'application/json',
+								}, 
+								body: a
+							}).then(response => response.json())
+								.then((gg) => {
+
+
+									let sortGG = gg.result.sort(function(a,b) {
+										if (a.shortId<b.shortId) {
+											return -1
+										} 
+										if (a.shortId>b.shortId) {
+											return 1
+										}
+										return 0
+									})
+									let z = 0
+									for (z=0; z<sortGG.length; z++) {
+										if (sortGG[z].isOnline) {
+											onlineGames+="\nhttps://surrogate.tv/game/"+sortGG[z].shortId
+										}
+									}
+									message.reply(onlineGames)
+								});			
+								
+						})
+				}
+				logBotActions(message, message.content)
+				break;
+			}
 			default: {
 				break;
 			}
@@ -2187,13 +2263,13 @@ function connect(){
 
 				}
 
-				// fetch(hiddenURL, {
-				// 	method: 'POST',
-				// 	headers: {
-				// 		'Content-Type': 'application/json'
-				// 	},
-				// 	body: JSON.stringify(toStoreObject)
-				// }).then(response => response.text());
+				fetch(hiddenURL, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(toStoreObject)
+				}).then(response => response.text());
 
 				if (obj.message.toLowerCase().startsWith("!mod")) {
 					bot.channels.cache.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
