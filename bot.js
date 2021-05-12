@@ -14,10 +14,23 @@ const TOKEN = process.env.TOKEN;
 const hiddenURL = ""+process.env.URL;
 const email = ""+process.env.EMAIL;
 const pass = ""+process.env.PASSWORD;
+
+// Bad word checking :)
+const whiteListWords = ['balls', 'whole'];
+
+const Filter = require('bad-words');
+const filter = new Filter();
+filter.removeWords(...whiteListWords);
+const swearjar = require('swearjar-extended');
+const { containsProfanity } = require("@therohitdas/profanityjs");
+const Profanity = require('profanity-js');
+const profanity = new Profanity();
+profanity.removeWords(...whiteListWords);
+
 bot.login(TOKEN);
 
 const TIMEZONE_OFFSET_GMT = 4;
-const TIMEZONE_OFFSET_FINLAND = 6;
+const TIMEZONE_OFFSET_FINLAND = 7;
 
 const battlingTrigger = ["627919045420646401", "707600524727418900"];
 const pinballTrigger = ["613630308931207198", "707600524727418900"];
@@ -86,6 +99,12 @@ const categories = [
         "ping": "<@&745984587422760980>",
         "channel": "745957132049973291",
     },
+    {
+        "id": "5763a3e7-595d-4f35-b085-1ab1635419d4",
+        "name": "HostInteract",
+        "ping": "<@&831149364927397930>",
+        "channel": "831079141478105118",
+    },
 ];
 
 var times=0;
@@ -103,7 +122,7 @@ async function announcement(shortId, dir) {
             console.log("Ending Announcments for "+shortId);
             break;
         }
-        const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=" + shortId.toLowerCase(), {
+        const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=" + shortId, {
             method: 'GET', headers: {
                 'Content-Type': 'application/json',
             },
@@ -188,6 +207,13 @@ function logBotActions(message, action) {
 			if (err) throw err;
 		});
 
+	}  else if (message === "SWEAR JAR") {
+		let out = date.timeString + " EST | SWEAR JAR | " + action;
+		console.log(out);
+		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", out + "\n", function (err) {
+			if (err) throw err;
+		});
+
 	} else {
 		let out = date.timeString + " EST | " + message.member.user.tag + " | " + action;
 		console.log(date.timeString + " EST | " + message.member.user.tag + " | " + action);
@@ -219,11 +245,14 @@ async function newDayCheck() {
 				if (err) throw err;
 			});
 			console.log("Starting a new day\n\n\n\n\n");
+
+			bot.channels.cache.get("841634463917015060").send("New Day of swears");
+					
 			startingDate=checkDate;
 			if (checkDate.weekday === "Tuesday") {
 				bot.channels.cache.get("800698068084457493").send("<@&800698382355660801> \n Are you good to host Mario Kart Live this week for your normal sessions?");
 			}
-			if (checkDate.weekday === "Thursday") {
+			if (checkDate.weekday === "Wednesday") {
 				bot.channels.cache.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
 			}
 			fs.open("./bot_logs/logs_" + checkDate.dateString_MDY_noLead + ".txt", 'a', function (err, file) {
@@ -347,8 +376,8 @@ bot.on('raw', packet => {
 });
 
 bot.on('messageReactionAdd', async (reaction, user) => {
-	const emoji = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents"];
-	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents"];
+	const emoji = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents", "HostInteract"];
+	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents", "HostInteract"];
 	const femoji = ['✅'];
 	const frole = ["feedback"];
 	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "811257817792905226") { //CHANGE AFTER GEN
@@ -378,8 +407,8 @@ bot.on('messageReactionAdd', async (reaction, user) => {
 });
 
 bot.on('messageReactionRemove', async (reaction, user) => {
-	const emoji = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents"];
-	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents"];
+	const emoji = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents", "HostInteract"];
+	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents", "HostInteract"];
 	const femoji = ['✅'];
 	const frole = ["feedback"];
 	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "811257817792905226") { //CHANGE AFTER GEN
@@ -613,6 +642,7 @@ bot.on('message', message => {
 		const wePlay = bot.emojis.cache.get("810959560968896564").toString();
 		const other = bot.emojis.cache.get("810972965247516722").toString();
 		const specialEvent = bot.emojis.cache.get("810967907193847860").toString();
+		const hostInteract = bot.emojis.cache.get("831148257152991243").toString();
 		
 		const embed = new Discord.MessageEmbed()
 			.setTitle("Notification Subsciption")
@@ -627,6 +657,7 @@ bot.on('message', message => {
 			.addField(wePlay + " We Play Games " + wePlay, "Get notified of any We Play game news or related events.")
 			.addField(other + " Other Games " + other, "Get notified of any Other game news.")
 			.addField(specialEvent + " Special Events " + specialEvent, "Get notified of any Special Events happening within the community.")
+			.addField(hostInteract + " Host Interact Games " + hostInteract, "Get notified of any Host Interact games.")
 			.addField("All of these fields will also be notified of any behind the scenes related content through this way for a given game.", "⠀")
 			.setFooter("To disable notification, un-react. If it appears that you haven't reacted, just react and un-react to disable them.");
 		
@@ -642,11 +673,11 @@ bot.on('message', message => {
 		//         .then(() => sentEmbed.react("810967907193847860")));
 		// });
 
-        // bot.channels.cache.get("745097595692515380").messages.fetch("811229678961557534")
+        // bot.channels.cache.get("745097595692515380").messages.fetch("811257817792905226")
         //   .then(msg => {
         //     msg.edit(embed).then(sentEmbed => {
         //     	// console.log(sentEmbed)
-        //     	// sentEmbed.react("810967907193847860");
+        //     	sentEmbed.react("831148257152991243");
         //     	// 	.then(() => sentEmbed.react("770308616800043048"));
         //     });
         //   })
@@ -726,7 +757,7 @@ bot.on('message', message => {
 				if (month < 10) {
 					month = "0" + month;
 				}
-				let sendOut = "*Beep boop*\nThe time is given in GMT+2 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso=" + year + "" + month + "" + day + "T" + hours + "" + minutes + "&p1=101\n*Beep boop*";
+				let sendOut = "*Beep boop*\nThe time is given in GMT+3 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso=" + year + "" + month + "" + day + "T" + hours + "" + minutes + "&p1=101\n*Beep boop*";
 				message.channel.send(sendOut);
 				logBotActions(message, "Link");
 			}
@@ -959,7 +990,7 @@ bot.on('message', message => {
 									let output = "";
 									x.result.schedule.sort((a, b) => a.startTime - b.startTime)
 									for (let i = 0; i < x.result.schedule.length; i++) {
-										let startTime = x.result.schedule[i].startTime + (2 * 60);
+										let startTime = x.result.schedule[i].startTime + (3 * 60);
 										let duration = x.result.schedule[i].duration;
 										let endTime = startTime + duration;
 										let day = Math.floor(startTime / minDay);
@@ -1085,7 +1116,7 @@ bot.on('message', message => {
 											.setURL("https://surrogate.tv/game/" + command)
 											.setDescription(output)
 											.setThumbnail(image)
-											.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+											.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
 										message.channel.send({embed});
 									} else {
 										if (message.channel.id !== botSpamID) {
@@ -1097,7 +1128,7 @@ bot.on('message', message => {
 												.setURL("https://surrogate.tv/game/" + command)
 												.setDescription(output)
 												.setThumbnail(image)
-												.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+												.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
 											bot.channels.cache.get(botSpamID).send({embed});
 											
 										} else {
@@ -1107,7 +1138,7 @@ bot.on('message', message => {
 												.setURL("https://surrogate.tv/game/" + command)
 												.setDescription(output)
 												.setThumbnail(image)
-												.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+												.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
 											bot.channels.cache.get(botSpamID).send({embed});
 										}
 									}
@@ -1337,6 +1368,10 @@ bot.on('message', message => {
 															icon = bot.emojis.cache.get("700736528967532564").toString();
 															break;
 														}
+														case "creator": {
+															icon = bot.emojis.cache.get("827147154321702933").toString();
+															break;
+														}
 														default: {
 															break;
 														}
@@ -1345,7 +1380,7 @@ bot.on('message', message => {
 													if (x.result.scoreType == "timestamp") {
 														scores += Math.floor((s.result.Items[i].points/(1000*60))%60) + ":" + ((Math.floor((s.result.Items[i].points/1000)%60).toString().length<2) ? "0" + Math.floor((s.result.Items[i].points/1000)%60) : Math.floor((s.result.Items[i].points/1000)%60))  + ":" + ((Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000).toString().length<3) ? ((("0" + Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000)).length<3) ? ("00" + Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000)) : "0" + Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000)) : Math.floor((((s.result.Items[i].points/1000)%60)%1)*1000));
 													} else {
-														score += s.result.Items[i].points;
+														scores += s.result.Items[i].points;
 													}
 												} else {
 													scores += (i + 1) + ") **__" + s.result.Items[i].userObject.username + "__**:    " 
@@ -1770,6 +1805,7 @@ bot.on('message', message => {
 											const broomSquad = bot.emojis.cache.get("700736528803954769").toString();
 											const alphaTester = bot.emojis.cache.get("700736528967532564").toString();
 											const modSquad = bot.emojis.cache.get("700736529043161139").toString();
+											const gameCreator = bot.emojis.cache.get("827147154321702933").toString();
 											if (x.result[0].userIcon === "surrogateTeam") {
 												embed.addField("The user has this icon", surrogateTeam);
 											} else if (x.result[0].userIcon === "broomSquad") {
@@ -1780,6 +1816,8 @@ bot.on('message', message => {
 												embed.addField("The user has this icon", modSquad);
 											} else if (x.result[0].userIcon === "alphaTester") {
 												embed.addField("The user has this icon", alphaTester);
+											} else if (x.result[0].userIcon === "creator") {
+												embed.addField("The user has this icon", gameCreator);
 											}
 										}
 										if (x.result[0].flag != null) {
@@ -2263,6 +2301,17 @@ function connect(){
 
 				}
 
+				if (filter.isProfane(obj.message) || swearjar.profane(obj.message) || containsProfanity(obj.message, true) || profanity.isProfane(obj.message)) {
+					if (swearjar.profane(obj.message)) {
+						var report = "```\n"+JSON.stringify(swearjar.words(obj.message))+"\n```";
+						bot.channels.cache.get("841634463917015060").send("User `"+obj.username+"` said `"+obj.message+"` on \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId+"\n\nScorecard:"+report);
+					
+					} else {
+						bot.channels.cache.get("841634463917015060").send("User `"+obj.username+"` said `"+obj.message+"` on \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
+					}
+					logBotActions("SWEAR JAR", "A swear has been said by "+obj.username);
+				}
+
 				fetch(hiddenURL, {
 					method: 'POST',
 					headers: {
@@ -2273,7 +2322,7 @@ function connect(){
 
 				if (obj.message.toLowerCase().startsWith("!mod")) {
 					bot.channels.cache.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
-					sendMessageToWebsite(gameObject[gindex].uuid, "I have pinged the Morderators on the discord. One should respond if available.");
+					sendMessageToWebsite(gameObject[gindex].uuid, "I have pinged the Moderators on the discord. One should respond if available.");
 					logBotActions("WEBSITE HELP", "Mod requested on a game");
 				} else if (obj.message.toLowerCase().startsWith("!mordecai")) {
 					var date = new Date();
