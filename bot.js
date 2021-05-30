@@ -9,14 +9,16 @@ let request = require(`request`);
 const Amplify = require('@aws-amplify/core');
 const Auth = require('@aws-amplify/auth');
 const API = require('@aws-amplify/api');
+const MarkovGen = require('markov-generator');
 const bot = new Discord.Client();
 const TOKEN = process.env.TOKEN;
 const hiddenURL = ""+process.env.URL;
 const email = ""+process.env.EMAIL;
 const pass = ""+process.env.PASSWORD;
+const somethingURL = ""+process.env.SOMETHING;
 
 // Bad word checking :)
-const whiteListWords = ['balls', 'whole'];
+const whiteListWords = ['balls', 'whole', 'god', 'damn'];
 
 const Filter = require('bad-words');
 const filter = new Filter();
@@ -144,7 +146,7 @@ async function announcement(shortId, dir) {
                     if (!(nearestStartTime === -1)) {
                         let startTime = x.result.schedule[nearestStartTime].startTime;
                         if (startTime - adjustedMinute === 15 ) {
-                            let out = at + " **" + x.result.title + "** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/" + shortId.toLowerCase() + "\n";
+                            let out = at + " **" + x.result.title + "** goes live in 15 minutes! You can play here:\nhttps://surrogate.tv/game/" + shortId + "\n";
                             bot.channels.cache.get(categories[cindex].channel).send(out, {
                                 files: [{
                                     attachment: './imgs/'+dir+'/'+chosenFile,
@@ -153,7 +155,7 @@ async function announcement(shortId, dir) {
                                 .then(bot.channels.cache.get(categories[cindex].channel).send("**NOTE** Notifications for games have been changed to a role based system. You can get a role by reacting to the message in <#745097595692515380>"));
                             logBotActions(null, shortId + " Pre-Announcement");
                         } else if (startTime - adjustedMinute === 0 ) {
-                            let out = at + " **" + x.result.title + "** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/" + shortId.toLowerCase() + "\n";
+                            let out = at + " **" + x.result.title + "** is live and you can start to queue up! You can play here:\nhttps://surrogate.tv/game/" + shortId + "\n";
                             bot.channels.cache.get(categories[cindex].channel).send(out, {
                                 files: [{
                                     attachment: './imgs/'+dir+'/'+chosenFile,
@@ -778,7 +780,7 @@ bot.on('message', message => {
 			// !time
 			case 'time': {
 				const date = getDateObject(TIMEZONE_OFFSET_FINLAND);
-				let sendOut = "It is currently **" + date.timeStringAMPM + " " + date.dateString_DMY_slash + "** in Finland (Where most of the games are located).";
+				let sendOut = "It is currently **" + date.timeStringAMPM + " " + date.dateString_DMY_slash + "** in Finland (Where the Surrogate.TV office is located).";
 				message.channel.send(sendOut);
 				logBotActions(message, "!time");
 				break;
@@ -860,6 +862,7 @@ bot.on('message', message => {
 						.addField("`!modupdate <DISCORD_USER_@> <USERNAME>`", "Force update `<DISCORD_USER_@>`'s connection to discord with STV account associated with `<USERNAME>`")
 						.addField("`!modremove <DISCORD_USER_@>`", "Remove the connection associated with `<DISCORD_USER_@>`")
 						.addField("`!search <USERNAME>`", "Get information on the STV account associated with `<USERNAME>.")
+						.addField("`!saysomething` | `!saysomething <GAME>`", "Generate either a random sentence based off some game on the site or by a given `<GAME>`.")
 						.setFooter("These commands are for Mod Squad and Surrogate Team");
 					bot.channels.cache.get(modBotSpamID).send({embed});
 				} else {
@@ -876,6 +879,7 @@ bot.on('message', message => {
 						.addField("`!online`", "Gives all games that are currently online and public")
 						.addField("`!connect <USERNAME>`", "Connect your Discord account to your Surrogate.TV (STV) account. `<USERNAME>` should be your STV username. Should you change your STV username at any point, just type the command with the new username.")
 						.addField("`!search <USERNAME>`", "Get information on the STV account associated with `<USERNAME>`.")
+						.addField("`!saysomething` | `!saysomething <GAME>`", "Generate either a random sentence based off some game on the site or by a given `<GAME>`.")
 						.setFooter("These commands are for everyone");
 					bot.channels.cache.get(botSpamID).send({embed});
 				}
@@ -2122,6 +2126,31 @@ bot.on('message', message => {
 				logBotActions(message, message.content)
 				break;
 			}
+			case 'saysomething': {
+                if (message.channel.id === botSpamID) {
+                	if (args[1] != null) {
+                		const {list} = fetch(somethingURL+"?game="+args[1], {
+							method: 'GET',  
+						}).then(response => response.json())
+							.then((x) => {
+								console.log(x)
+								message.channel.send(x.message)
+							});
+                	} else {
+                		const {list} = fetch(somethingURL, {
+							method: 'GET',
+						}).then(response => response.json())
+							.then((x) => {
+								console.log(x)
+								message.channel.send(x.message)
+							});
+                	}
+                } else {
+                	message.delete();
+                }
+                logBotActions(message, message.content)
+				break;
+			}
 			default: {
 				break;
 			}
@@ -2245,6 +2274,20 @@ function checkLevel(message) {
 	});
 }
 
+// async function saysomething() {
+	// fs.readFile("./database/scrubed.dat", 'ascii', function (err, file) {
+	// 	if (err) throw err;
+	// 	let totalData = file.toString().split("\n");
+	// 	let mkov = new MarkovGen({
+	// 	  input: totalData,
+	// 	  minLength: 10
+	// 	});
+	// 	let something = mkov.makeChain();
+
+	// 	return something
+	// });
+// }
+
 function wait(ms){
     var start = new Date().getTime();
     var end = start;
@@ -2301,7 +2344,7 @@ function connect(){
 
 				}
 
-				if (filter.isProfane(obj.message) || swearjar.profane(obj.message) || containsProfanity(obj.message, true) || profanity.isProfane(obj.message)) {
+				if (filter.isProfane(obj.message) || swearjar.profane(obj.message) /*|| containsProfanity(obj.message, true)*/ || profanity.isProfane(obj.message)) {
 					if (swearjar.profane(obj.message)) {
 						var report = "```\n"+JSON.stringify(swearjar.words(obj.message))+"\n```";
 						bot.channels.cache.get("841634463917015060").send("User `"+obj.username+"` said `"+obj.message+"` on \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId+"\n\nScorecard:"+report);
@@ -2310,15 +2353,20 @@ function connect(){
 						bot.channels.cache.get("841634463917015060").send("User `"+obj.username+"` said `"+obj.message+"` on \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
 					}
 					logBotActions("SWEAR JAR", "A swear has been said by "+obj.username);
-				}
+				} 
+				// else {
+				// 	fs.appendFile("./database/scrubed.dat", obj.message + "\n", function (err) {
+				// 		if (err) throw err;
+				// 	});
+				// }
 
-				fetch(hiddenURL, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify(toStoreObject)
-				}).then(response => response.text());
+				// fetch(hiddenURL, {
+				// 	method: 'POST',
+				// 	headers: {
+				// 		'Content-Type': 'application/json'
+				// 	},
+				// 	body: JSON.stringify(toStoreObject)
+				// }).then(response => response.text());
 
 				if (obj.message.toLowerCase().startsWith("!mod")) {
 					bot.channels.cache.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
@@ -2338,7 +2386,12 @@ function connect(){
 				} else if ((obj.message.toLowerCase().includes(" rigged ") || obj.message.toLowerCase().startsWith("rigged") || obj.message.toLowerCase().endsWith(" rigged") || obj.message.toLowerCase().startsWith("rig ") || obj.message.toLowerCase().endsWith(" rig") || obj.message.toLowerCase().includes(" rig ")) && gameObject[gindex].shortId.toLowerCase().includes("claw")) {
 					sendMessageToWebsite(gameObject[gindex].uuid, "(Robot Ninja Auto Help) Operators can set the claw strength on Claw Machines to limit the amount of prizes won. Some modern claw machines (but not this one) have even more settings to control how many prizes are won. This claw machine is set up so that not all but a fair amount of grabs will win a prize. The difficulty mostly comes from the unusual shapes of the prizes.");
 					logBotActions("RIGGED MACHINE", "Rigged on Claw Machine");
-				}
+				} 
+				// else if(obj.message.toLowerCase().startsWith("!saysomething")) {
+
+				// 	sendMessageToWebsite(gameObject[gindex].uuid, saysomething());
+					
+				// }
 
 				if (obj.message.toLowerCase().includes("help") && !obj.message.toLowerCase().includes("helping") && !obj.message.toLowerCase().includes("!test") && !obj.message.toLowerCase().includes("!help") && obj.role == null) {
 					gameObject[gindex].threshold++;
