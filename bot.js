@@ -10,6 +10,7 @@ const Amplify = require('@aws-amplify/core');
 const Auth = require('@aws-amplify/auth');
 const API = require('@aws-amplify/api');
 const MarkovGen = require('markov-generator');
+
 const bot = new Discord.Client();
 const TOKEN = process.env.TOKEN;
 const hiddenURL = ""+process.env.URL;
@@ -34,6 +35,7 @@ bot.login(TOKEN);
 const TIMEZONE_OFFSET_GMT = 4;
 const TIMEZONE_OFFSET_FINLAND = 7;
 
+// All the channel IDs
 const battlingTrigger = ["627919045420646401", "707600524727418900"];
 const pinballTrigger = ["613630308931207198", "707600524727418900"];
 const raceTrigger = ["589484542214012963", "707600524727418900"];
@@ -52,6 +54,7 @@ const botSpamID = "710104643996352633";
 const modBotSpamID = "593000239841935362";
 const testChannelID = "707600524727418900";
 
+// Master Category Dictionary
 const categories = [
     {
         "id": "5d7f6eab-cbc7-4db6-9803-25e8a9c99ebe",
@@ -114,8 +117,6 @@ var times=0;
 var gameObject=[];
 var curAnnounce=[];
 
-// var storedMessages=[];
-
 //Game Announcements
 async function announcement(shortId, dir) {
     console.log("Starting Announcements for "+shortId+" with image path "+dir);
@@ -171,10 +172,12 @@ async function announcement(shortId, dir) {
     }
 }
 
+// Helper Sleep function used throughout the program
 function Sleep(milliseconds) {
 	return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
+// Logging actions performed by bot when triggered by a message or a given a trigger
 function logBotActions(message, action) {
 	const date = getDateObject(0);
 	if (message == null) {
@@ -225,6 +228,7 @@ function logBotActions(message, action) {
 	}
 }
 
+// Generalized logging method for reactions and a given user
 function logReactActions(user, event) {
 	const date = getDateObject(0);
 	console.log(date.timeString + " EST | " + user.tag + " | " + event);
@@ -233,6 +237,7 @@ function logReactActions(user, event) {
 	});
 }
 
+// Minute check for if it is a new day 
 async function newDayCheck() {
 	let startingDate = getDateObject(0);
 	
@@ -299,6 +304,7 @@ async function newDayCheck() {
 	}
 }
 
+// Basically a never utilized function as no one is ever muted through the bot :P
 async function checkToUnmute() {
 	let testServer = bot.guilds.cache.get("707047722208854098");
 	let bromBotServer = bot.guilds.cache.get("664556796576268298");
@@ -355,6 +361,7 @@ async function checkToUnmute() {
 	}
 }
 
+// Reaction stuff for giving roles for reactions
 const events = {
 	MESSAGE_REACTION_ADD: 'messageReactionAdd', MESSAGE_REACTION_REMOVE: 'messageReactionRemove',
 };
@@ -439,6 +446,7 @@ bot.on('messageReactionRemove', async (reaction, user) => {
 	}
 });
 
+// Init function for the bot to prepare for the hell road that is being a bot on Surrogate.tv's discord 
 bot.once('ready', async () => {
     fs.exists("./database/announce.dat", (exists) => {
         if (!exists) {
@@ -545,6 +553,7 @@ bot.once('ready', async () => {
 	console.info(info);
 });
 
+// Master handler for messages...don't look too closely at my code please and thank you
 bot.on('message', message => {
 	if (message.author.bot || message.author.id === "381655612335063040" || message.guild.id == null || !((message.guild.id === ("707047722208854098") || message.guild.id === ("664556796576268298") || message.guild.id === ("571388780058247179")))) {
 		if (message.guild.id === ("800697435986198579")) {
@@ -618,17 +627,17 @@ bot.on('message', message => {
 		//some test I want to do
 		//707047722208854101
 		
-		let args = message.content.substring(1).split(' ');
-		let cmd = args[0].toLowerCase();
+		// let args = message.content.substring(1).split(' ');
+		// let cmd = args[0].toLowerCase();
 
-		var checkDate = getDateObject(0);
+		// var checkDate = getDateObject(0);
 
-		if (checkDate.weekday === "Tuesday") {
-			bot.channels.cache.get("800698068084457493").send("<@&800698382355660801> \n Are you good to host Mario Kart Live this week for your normal sessions?");
-		}
-		if (checkDate.weekday === "Thursday") {
-			bot.channels.cache.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
-		}
+		// if (checkDate.weekday === "Tuesday") {
+		// 	bot.channels.cache.get("800698068084457493").send("<@&800698382355660801> \n Are you good to host Mario Kart Live this week for your normal sessions?");
+		// }
+		// if (checkDate.weekday === "Thursday") {
+		// 	bot.channels.cache.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
+		// }
 		return;
 	}
 	
@@ -840,6 +849,7 @@ bot.on('message', message => {
 				}
 				break;
 			}
+			// !help
 			// !getHelp
 			case 'help':
 			case 'gethelp': {
@@ -890,7 +900,6 @@ bot.on('message', message => {
 			// !game <GAME>
 			case 'games':
 			case 'game': {
-
 				let url = "https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/ids?category=";
 				let out = "Here you go!\n";
 
@@ -1845,10 +1854,12 @@ bot.on('message', message => {
 				logBotActions(message, message.content);
 				break;
 			}
+			// !burr
 			case "burr":{
 				message.reply("burrrrrrrrrrrr");
 				break
 			}
+			// !announcestart
             case "announcestart": {
                 if (message.channel.id === modBotSpamID) {
                     if (args[1] == null || args[2] == null) {
@@ -1896,6 +1907,7 @@ bot.on('message', message => {
                 logBotActions(message, message.content);
                 break;
             }
+            // !announcepause
             case "announcepause": {
                 if (message.channel.id === modBotSpamID) {
                     if (args[1] == null) {
@@ -1912,6 +1924,7 @@ bot.on('message', message => {
                 logBotActions(message, message.content);
                 break;
             }
+            // !announceunpause
             case "announceunpause": {
                 if (message.channel.id === modBotSpamID) {
                     if (args[1] == null || args[2] == null) {
@@ -1929,6 +1942,7 @@ bot.on('message', message => {
                 logBotActions(message, message.content);
                 break;
             }
+            // !announcestop
             case "announcestop": {
                 if (message.channel.id === modBotSpamID) {
                     if (args[1] == null) {
@@ -1967,6 +1981,7 @@ bot.on('message', message => {
                 logBotActions(message, message.content);
                 break;
             }
+            // !add
             case "add": {
                 if (message.channel.id === modBotSpamID) {
                     if (args[1] == null) {
@@ -1999,6 +2014,7 @@ bot.on('message', message => {
                 logBotActions(message, message.content);
                 break;
             }
+            // !announcestatus
 			case "announcestatus": {
                 if (message.channel.id === modBotSpamID) {
                     if (args[1] == null) {
@@ -2030,6 +2046,7 @@ bot.on('message', message => {
                 logBotActions(message, message.content);
                 break;
             }
+            // !announceaudit
 			case "announceaudit": {
                 if (message.channel.id === modBotSpamID) {
                     if (args[1] != null) {
@@ -2044,6 +2061,7 @@ bot.on('message', message => {
                 logBotActions(message, message.content);
                 break;
             }
+            // !announcehelp
 			case 'announcehelp': {
 				if (message.channel.id === modBotSpamID) {
 					const embed = new Discord.MessageEmbed()
@@ -2062,6 +2080,7 @@ bot.on('message', message => {
 				}
 				break;
 			}
+			// !online
 			case 'online': {
 				if (message.channel.id != botSpamID) {
 					message.delete();
@@ -2126,6 +2145,7 @@ bot.on('message', message => {
 				logBotActions(message, message.content)
 				break;
 			}
+			// !saysomething
 			case 'saysomething': {
                 if (message.channel.id === botSpamID) {
                 	if (args[1] != null) {
@@ -2163,6 +2183,7 @@ bot.on('message', message => {
 	detection(message, triggerBattlingResponse, triggerPinballResponse, triggerRaceResponse, triggerClawResponse, triggerExploreResponse, triggerGameResponse, triggerWePlayResponse, triggerOtherResponse, triggerGeneralResponse, triggerFeedbackResponse, triggerDiscussionResponse, triggerIssuesResposne);
 });
 
+// A detection function for reactions and responses caused by messages that aren't commands
 function detection(message, triggerBattlingResponse, triggerPinballResponse, triggerRaceResponse, triggerClawResponse, triggerExploreResponse, triggerGameResponse, triggerWePlayResponse, triggerOtherResponse, triggerGeneralResponse, triggerFeedbackResponse, triggerDiscussionResponse, triggerIssuesResposne) {
 	//"Refill the machine" for Claw
 	if (triggerClawResponse && ((message.content.toLowerCase().includes("filled") || message.content.toLowerCase().includes("refill") || message.content.toLowerCase().includes("restock")) && !message.content.includes("www.")) && !((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team" || message.member.roles.cache.find(r => r.name.toLowerCase() === "alpha testers"))))) {
@@ -2219,6 +2240,7 @@ function detection(message, triggerBattlingResponse, triggerPinballResponse, tri
 
 }
 
+// Site integration to change role based of site level
 function checkLevel(message) {
 	fs.exists("./database/connect.dat", (exists) => {
 		if (exists) {
@@ -2294,20 +2316,7 @@ function checkLevel(message) {
 	});
 }
 
-// async function saysomething() {
-	// fs.readFile("./database/scrubed.dat", 'ascii', function (err, file) {
-	// 	if (err) throw err;
-	// 	let totalData = file.toString().split("\n");
-	// 	let mkov = new MarkovGen({
-	// 	  input: totalData,
-	// 	  minLength: 10
-	// 	});
-	// 	let something = mkov.makeChain();
-
-	// 	return something
-	// });
-// }
-
+// Helper function 
 function wait(ms){
     var start = new Date().getTime();
     var end = start;
@@ -2316,6 +2325,7 @@ function wait(ms){
    }
  }
 
+// Chat listener for site integration with chats
 function connect(){
 	var socket = new WebSocket('wss://broker.surrogate.tv/socket.io/?EIO=3&transport=websocket');
 	// ws.reconnectInterval = 60000
@@ -2374,11 +2384,6 @@ function connect(){
 					}
 					logBotActions("SWEAR JAR", "A swear has been said by "+obj.username);
 				} 
-				// else {
-				// 	fs.appendFile("./database/scrubed.dat", obj.message + "\n", function (err) {
-				// 		if (err) throw err;
-				// 	});
-				// }
 
 				// fetch(hiddenURL, {
 				// 	method: 'POST',
@@ -2491,12 +2496,14 @@ function connect(){
 	    setInterval(tick, 6000);
 }
 
+// Helper function
 async function sendMessageToWebsite(gameId, message) {
   await API.default.post('surrogateApi', '/chatMessage', {
       body: { gameId: gameId, message: message },
   });
 }
 
+// Helper function
 function getDateObject(timezoneOffset) {
 	const date = new Date();
 	date.setHours(date.getHours() + timezoneOffset);
