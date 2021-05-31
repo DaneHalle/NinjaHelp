@@ -2221,15 +2221,20 @@ function detection(message, triggerBattlingResponse, triggerPinballResponse, tri
 
 
 
-	const pokeTrigger = ["pokemon", "when", "online", "?", "play", "down", "offline", "why"];
+	const pokeTrigger = ["pokemon", "when", "online", "?", "play", "down", "offline", "why", "sword", "shield"];
+	const reqPokeTrigger = ["pokemon", "sword", "shield", "poke"];
+	var flag = false;
 	var confirm = 0;
 	var i = 0;
 	for (i = 0; i < pokeTrigger.length; i++) {
 		if (message.content.toLowerCase().includes(pokeTrigger[i])) {
 			confirm++; 
 		}
+		if (reqPokeTrigger[i] != null && message.content.toLowerCase().includes(reqPokeTrigger[i])) {
+			flag = true;
+		}
 	}
-	if (confirm >= 3) {
+	if (confirm >= 3 && flag) {
 		var msg = "Hello, this is an automated message.\nIf Pokemon Sword is offline, there is likely an issue with the game or switch that makes it unplayable at the moment. As for how long it will be is unsure, these things are fixed as soon as the team can during working hours.";
 		if (!triggerWePlayResponse) {
 			msg += "\n\nI noticed that this isn't within the proper channel, this message should go into the <#790994604316164096> channel. You can also head to <#745097595692515380> channel to subscribe to notifications related to WePlay games so you can know when the game goes back online!"
