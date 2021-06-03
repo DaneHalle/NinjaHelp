@@ -2239,7 +2239,21 @@ function detection(message, triggerBattlingResponse, triggerPinballResponse, tri
 		if (!triggerWePlayResponse) {
 			msg += "\n\nI noticed that this isn't within the proper channel, this message should go into the <#790994604316164096> channel. You can also head to <#745097595692515380> channel to subscribe to notifications related to WePlay games so you can know when the game goes back online!"
 		}
-		message.reply(msg);
+		const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=pokesword", {
+			method: 'GET', headers: {
+				'Content-Type': 'application/json',
+			},
+		}).then(response => response.json())
+			.then((x) => {
+				if (x.result == null) {
+				} else {
+					if (!x.result.isOnline) {
+						message.reply(msg);
+					}
+				}
+			});
+
+		// message.reply(msg);
 	}
 
 
