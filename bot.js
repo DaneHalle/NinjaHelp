@@ -332,7 +332,7 @@ async function checkToUnmute() {
 							let success = false;
 							let removeMin = parseInt(removeSpecificTime[1]) + ((parseInt(removeSpecificTime[0]) + (parseInt(removeDate[1]) * 24)) * 60);
 							if (removeMin <= tempMin) {
-								surrogateServer.members.forEach(u => {
+								surrogateServer.members.cache.forEach(u => {
 									if (!u.user.bot) {
 										if (remove[0] === u.user.id) {
 											u.roles.remove(role.id);
@@ -1254,7 +1254,7 @@ bot.on('message', message => {
 						bot.channels.cache.get(modBotSpamID).send(`<@${toUnmute} is not muted.`);
 						return;
 					}
-					await(toUnmute.roles.remove(role.id));
+					// await(toUnmute.roles.remove(role.id));
 					toUnmute.roles.remove(role.id);
 					bot.channels.cache.get(modBotSpamID).send(`<@${toUnmute.id}> has been unmuted by <@${message.member.user.id}>`);
 					logBotActions(message, "!unmute " + toUnmute.user.tag);
@@ -1264,7 +1264,8 @@ bot.on('message', message => {
 						
 						let testData = file.toString().split("\n");
 						let toRemove = -1;
-						for (let i = 0; i < testData.length; i++) {
+						var i = 0
+						for (i = 0; i < testData.length; i++) {
 							if (testData[i].includes(toUnmute.id)) {
 								toRemove = i;
 								break;
@@ -1272,7 +1273,8 @@ bot.on('message', message => {
 						}
 						let removeUserData = testData[i];
 						let reinsert = "";
-						for (let i = 0; i < testData.length; i++) {
+						var i = 0
+						for (i = 0; i < testData.length; i++) {
 							if (toRemove === i || testData[i] === "\n") {
 							
 							} else {
