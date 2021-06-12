@@ -218,8 +218,13 @@ function logBotActions(message, action) {
 		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", out + "\n", function (err) {
 			if (err) throw err;
 		});
-
-	} else {
+	} else if (message === "MUTE BYPASS") {
+		let out = date.timeString + "EST | MUTE BYPASS | " + action;
+		console.log(out);
+		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", out + "\n", function (err) {
+			if (err) throw err;
+		});
+	}else {
 		let out = date.timeString + " EST | " + message.member.user.tag + " | " + action;
 		console.log(date.timeString + " EST | " + message.member.user.tag + " | " + action);
 		fs.appendFile("./bot_logs/logs_" + date.dateString_MDY_noLead + ".txt", out + "\n", function (err) {
@@ -1183,20 +1188,20 @@ bot.on('message', message => {
 					}
 					toMute.roles.add(role.id);
 					bot.channels.cache.get(modBotSpamID).send(`<@${toMute.id}> has been muted for ${ms(ms(mutetime))} by <@${message.member.user.id}>`);
-					let date = getDateObject();
-					let day = date.day;
-					let month = date.month;
-					let year = date.year;
-					let minute = date.minute;
-					let hour = date.hour;
-					let startMute = month + "/" + day + "/" + year + "~" + hour + ":" + minute;
+					var date = getDateObject(0);
+					var day = date.day;
+					var month = date.month;
+					var year = date.year;
+					var minute = date.minute;
+					var hour = date.hour;
+					var startMute = month + "/" + day + "/" + year + "~" + hour + ":" + minute;
 					minute += (ms(mutetime) / 60000);
 					hour += Math.floor(minute / 60);
 					minute %= 60;
 					day += Math.floor(hour / 24);
 					hour %= 24;
-					let endMute = month + "/" + day + "/" + year + "~" + hour + ":" + minute + "\n";
-					let updated = false;
+					var endMute = month + "/" + day + "/" + year + "~" + hour + ":" + minute + "\n";
+					var updated = false;
 					fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
 						if (err) throw err;
 						let testData = file.toString().split("\n");
@@ -2335,6 +2340,26 @@ function checkLevel(message) {
 	});
 }
 
+bot.on('guildMemberAdd', member => {
+	fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
+		if (err) throw err;
+		let testData = file.toString().split("\n");
+		var user = member.user;
+		let guildSTV = bot.guilds.cache.get("571388780058247179");
+		var role = guildSTV.roles.cache.find(r => r.name === "muted");
+		for (let i = 0; i < testData.length; i++) {
+			if (testData[i].includes(user.id)) {
+				member.roles.add(member.guild.roles.cache.find(role => role.name === "muted"));
+				logBotActions("MUTE BYPASS", user.tag+" attempted to try and bypass a mute")
+				break;
+			}
+		}
+	});
+    // channel = member.guild.channels.cache.get("channel id");
+    // channel.send("Welcome " + member.displayName + "\n Member Count: " + member.guild.memberCount);
+})
+
+
 // Helper function 
 function wait(ms){
     var start = new Date().getTime();
@@ -2523,7 +2548,7 @@ async function sendMessageToWebsite(gameId, message) {
 }
 
 // Helper function
-function getDateObject(timezoneOffset) {
+function getDateObject(timezoneOffset = 0) {
 	const date = new Date();
 	date.setHours(date.getHours() + timezoneOffset);
 	const monthLeadZero = ("0" + (date.getMonth() + 1).toString()).slice(-2);
