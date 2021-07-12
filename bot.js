@@ -68,12 +68,12 @@ const categories = [
         "ping": "<@&744956844233064449>",
         "channel": "589484542214012963",
     },
-    {
-        "id": "b5b6b966-cc16-4db1-b18d-6545bda1407c",
-        "name": "WePlay",
-        "ping": "<@&810898512748609546>",
-        "channel": "790994604316164096",
-    },
+    // {
+    //     "id": "b5b6b966-cc16-4db1-b18d-6545bda1407c",
+    //     "name": "WePlay",
+    //     "ping": "<@&810898512748609546>",
+    //     "channel": "790994604316164096",
+    // },
     {
         "id": "c5d4fb68-94bf-41a5-bd82-8120bee957b5",
         "name": "GameConsoles",
@@ -390,8 +390,8 @@ bot.on('raw', packet => {
 });
 
 bot.on('messageReactionAdd', async (reaction, user) => {
-	const emoji = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents", "HostInteract"];
-	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents", "HostInteract"];
+	const emoji = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "Other", "SpecialEvents", "HostInteract"];
+	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "Other", "SpecialEvents", "HostInteract"];
 	const femoji = ['✅'];
 	const frole = ["feedback"];
 	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "811257817792905226") { //CHANGE AFTER GEN
@@ -421,8 +421,8 @@ bot.on('messageReactionAdd', async (reaction, user) => {
 });
 
 bot.on('messageReactionRemove', async (reaction, user) => {
-	const emoji = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents", "HostInteract"];
-	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "WePlay", "Other", "SpecialEvents", "HostInteract"];
+	const emoji = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "Other", "SpecialEvents", "HostInteract"];
+	const role  = ["Battling", "Pinball", "Racing", "ClawGames", "Explore", "GameConsoles", "Other", "SpecialEvents", "HostInteract"];
 	const femoji = ['✅'];
 	const frole = ["feedback"];
 	if (user && !user.bot && reaction.message.channel.guild && reaction.message.content === "" && reaction.message.id === "811257817792905226") { //CHANGE AFTER GEN
@@ -670,7 +670,7 @@ bot.on('message', message => {
 			.addField(claw + " Claw Games " + claw, "Get notified of any Claw Game news or related events.")
 			.addField(explore + " Explore Games " + explore, "Get notified of any Explore game news or related events.")
 			.addField(consoles + " Game Console Games " + consoles, "Get notified of any Game Console game news and when MarioKartLive is about to go live.")
-			.addField(wePlay + " We Play Games " + wePlay, "Get notified of any We Play game news or related events.")
+			// .addField(wePlay + " We Play Games " + wePlay, "Get notified of any We Play game news or related events.")
 			.addField(other + " Other Games " + other, "Get notified of any Other game news.")
 			.addField(specialEvent + " Special Events " + specialEvent, "Get notified of any Special Events happening within the community.")
 			.addField(hostInteract + " Host Interact Games " + hostInteract, "Get notified of any Host Interact games.")
@@ -689,15 +689,15 @@ bot.on('message', message => {
 		//         .then(() => sentEmbed.react("810967907193847860")));
 		// });
 
-        // bot.channels.cache.get("745097595692515380").messages.fetch("811257817792905226")
-        //   .then(msg => {
-        //     msg.edit(embed).then(sentEmbed => {
-        //     	// console.log(sentEmbed)
-        //     	sentEmbed.react("831148257152991243");
-        //     	// 	.then(() => sentEmbed.react("770308616800043048"));
-        //     });
-        //   })
-        //   .catch(console.error);
+        bot.channels.cache.get("745097595692515380").messages.fetch("811257817792905226")
+          .then(msg => {
+            msg.edit(embed).then(sentEmbed => {
+            	// console.log(sentEmbed)
+            	// sentEmbed.react("831148257152991243");
+            	// 	.then(() => sentEmbed.react("770308616800043048"));
+            });
+          })
+          .catch(console.error);
 		
 		logReactActions(message.member.user, "Edited embed");
 		
@@ -2228,40 +2228,40 @@ function detection(message, triggerBattlingResponse, triggerPinballResponse, tri
 
 
 
-	const pokeTrigger = ["pokemon", "when", "online", "?", "play", "down", "offline", "why", "sword", "shield"];
-	const reqPokeTrigger = ["pokemon", "sword", "shield", "poke"];
-	var flag = false;
-	var confirm = 0;
-	var i = 0;
-	for (i = 0; i < pokeTrigger.length; i++) {
-		if (message.content.toLowerCase().includes(pokeTrigger[i])) {
-			confirm++; 
-		}
-		if (reqPokeTrigger[i] != null && message.content.toLowerCase().includes(reqPokeTrigger[i])) {
-			flag = true;
-		}
-	}
-	if (confirm >= 3 && flag) {
-		var msg = "Hello, this is an automated message.\nIf Pokemon Sword is offline, there is likely an issue with the game or switch that makes it unplayable at the moment. As for how long it will be is unsure, these things are fixed as soon as the team can during working hours.";
-		if (!triggerWePlayResponse) {
-			msg += "\n\nI noticed that this isn't within the proper channel, this message should go into the <#790994604316164096> channel. You can also head to <#745097595692515380> channel to subscribe to notifications related to WePlay games so you can know when the game goes back online!"
-		}
-		const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=pokesword", {
-			method: 'GET', headers: {
-				'Content-Type': 'application/json',
-			},
-		}).then(response => response.json())
-			.then((x) => {
-				if (x.result == null) {
-				} else {
-					if (!x.result.isOnline) {
-						message.reply(msg);
-					}
-				}
-			});
+	// const pokeTrigger = ["pokemon", "when", "online", "?", "play", "down", "offline", "why", "sword", "shield"];
+	// const reqPokeTrigger = ["pokemon", "sword", "shield", "poke"];
+	// var flag = false;
+	// var confirm = 0;
+	// var i = 0;
+	// for (i = 0; i < pokeTrigger.length; i++) {
+	// 	if (message.content.toLowerCase().includes(pokeTrigger[i])) {
+	// 		confirm++; 
+	// 	}
+	// 	if (reqPokeTrigger[i] != null && message.content.toLowerCase().includes(reqPokeTrigger[i])) {
+	// 		flag = true;
+	// 	}
+	// }
+	// if (confirm >= 3 && flag) {
+	// 	var msg = "Hello, this is an automated message.\nIf Pokemon Sword is offline, there is likely an issue with the game or switch that makes it unplayable at the moment. As for how long it will be is unsure, these things are fixed as soon as the team can during working hours.";
+	// 	if (!triggerWePlayResponse) {
+	// 		msg += "\n\nI noticed that this isn't within the proper channel, this message should go into the <#790994604316164096> channel. You can also head to <#745097595692515380> channel to subscribe to notifications related to WePlay games so you can know when the game goes back online!"
+	// 	}
+	// 	const {list} = fetch("https://g9b1fyald3.execute-api.eu-west-1.amazonaws.com/master/games/?shortId=pokesword", {
+	// 		method: 'GET', headers: {
+	// 			'Content-Type': 'application/json',
+	// 		},
+	// 	}).then(response => response.json())
+	// 		.then((x) => {
+	// 			if (x.result == null) {
+	// 			} else {
+	// 				if (!x.result.isOnline) {
+	// 					message.reply(msg);
+	// 				}
+	// 			}
+	// 		});
 
-		// message.reply(msg);
-	}
+	// 	// message.reply(msg);
+	// }
 
 
 }
