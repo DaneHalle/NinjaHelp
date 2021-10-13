@@ -117,6 +117,8 @@ var times=0;
 var gameObject=[];
 var curAnnounce=[];
 
+var blacklist=[];
+
 //Game Announcements
 async function announcement(shortId, dir) {
     console.log("Starting Announcements for "+shortId+" with image path "+dir);
@@ -520,6 +522,16 @@ bot.once('ready', async () => {
 		}
 
 	});
+
+	fs.readFile("./database/blacklist.dat", 'ascii', function (err, file) {
+		if (err) throw err;
+		let totalData = file.toString().split("\n");
+		for (let i = 0; i < totalData.length; i++) {
+			if (totalData[i].length != 0) {
+				blacklist.push(totalData[i]);
+			}
+		}
+	})
 
 
 	//Sign in for NinjaHelp Surrogate Account. 
@@ -1170,6 +1182,7 @@ bot.on('message', message => {
 			}
 			// !mute <USER> <TIME>
 			case 'mute': {
+				var dayInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 				if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null && args[2] != null)) {
 					let toMute = message.guild.member(message.mentions.users.first());
 					let role = message.guild.roles.cache.find(r => r.name === "muted");
@@ -1200,6 +1213,11 @@ bot.on('message', message => {
 					minute %= 60;
 					day += Math.floor(hour / 24);
 					hour %= 24;
+					var preMonth = month;
+					month += Math.floor(day / dayInMonth[preMonth]);
+					day %= dayInMonth[preMonth];
+					year += Math.floor(month / 12);
+					month %= 12;
 					var endMute = month + "/" + day + "/" + year + "~" + hour + ":" + minute + "\n";
 					var updated = false;
 					fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
@@ -1219,7 +1237,7 @@ bot.on('message', message => {
 							for (let j = 0; j < testData.length; j++) {
 								if (toRemove === j || testData[j] === "\n") {
 								} else if (j === testData.length - 1) {
-									reinsert += testData[j];
+									reinsert += testData[j] + "\n";
 								} else {
 									reinsert += testData[j] + "\n";
 								}
@@ -1233,7 +1251,7 @@ bot.on('message', message => {
 						}
 					});
 					if (!updated) {
-						endMute = toMute.id + "|" + endMute;
+						endMute = toMute.id + "|" + endMute + "\n";
 						fs.appendFile("./database/mute.dat", endMute, (err) => {
 							if (err) throw err;
 						});
@@ -2178,6 +2196,75 @@ bot.on('message', message => {
                 logBotActions(message, message.content)
 				break;
 			}
+			// !blacklist
+			case 'blacklist': {
+				if (message.channel.id == modBotSpamID && message.member.user.tag === "Mordecai#3257") {
+					if (args[1] == null) {
+						message.reply("You need to provide a site user to blacklist");
+					} else {
+						if (blacklist.includes(args[1])) {
+							message.reply("Already blacklisted");
+						} else {
+							blacklist.push(args[1]);
+
+							fs.appendFile("./database/blacklist.dat", args[1]+"\n", (err) => {
+								if (err) throw err;
+							});
+
+							message.reply("User `"+args[1]+"` has been blacklisted")
+						}
+					}
+					logBotActions(message, message.content);
+				}
+				break;
+			}
+			// !whitelist
+			case 'whitelist': {
+				if (message.channel.id == modBotSpamID && message.member.user.tag === "Mordecai#3257") {
+					if (args[1] == null) {
+						message.reply("You need to provide a site user to whitelist");
+					} else {
+						if (blacklist.includes(args[1])) {
+							blacklist.splice(blacklist.indexOf(args[1], 1));
+
+
+							fs.readFile("./database/blacklist.dat", 'ascii', function (err, file) {
+								if (err) throw err;
+								let testData = file.toString().split("\n");
+								let toRemove = -1;
+								for (let i = 0; i < testData.length; i++) {
+									if (testData[i].includes(args[1])) {
+										toRemove = i;
+										updated = true;
+										break;
+									}
+								}
+								if (toRemove !== -1) {
+									let removeUserData = testData[toRemove];
+									let reinsert = "";
+									for (let j = 0; j < testData.length; j++) {
+										if (toRemove === j || testData[j] === "\n") {
+										} else if (j === testData.length - 1) {
+											reinsert += testData[j] + "\n";
+										} else {
+											reinsert += testData[j] + "\n";
+										}
+									}
+									fs.writeFile("./database/blacklist.dat", reinsert, (err) => {
+										if (err) throw err;
+									});
+								}
+							});
+
+							message.reply("User `"+args[1]+"` has been whitelisted");
+						} else {
+							message.reply("That user isn't blacklisted");
+						}
+					}
+					logBotActions(message, message.content);
+				}
+				break;
+			}
 			default: {
 				break;
 			}
@@ -2417,6 +2504,7 @@ function connect(){
 				if (obj.message.toLowerCase().startsWith("!help") && toStoreObject.username!="NinjaHelp") {
 					// Some sort of detection 
 					sendMessageToWebsite(gameObject[gindex].uuid, "I am a work in progress currently so can't help you. Sorry!");
+					sendMessageToWebsite(gameObject[gindex].uuid, "However, reaching out directly to Surrogate.tv probably will help. That can be done here: https://www.surrogate.tv/contact");
 
 				}
 
@@ -2440,13 +2528,17 @@ function connect(){
 				// }).then(response => response.text());
 
 				if (obj.message.toLowerCase().startsWith("!mod")) {
-					bot.channels.cache.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
-					sendMessageToWebsite(gameObject[gindex].uuid, "I have pinged the Moderators on the discord. One should respond if available.");
-					logBotActions("WEBSITE HELP", "Mod requested on a game");
+					if (!blacklist.includes(obj.username)) {
+						bot.channels.cache.get(modBotSpamID).send("<@&668877680095264780> | User `"+obj.username+"` has requested a mod on game: \nhttps://surrogate.tv/game/"+gameObject[gindex].shortId);
+						sendMessageToWebsite(gameObject[gindex].uuid, "I have pinged the Moderators on the discord. One should respond if available.");
+						logBotActions("WEBSITE HELP", "Mod requested on a game");
+					} else {
+
+					}
 				} else if (obj.message.toLowerCase().startsWith("!mordecai")) {
 					var date = new Date();
 					var hrs = date.getHours();
-					if (hrs >= 23 || hrs <= 8) {
+					if (hrs >= 23 || hrs <= 7) {
 						sendMessageToWebsite(gameObject[gindex].uuid, "Mordecai is currently sleeping. Please refrain from requesting him between 23:00-08:00 EST.");
 						logBotActions("WEBSITE HELP", "Mordecai requested on a game during off hours");
 					} else {
@@ -2484,7 +2576,7 @@ function connect(){
 					// 	});
 					// logBotActions("WEBSITE HELP", "Help Requested on private game");
 					gameObject[gindex].threshold=-4;
-				} else if (gameObject[gindex].threshold >= 2 && gameObject[gindex].public && toStoreObject.username!="NinjaHelp") {
+				} else if (gameObject[gindex].threshold >= 3 && gameObject[gindex].public && toStoreObject.username!="NinjaHelp") {
 					fetch(hiddenURL+"?user="+obj.username+"&limit=5&game="+toStoreObject.game, {
 						method: 'GET',
 						headers: {
