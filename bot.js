@@ -319,7 +319,7 @@ async function checkToUnmute() {
 	let role = surrogateServer.roles.cache.find(r => r.name === "muted");
 	while (true) {
 		let date = getDateObject(0);
-		let tempMin = date.minute + ((date.hour + (date.day * 24)) * 60);
+		let tempMin = date.minute + (date.hour * 60) + (date.day * 24 * 60) + (date.month * 30 * 24 * 60) + (date.year * 365 * 24 * 60);
 		fs.exists("./database/mute.dat", (exists) => {
 			if (exists) {
 				fs.readFile("./database/mute.dat", 'ascii', function (err, file) {
@@ -327,12 +327,15 @@ async function checkToUnmute() {
 					let testData = file.toString().split("\n");
 					for (let i = 0; i < testData.length; i++) {
 						if (testData[i].length!=0) {
-							let remove = testData[i].split("|");
-							let removeTime = remove[1].split("~");
-							let removeDate = removeTime[0].split("/");
-							let removeSpecificTime = removeTime[1].split(":");
+							let remove = testData[i].split("|"); //id,time
+							let removeTime = remove[1].split("~"); //date,time
+							let removeDate = removeTime[0].split("/"); //month,day,year
+							let removeSpecificTime = removeTime[1].split(":"); //hour,minute
 							let success = false;
-							let removeMin = parseInt(removeSpecificTime[1]) + ((parseInt(removeSpecificTime[0]) + (parseInt(removeDate[1]) * 24)) * 60);
+
+											// minute + (hour * 60) + (day * 24 * 60) + (month * 30 * 24 * 60) + (year * 365 * 24 * 60)
+							let removeMin = parseInt(removeSpecificTime[1]) + (parseInt(removeSpecificTime[0]) * 60) + (parseInt(removeDate[1]) * 24 * 60) + (parseInt(removeDate[0]) * 30 * 24 * 60) + (parseInt(removeDate[2]) * 365 * 24 * 60);
+							
 							if (removeMin <= tempMin) {
 								surrogateServer.members.cache.forEach(u => {
 									if (!u.user.bot) {
@@ -350,7 +353,7 @@ async function checkToUnmute() {
 								for (let j = 0; j < testData.length; j++) {
 									if (i === j || testData[j] === "\n") {
 									} else if (j < testData.length - 1) {
-										reinsert += testData[j];
+										reinsert += testData[j] + "\n";
 									} else {
 										reinsert += testData[j] + "\n";
 									}
