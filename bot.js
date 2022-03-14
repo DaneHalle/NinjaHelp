@@ -11,7 +11,22 @@ const Auth = require('@aws-amplify/auth');
 const API = require('@aws-amplify/api');
 const MarkovGen = require('markov-generator');
 
-const bot = new Discord.Client();
+const bot = new Discord.Client({ intents: [ Discord.Intents.FLAGS.GUILDS, 
+											Discord.Intents.FLAGS.GUILD_MEMBERS, 
+											Discord.Intents.FLAGS.GUILD_BANS, 
+											Discord.Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS, 
+											Discord.Intents.FLAGS.GUILD_INTEGRATIONS, 
+											Discord.Intents.FLAGS.GUILD_WEBHOOKS, 
+											Discord.Intents.FLAGS.GUILD_INVITES, 
+											Discord.Intents.FLAGS.GUILD_VOICE_STATES, 
+											Discord.Intents.FLAGS.GUILD_PRESENCES, 
+											Discord.Intents.FLAGS.GUILD_MESSAGES, 
+											Discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS, 
+											Discord.Intents.FLAGS.GUILD_MESSAGE_TYPING, 
+											Discord.Intents.FLAGS.DIRECT_MESSAGES, 
+											Discord.Intents.FLAGS.DIRECT_MESSAGE_REACTIONS, 
+											Discord.Intents.FLAGS.DIRECT_MESSAGE_TYPING, 
+											Discord.Intents.FLAGS.GUILD_SCHEDULED_EVENTS] });
 const TOKEN = process.env.TOKEN;
 const hiddenURL = ""+process.env.URL;
 const email = ""+process.env.EMAIL;
@@ -32,7 +47,7 @@ profanity.removeWords(...whiteListWords);
 
 bot.login(TOKEN);
 
-const TIMEZONE_OFFSET_GMT = 4;
+const TIMEZONE_OFFSET_GMT = 5;
 const TIMEZONE_OFFSET_FINLAND = 7;
 
 // All the channel IDs
@@ -263,12 +278,12 @@ async function newDayCheck() {
 			bot.channels.cache.get("841634463917015060").send("New Day of swears");
 					
 			startingDate=checkDate;
-			if (checkDate.weekday === "Tuesday") {
-				bot.channels.cache.get("800698068084457493").send("<@&800698382355660801> \n Are you good to host Mario Kart Live this week for your normal sessions?");
-			}
-			if (checkDate.weekday === "Wednesday") {
-				bot.channels.cache.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
-			}
+			// if (checkDate.weekday === "Tuesday") {
+			// 	bot.channels.cache.get("800698068084457493").send("<@&800698382355660801> \n Are you good to host Mario Kart Live this week for your normal sessions?");
+			// }
+			// if (checkDate.weekday === "Wednesday") {
+			// 	bot.channels.cache.get("800698090629103616").send("<@&800698182845464609>  \n Are you good to host SumoBots this weekend for your normal sessions?");
+			// }
 			fs.open("./bot_logs/logs_" + checkDate.dateString_MDY_noLead + ".txt", 'a', function (err, file) {
 				if (err) throw err;
 			});
@@ -403,7 +418,7 @@ bot.on('messageReactionAdd', async (reaction, user) => {
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
 				let i = reaction.message.guild.roles.cache.find(e => e.name === role[o]);
-				await reaction.message.guild.member(user).roles.add(i).catch(console.error);
+				await reaction.message.guild.members.cache.get(user.id).roles.add(i).catch(console.error);
 				console.log("Given " + user.tag + " role of \"" + i.name + "\"");
 				logReactActions(user, "Given role of \"" + i.name + "\"");
 			}
@@ -415,7 +430,7 @@ bot.on('messageReactionAdd', async (reaction, user) => {
 		for (let o in femoji) {
 			if (reaction.emoji.name === femoji[o]) {
 				let i = reaction.message.guild.roles.cache.find(e => e.name === frole[o]);
-				await reaction.message.guild.member(user).roles.add(i).catch(console.error);
+				await reaction.message.guild.members.cache.get(user.id).roles.add(i).catch(console.error);
 				console.log("Given " + user.tag + " role of \"" + i.name + "\"");
 				logReactActions(user, "Given role of \"" + i.name + "\"");
 			}
@@ -434,7 +449,7 @@ bot.on('messageReactionRemove', async (reaction, user) => {
 		for (let o in emoji) {
 			if (reaction.emoji.name === emoji[o]) {
 				let i = reaction.message.guild.roles.cache.find(e => e.name === role[o]);
-				await reaction.message.guild.member(user).roles.remove(i).catch(console.error);
+				await reaction.message.guild.members.cache.get(user.id).roles.remove(i).catch(console.error);
 				console.log("Taken " + user.tag + "'s' role of \"" + i.name + "\"");
 				logReactActions(user, "Taken role of \"" + i.name + "\"");
 			}
@@ -446,7 +461,7 @@ bot.on('messageReactionRemove', async (reaction, user) => {
 		for (let o in femoji) {
 			if (reaction.emoji.name === femoji[o]) {
 				let i = reaction.message.guild.roles.cache.find(e => e.name === frole[o]);
-				await reaction.message.guild.member(user).roles.remove(i).catch(console.error);
+				await reaction.message.guild.members.cache.get(user.id).roles.remove(i).catch(console.error);
 				console.log("Taken " + user.tag + "'s' role of \"" + i.name + "\"");
 				logReactActions(user, "Taken role of \"" + i.name + "\"");
 			}
@@ -574,7 +589,7 @@ bot.once('ready', async () => {
 });
 
 // Master handler for messages...don't look too closely at my code please and thank you
-bot.on('message', message => {
+bot.on('messageCreate', message => {
 	if (message.author.bot || message.author.id === "381655612335063040" || message.guild.id == null || !((message.guild.id === ("707047722208854098") || message.guild.id === ("664556796576268298") || message.guild.id === ("571388780058247179")))) {
 		if (message.guild.id === ("800697435986198579")) {
 			if (message.content.substring(0, 1) === '!') {
@@ -692,7 +707,7 @@ bot.on('message', message => {
 			.addField("All of these fields will also be notified of any behind the scenes related content through this way for a given game.", "⠀")
 			.setFooter("To disable notification, un-react. If it appears that you haven't reacted, just react and un-react to disable them.");
 		
-		// bot.channels.cache.get("745097595692515380").send({embed}).then(sentEmbed => {
+		// bot.channels.cache.get("745097595692515380").send({embeds: [embed]}).then(sentEmbed => {
 		//     sentEmbed.react("811185294011006996")
 		//         .then(() => sentEmbed.react("810972920867717190"))
 		//         .then(() => sentEmbed.react("811256590106755074"))
@@ -788,7 +803,7 @@ bot.on('message', message => {
 				if (month < 10) {
 					month = "0" + month;
 				}
-				let sendOut = "*Beep boop*\nThe time is given in GMT+3 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso=" + year + "" + month + "" + day + "T" + hours + "" + minutes + "&p1=101\n*Beep boop*";
+				let sendOut = "*Beep boop*\nThe time is given in GMT+2 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso=" + year + "" + month + "" + day + "T" + hours + "" + minutes + "&p1=101\n*Beep boop*";
 				message.channel.send(sendOut);
 				logBotActions(message, "Link");
 			}
@@ -894,7 +909,7 @@ bot.on('message', message => {
 						.addField("`!search <USERNAME>`", "Get information on the STV account associated with `<USERNAME>.")
 						.addField("`!saysomething` | `!saysomething <GAME>`", "Generate either a random sentence based off some game on the site or by a given `<GAME>`.")
 						.setFooter("These commands are for Mod Squad and Surrogate Team");
-					bot.channels.cache.get(modBotSpamID).send({embed});
+					bot.channels.cache.get(modBotSpamID).send({embeds: [embed]});
 				} else {
 					const embed = new Discord.MessageEmbed()
 						.setTitle("Hello, I am the NinjaHelp bot")
@@ -911,7 +926,7 @@ bot.on('message', message => {
 						.addField("`!search <USERNAME>`", "Get information on the STV account associated with `<USERNAME>`.")
 						.addField("`!saysomething` | `!saysomething <GAME>`", "Generate either a random sentence based off some game on the site or by a given `<GAME>`.")
 						.setFooter("These commands are for everyone");
-					bot.channels.cache.get(botSpamID).send({embed});
+					bot.channels.cache.get(botSpamID).send({embeds: [embed]});
 				}
 				message.delete();
 				logBotActions(message, "!help");
@@ -1149,8 +1164,8 @@ bot.on('message', message => {
 											.setURL("https://surrogate.tv/game/" + command)
 											.setDescription(output)
 											.setThumbnail(image)
-											.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
-										message.channel.send({embed});
+											.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+										message.channel.send({embeds: [embed]});
 									} else {
 										if (message.channel.id !== botSpamID) {
 											message.delete();
@@ -1161,8 +1176,8 @@ bot.on('message', message => {
 												.setURL("https://surrogate.tv/game/" + command)
 												.setDescription(output)
 												.setThumbnail(image)
-												.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
-											bot.channels.cache.get(botSpamID).send({embed});
+												.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+											bot.channels.cache.get(botSpamID).send({embeds: [embed]});
 											
 										} else {
 											const embed = new Discord.MessageEmbed()
@@ -1171,8 +1186,8 @@ bot.on('message', message => {
 												.setURL("https://surrogate.tv/game/" + command)
 												.setDescription(output)
 												.setThumbnail(image)
-												.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
-											bot.channels.cache.get(botSpamID).send({embed});
+												.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+											bot.channels.cache.get(botSpamID).send({embeds: [embed]});
 										}
 									}
 								}
@@ -1187,13 +1202,14 @@ bot.on('message', message => {
 			case 'mute': {
 				var dayInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 				if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null && args[2] != null)) {
-					let toMute = message.guild.member(message.mentions.users.first());
+					let toMute = message.guild.members.cache.get(message.mentions.users.first().id);
 					let role = message.guild.roles.cache.find(r => r.name === "muted");
 					if (!toMute) {
+						console.log(message.mentions.users.first())
 						bot.channels.cache.get(modBotSpamID).send(`Couldn't find user.`);
 						return;
 					}
-					if (toMute.hasPermission("MANAGE_MESSAGES")) {
+					if (toMute.permissions.has("MANAGE_MESSAGES")) {
 						bot.channels.cache.get(modBotSpamID).send(`Can't mute that user`);
 						return;
 					}
@@ -1266,7 +1282,7 @@ bot.on('message', message => {
 			// !unmute <USER>
 			case "unmute": {
 				if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null)) {
-					let toUnmute = message.guild.member(message.mentions.users.first() || message.guild.members.cache.get(args[0]));
+					let toUnmute = message.guild.members.cache.get(message.mentions.users.first().id || message.guild.members.cache.get(args[0]));
 					let role = message.guild.roles.cache.find(r => r.name === "muted");
 					if (!toUnmute) {
 						bot.channels.cache.get(modBotSpamID).send("Couldn't find user.");
@@ -1446,21 +1462,21 @@ bot.on('message', message => {
 															.setColor(0x220e41)
 															.setThumbnail(image)
 															.addField(description, scores);
-														bot.channels.cache.get(botSpamID).send({embed})
+														bot.channels.cache.get(botSpamID).send({embeds: [embed]})
 													} else if (message.channel.id == modBotSpamID) {
 														const embed = new Discord.MessageEmbed()
 															.setTitle("__" + title + "__")
 															.setColor(0x220e41)
 															.setThumbnail(image)
 															.addField(description, scores);
-														bot.channels.cache.get(modBotSpamID).send({embed})
+														bot.channels.cache.get(modBotSpamID).send({embeds: [embed]})
 													} else {
 														const embed = new Discord.MessageEmbed()
 															.setTitle("__" + title + "__")
 															.setColor(0x220e41)
 															.setThumbnail(image)
 															.addField(description, scores);
-														bot.channels.cache.get(botSpamID).send({embed})
+														bot.channels.cache.get(botSpamID).send({embeds: [embed]})
 															.then(bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">"));
 													}
 												} else {
@@ -1470,7 +1486,7 @@ bot.on('message', message => {
 														.setThumbnail(image)
 														.addField(description, scores);
 													
-													message.channel.send({embed});
+													message.channel.send({embeds: [embed]});
 												}
 											} else {
 												if (message.channel.id !== botSpamID) {
@@ -1481,7 +1497,7 @@ bot.on('message', message => {
 														.setThumbnail(image)
 														.addField(description, scores)
 														.setFooter("Please use this channel for bot commands!");
-													bot.channels.cache.get(botSpamID).send({embed})
+													bot.channels.cache.get(botSpamID).send({embeds: [embed]})
 														.then(bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">"));
 												} else {
 													const embed = new Discord.MessageEmbed()
@@ -1489,7 +1505,7 @@ bot.on('message', message => {
 														.setColor(0x220e41)
 														.setThumbnail(image)
 														.addField(description, scores);
-													message.channel.send({embed});
+													message.channel.send({embeds: [embed]});
 												}
 											}
 										}
@@ -1535,7 +1551,7 @@ bot.on('message', message => {
 						.setColor(0x220e41)
 						.setDescription(description);
 					
-					message.channel.send({embed});
+					message.channel.send({embeds: [embed]});
 				} else if (message.channel.id !== botSpamID) {
 					const embed = new Discord.MessageEmbed()
 						.setTitle("__" + title + "__")
@@ -1543,7 +1559,7 @@ bot.on('message', message => {
 						.setDescription(description)
 						.setFooter("Please use this channel for that command!");
 					
-					bot.channels.cache.get(botSpamID).send({embed})
+					bot.channels.cache.get(botSpamID).send({embeds: [embed]})
 						.then(bot.channels.cache.get(botSpamID).send("<@" + message.author.id + ">"));
 				} else {
 					const embed = new Discord.MessageEmbed()
@@ -1551,7 +1567,7 @@ bot.on('message', message => {
 						.setColor(0x220e41)
 						.setDescription(description);
 					
-					message.channel.send({embed});
+					message.channel.send({embeds: [embed]});
 				}
 				logBotActions(message, "!name");
 				break;
@@ -1869,9 +1885,9 @@ bot.on('message', message => {
 										}
 										
 										if (message.channel.id === botSpamID){
-											bot.channels.cache.get(botSpamID).send({embed});
+											bot.channels.cache.get(botSpamID).send({embeds: [embed]});
 										} else if (message.channel.id === modBotSpamID){
-											bot.channels.cache.get(modBotSpamID).send({embed});
+											bot.channels.cache.get(modBotSpamID).send({embeds: [embed]});
 										}
 									}
 								});
@@ -2104,7 +2120,7 @@ bot.on('message', message => {
 						.addField("`!announceaudit`", "Provides an audit of all the shortIDs and imagePaths currently setup.")
 						.addField("`!add <image_path>`", "NOTE: Requires an attatched image/gif to work. Will add the included attatchment to image_path to be randomly pulled from when announcements happen.")
 						.setFooter("These commands are for Mod Squad, Surrogate Team, and Game Creators");
-					bot.channels.cache.get(modBotSpamID).send({embed});
+					bot.channels.cache.get(modBotSpamID).send({embeds: [embed]});
 				}
 				break;
 			}
@@ -2387,42 +2403,42 @@ function checkLevel(message) {
 						const ultimate = message.guild.roles.cache.find(e => e.name === "Ultimate Robot Ninja");
 						if (x.result[0] == null) {
 							if (message.member.roles.cache.find(r => r.name === "Starter Robot Ninja") || message.member.roles.cache.find(r => r.name === "Advanced Robot Ninja") || message.member.roles.cache.find(r => r.name === "Veteran Robot Ninja") || message.member.roles.cache.find(r => r.name === "Ultimate Robot Ninja")) {
-								message.guild.member(message.member).roles.remove(starter).catch(console.error);
-								message.guild.member(message.member).roles.remove(advanced).catch(console.error);
-								message.guild.member(message.member).roles.remove(veteran).catch(console.error);
-								message.guild.member(message.member).roles.remove(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(starter).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Taken Tier roles");
 							}
 						} else {
 							if ((x.result[0].experience == null || x.result[0].experience < 25600) && !message.member.roles.cache.find(r => r.name === "Starter Robot Ninja")) {
-								message.guild.member(message.member).roles.add(starter).catch(console.error);
-								message.guild.member(message.member).roles.remove(advanced).catch(console.error);
-								message.guild.member(message.member).roles.remove(veteran).catch(console.error);
-								message.guild.member(message.member).roles.remove(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.add(starter).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Starter Robot Ninja\"");
 							} else if (x.result[0].experience >= 25600 && x.result[0].experience < 175000 && !message.member.roles.cache.find(r => r.name === "Advanced Robot Ninja")) {
-								message.guild.member(message.member).roles.remove(starter).catch(console.error);
-								message.guild.member(message.member).roles.add(advanced).catch(console.error);
-								message.guild.member(message.member).roles.remove(veteran).catch(console.error);
-								message.guild.member(message.member).roles.remove(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(starter).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.add(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Advanced Robot Ninja\"");
 							} else if (x.result[0].experience >= 175000 && x.result[0].experience < 1668000 && !message.member.roles.cache.find(r => r.name === "Veteran Robot Ninja")) {
-								message.guild.member(message.member).roles.remove(starter).catch(console.error);
-								message.guild.member(message.member).roles.remove(advanced).catch(console.error);
-								message.guild.member(message.member).roles.add(veteran).catch(console.error);
-								message.guild.member(message.member).roles.remove(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(starter).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.add(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Veteran Robot Ninja\"");
 							} else if (x.result[0].experience >= 1668000 && !message.member.roles.cache.find(r => r.name === "Ultimate Robot Ninja")) {
-								message.guild.member(message.member).roles.remove(starter).catch(console.error);
-								message.guild.member(message.member).roles.remove(advanced).catch(console.error);
-								message.guild.member(message.member).roles.remove(veteran).catch(console.error);
-								message.guild.member(message.member).roles.add(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(starter).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.add(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Ultimate Robot Ninja\"");
 							} else if (!message.member.roles.cache.find(r => r.name === "Starter Robot Ninja") && !message.member.roles.cache.find(r => r.name === "Advanced Robot Ninja") && !message.member.roles.cache.find(r => r.name === "Veteran Robot Ninja") && !message.member.roles.cache.find(r => r.name === "Ultimate Robot Ninja")) {
-								message.guild.member(message.member).roles.add(starter).catch(console.error);
-								message.guild.member(message.member).roles.remove(advanced).catch(console.error);
-								message.guild.member(message.member).roles.remove(veteran).catch(console.error);
-								message.guild.member(message.member).roles.remove(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.add(starter).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Starter Robot Ninja\"");
 							}
 						}
