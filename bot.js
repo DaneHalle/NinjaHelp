@@ -47,8 +47,8 @@ profanity.removeWords(...whiteListWords);
 
 bot.login(TOKEN);
 
-const TIMEZONE_OFFSET_GMT = 5;
-const TIMEZONE_OFFSET_FINLAND = 7;
+const TIMEZONE_OFFSET_GMT = 6;
+const TIMEZONE_OFFSET_FINLAND = 9;
 
 // All the channel IDs
 const battlingTrigger = ["627919045420646401", "707600524727418900"];
@@ -803,7 +803,7 @@ bot.on('messageCreate', message => {
 				if (month < 10) {
 					month = "0" + month;
 				}
-				let sendOut = "*Beep boop*\nThe time is given in GMT+2 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso=" + year + "" + month + "" + day + "T" + hours + "" + minutes + "&p1=101\n*Beep boop*";
+				let sendOut = "*Beep boop*\nThe time is given in GMT+3 (Finland). See what time that is for you here:\nhttps://www.timeanddate.com/worldclock/fixedtime.html?iso=" + year + "" + month + "" + day + "T" + hours + "" + minutes + "&p1=101\n*Beep boop*";
 				message.channel.send(sendOut);
 				logBotActions(message, "Link");
 			}
@@ -1164,7 +1164,7 @@ bot.on('messageCreate', message => {
 											.setURL("https://surrogate.tv/game/" + command)
 											.setDescription(output)
 											.setThumbnail(image)
-											.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+											.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
 										message.channel.send({embeds: [embed]});
 									} else {
 										if (message.channel.id !== botSpamID) {
@@ -1176,7 +1176,7 @@ bot.on('messageCreate', message => {
 												.setURL("https://surrogate.tv/game/" + command)
 												.setDescription(output)
 												.setThumbnail(image)
-												.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+												.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
 											bot.channels.cache.get(botSpamID).send({embeds: [embed]});
 											
 										} else {
@@ -1186,7 +1186,7 @@ bot.on('messageCreate', message => {
 												.setURL("https://surrogate.tv/game/" + command)
 												.setDescription(output)
 												.setThumbnail(image)
-												.setFooter("The Office and most of the games are located in Finland so times are in GMT+2 timezone.");
+												.setFooter("The Office and most of the games are located in Finland so times are in GMT+3 timezone.");
 											bot.channels.cache.get(botSpamID).send({embeds: [embed]});
 										}
 									}
@@ -1770,7 +1770,7 @@ bot.on('messageCreate', message => {
 			//!modremove <USER>
 			case "modremove": {
 				if ((message.member.roles.cache.find(r => r.name.toLowerCase() === "mod squad") || message.member.roles.cache.find(r => r.name.toLowerCase() === "surrogate team") && args[1] != null)) {
-					let infoID = args[1].substring(3, args[1].length - 1);
+					let infoID = args[1].substring(2, args[1].length - 1);
 					args[1]=encodeURI(args[1]);
 					fs.exists("./database/connect.dat", (exists) => {
 						if (exists) {
@@ -1782,6 +1782,8 @@ bot.on('messageCreate', message => {
 								for (i = 0; i < testData.length; i++) {
 									if (!(testData[i] === "\n")) {
 										let inHere = testData[i].split("|");
+										console.log(inHere);
+										console.log(infoID);
 										if (inHere[0] === infoID) {
 											dIDFound = true;
 											break;
@@ -1803,7 +1805,7 @@ bot.on('messageCreate', message => {
 									fs.writeFile("./database/connect.dat", insert, (err) => {
 										if (err) throw err;
 									});
-									bot.channels.cache.get(modBotSpamID).send("Successfully removed " + args[1] + "'s connection. ");
+									bot.channels.cache.get(modBotSpamID).send("Successfully removed <@" + infoID + ">'s connection. ");
 								} else {
 									bot.channels.cache.get(modBotSpamID).send("Cannot find that user's information in my database. They don't need to be removed.");
 								}
@@ -1854,7 +1856,7 @@ bot.on('messageCreate', message => {
 											.setFooter("If nothing shows up, the user has no experience, no icon set, no flag set, and doesn't have the account connected to their discord.");
 										
 										if (x.result[0].experience != null) {
-											embed.addField("The user has this much experience", x.result[0].experience);
+											embed.addField("The user has this much experience", (x.result[0].experience).toString());
 										}
 										if (x.result[0].userIcon != null) {
 											const surrogateTeam = bot.emojis.cache.get("700737595734491237").toString();
@@ -1864,21 +1866,21 @@ bot.on('messageCreate', message => {
 											const modSquad = bot.emojis.cache.get("700736529043161139").toString();
 											const gameCreator = bot.emojis.cache.get("827147154321702933").toString();
 											if (x.result[0].userIcon === "surrogateTeam") {
-												embed.addField("The user has this icon", surrogateTeam);
+												embed.addField("The user has this icon", (surrogateTeam).toString());
 											} else if (x.result[0].userIcon === "broomSquad") {
-												embed.addField("The user has this icon", broomSquad);
+												embed.addField("The user has this icon", (broomSquad).toString());
 											} else if (x.result[0].userIcon === "patreonSupporter") {
-												embed.addField("The user has this icon", patreonSupproter);
+												embed.addField("The user has this icon", (patreonSupproter).toString());
 											} else if (x.result[0].userIcon === "moderator") {
-												embed.addField("The user has this icon", modSquad);
+												embed.addField("The user has this icon", (modSquad).toString());
 											} else if (x.result[0].userIcon === "alphaTester") {
-												embed.addField("The user has this icon", alphaTester);
+												embed.addField("The user has this icon", (alphaTester).toString());
 											} else if (x.result[0].userIcon === "creator") {
-												embed.addField("The user has this icon", gameCreator);
+												embed.addField("The user has this icon", (gameCreator).toString());
 											}
 										}
 										if (x.result[0].flag != null) {
-											embed.addField("The user's flag is", x.result[0].flag);
+											embed.addField("The user's flag is", (x.result[0].flag).toString());
 										}
 										if (user) {
 											embed.addField("The STV account is connected to the discord to the following user", "<@!" + inHere[0] + ">");
@@ -2403,42 +2405,42 @@ function checkLevel(message) {
 						const ultimate = message.guild.roles.cache.find(e => e.name === "Ultimate Robot Ninja");
 						if (x.result[0] == null) {
 							if (message.member.roles.cache.find(r => r.name === "Starter Robot Ninja") || message.member.roles.cache.find(r => r.name === "Advanced Robot Ninja") || message.member.roles.cache.find(r => r.name === "Veteran Robot Ninja") || message.member.roles.cache.find(r => r.name === "Ultimate Robot Ninja")) {
-								message.guild.members.cache.get(message.member).roles.remove(starter).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(advanced).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(veteran).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(starter).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Taken Tier roles");
 							}
 						} else {
 							if ((x.result[0].experience == null || x.result[0].experience < 25600) && !message.member.roles.cache.find(r => r.name === "Starter Robot Ninja")) {
-								message.guild.members.cache.get(message.member).roles.add(starter).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(advanced).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(veteran).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.add(starter).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Starter Robot Ninja\"");
 							} else if (x.result[0].experience >= 25600 && x.result[0].experience < 175000 && !message.member.roles.cache.find(r => r.name === "Advanced Robot Ninja")) {
-								message.guild.members.cache.get(message.member).roles.remove(starter).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.add(advanced).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(veteran).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(starter).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.add(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Advanced Robot Ninja\"");
 							} else if (x.result[0].experience >= 175000 && x.result[0].experience < 1668000 && !message.member.roles.cache.find(r => r.name === "Veteran Robot Ninja")) {
-								message.guild.members.cache.get(message.member).roles.remove(starter).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(advanced).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.add(veteran).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(starter).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.add(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Veteran Robot Ninja\"");
 							} else if (x.result[0].experience >= 1668000 && !message.member.roles.cache.find(r => r.name === "Ultimate Robot Ninja")) {
-								message.guild.members.cache.get(message.member).roles.remove(starter).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(advanced).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(veteran).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.add(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(starter).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.add(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Ultimate Robot Ninja\"");
 							} else if (!message.member.roles.cache.find(r => r.name === "Starter Robot Ninja") && !message.member.roles.cache.find(r => r.name === "Advanced Robot Ninja") && !message.member.roles.cache.find(r => r.name === "Veteran Robot Ninja") && !message.member.roles.cache.find(r => r.name === "Ultimate Robot Ninja")) {
-								message.guild.members.cache.get(message.member).roles.add(starter).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(advanced).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(veteran).catch(console.error);
-								message.guild.members.cache.get(message.member).roles.remove(ultimate).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.add(starter).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(advanced).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(veteran).catch(console.error);
+								message.guild.members.cache.get(message.member.id).roles.remove(ultimate).catch(console.error);
 								logReactActions(message.member.user, "Given role of \"Starter Robot Ninja\"");
 							}
 						}
